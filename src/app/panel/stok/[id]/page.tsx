@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { etkinKurlar, paraFormatla } from "@/lib/doviz";
 
 export default async function UrunDetayPage({
   params,
@@ -20,9 +21,18 @@ export default async function UrunDetayPage({
 
   const kategori = u.product_categories as unknown as { name: string } | null;
   const kritikMi = u.stock_quantity <= u.critical_stock;
+
+  // Dövizli alışsa kâr marjı, güncel kurla TL'ye çevrilmiş maliyet üzerinden hesaplanır
+  let alisTLKarsiligi: number | null = u.purchase_price;
+  if (u.purchase_price && u.purchase_currency !== "TRY") {
+    const kurlar = await etkinKurlar(supabase);
+    const guncelKur = kurlar.get(u.purchase_currency)?.rate_to_try ?? null;
+    alisTLKarsiligi = guncelKur ? u.purchase_price * guncelKur : null;
+  }
+
   const marj =
-    u.purchase_price && u.sale_price
-      ? (((u.sale_price - u.purchase_price) / u.sale_price) * 100).toFixed(1)
+    alisTLKarsiligi != null && u.sale_price
+      ? (((u.sale_price - alisTLKarsiligi) / u.sale_price) * 100).toFixed(1)
       : null;
 
   return (
@@ -86,11 +96,15 @@ export default async function UrunDetayPage({
           <div className="rounded-lg border border-slate-800 bg-surface px-3 py-2.5 text-center">
             <p className="text-lg font-bold text-slate-200">
               {u.purchase_price != null
-                ? `${u.purchase_price.toLocaleString("tr-TR")}`
+                ? u.purchase_currency !== "TRY"
+                  ? `${u.purchase_price.toLocaleString("tr-TR")} ${u.purchase_currency}`
+                  : u.purchase_price.toLocaleString("tr-TR")
                 : "—"}
             </p>
             <p className="text-[10px] uppercase tracking-wide text-slate-500">
-              Alış (TL)
+              Alış{alisTLKarsiligi != null && u.purchase_currency !== "TRY"
+                ? ` (${paraFormatla(alisTLKarsiligi)})`
+                : " (TL)"}
             </p>
           </div>
           <div className="rounded-lg border border-slate-800 bg-surface px-3 py-2.5 text-center">

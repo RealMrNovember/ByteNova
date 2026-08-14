@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { fiyatHesapla, paraFormatla } from "@/lib/doviz";
 import { KategoriSec } from "./KategoriSec";
 
 type Mevcut = {
@@ -14,6 +15,9 @@ type Mevcut = {
   brand: string | null;
   unit: string;
   purchase_price: number | null;
+  purchase_currency: string;
+  price_margin: number | null;
+  auto_price: boolean;
   sale_price: number | null;
   vat_rate: number;
   min_stock: number;
@@ -22,8 +26,12 @@ type Mevcut = {
   warranty_months: number | null;
 };
 
+type ParaBirimi = { code: string; symbol: string };
+
 type Props = {
   tenantId: string;
+  paraBirimleri: ParaBirimi[];
+  kurlar: Record<string, number>; // code -> 1 birimin TL karşılığı (TRY hariç)
   mevcut?: Mevcut;
 };
 
@@ -32,7 +40,7 @@ const alanSinifi =
 
 const BIRIMLER = ["adet", "kutu", "metre", "kg", "paket"];
 
-export function UrunFormu({ tenantId, mevcut }: Props) {
+export function UrunFormu({ tenantId, paraBirimleri, kurlar, mevcut }: Props) {
   const router = useRouter();
   const [ad, setAd] = useState(mevcut?.name ?? "");
   const [sku, setSku] = useState(mevcut?.sku ?? "");
@@ -42,8 +50,15 @@ export function UrunFormu({ tenantId, mevcut }: Props) {
     mevcut?.category_id ?? null
   );
   const [birim, setBirim] = useState(mevcut?.unit ?? "adet");
+  const [alisParaBirimi, setAlisParaBirimi] = useState(
+    mevcut?.purchase_currency ?? "TRY"
+  );
   const [alisFiyati, setAlisFiyati] = useState(
     mevcut?.purchase_price?.toString() ?? ""
+  );
+  const [marj, setMarj] = useState(mevcut?.price_margin?.toString() ?? "25");
+  const [otomatikFiyat, setOtomatikFiyat] = useState(
+    mevcut?.auto_price ?? false
   );
   const [satisFiyati, setSatisFiyati] = useState(
     mevcut?.sale_price?.toString() ?? ""
@@ -62,6 +77,20 @@ export function UrunFormu({ tenantId, mevcut }: Props) {
   const [hata, setHata] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
 
+  const guncelKur = alisParaBirimi === "TRY" ? 1 : (kurlar[alisParaBirimi] ?? null);
+  const tlKarsiligi = useMemo(() => {
+    const tutar = Number(alisFiyati);
+    if (!tutar || !guncelKur) return null;
+    return tutar * guncelKur;
+  }, [alisFiyati, guncelKur]);
+
+  // Otomatik fiyat açıksa: satış = maliyet(TL) × (1 + marj/100), yukarı yuvarlanmış
+  useEffect(() => {
+    if (!otomatikFiyat || tlKarsiligi == null) return;
+    const onerilen = fiyatHesapla(tlKarsiligi, 1, Number(marj) || 0);
+    setSatisFiyati(onerilen.toString());
+  }, [otomatikFiyat, tlKarsiligi, marj]);
+
   async function kaydet(e: React.FormEvent) {
     e.preventDefault();
     setHata(null);
@@ -76,6 +105,9 @@ export function UrunFormu({ tenantId, mevcut }: Props) {
       brand: marka.trim() || null,
       unit: birim,
       purchase_price: alisFiyati ? Number(alisFiyati) : null,
+      purchase_currency: alisParaBirimi,
+      price_margin: marj ? Number(marj) : null,
+      auto_price: otomatikFiyat,
       sale_price: satisFiyati ? Number(satisFiyati) : null,
       vat_rate: Number(kdv) || 0,
       min_stock: Number(minStok) || 0,
@@ -203,11 +235,11 @@ export function UrunFormu({ tenantId, mevcut }: Props) {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-slate-300">
-            Alış fiyatı (TL)
-          </label>
+      <div>
+        <label className="mb-1.5 block text-xs font-medium text-slate-300">
+          Alış fiyatı
+        </label>
+        <div className="flex gap-2">
           <input
             type="number"
             step="0.01"
@@ -215,7 +247,55 @@ export function UrunFormu({ tenantId, mevcut }: Props) {
             value={alisFiyati}
             onChange={(e) => setAlisFiyati(e.target.value)}
             placeholder="0.00"
-            className={alanSinifi}
+            className={`${alanSinifi} flex-1`}
+          />
+          <select
+            value={alisParaBirimi}
+            onChange={(e) => setAlisParaBirimi(e.target.value)}
+            className="w-24 shrink-0 rounded-lg border border-slate-700 bg-surface px-2 py-2.5 text-sm text-slate-200 outline-none focus:border-nova-500"
+          >
+            <option value="TRY">TL</option>
+            {paraBirimleri.map((p) => (
+              <option key={p.code} value={p.code}>
+                {p.code}
+              </option>
+            ))}
+          </select>
+        </div>
+        {alisParaBirimi !== "TRY" && (
+          <p className="mt-1.5 text-[11px] text-slate-500">
+            {guncelKur
+              ? `Güncel kur: 1 ${alisParaBirimi} = ${guncelKur.toLocaleString("tr-TR")} TL${
+                  tlKarsiligi ? ` · TL karşılığı: ${paraFormatla(tlKarsiligi)}` : ""
+                }`
+              : "Bu para birimi için güncel kur bulunamadı — Ayarlar'dan kontrol edin."}
+          </p>
+        )}
+      </div>
+
+      <label className="flex items-center gap-2.5 rounded-lg border border-slate-700 bg-surface px-3.5 py-2.5 text-sm text-slate-300">
+        <input
+          type="checkbox"
+          checked={otomatikFiyat}
+          onChange={(e) => setOtomatikFiyat(e.target.checked)}
+          className="h-3.5 w-3.5 rounded border-slate-600 bg-surface text-nova-500 focus:ring-0 focus:ring-offset-0"
+        />
+        Satış fiyatını otomatik hesapla (maliyet × kur × marj)
+      </label>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-slate-300">
+            Kâr marjı (%)
+          </label>
+          <input
+            type="number"
+            step="0.1"
+            min="0"
+            disabled={!otomatikFiyat}
+            value={marj}
+            onChange={(e) => setMarj(e.target.value)}
+            className={`${alanSinifi} disabled:opacity-40`}
           />
         </div>
         <div>
@@ -226,10 +306,11 @@ export function UrunFormu({ tenantId, mevcut }: Props) {
             type="number"
             step="0.01"
             min="0"
+            readOnly={otomatikFiyat}
             value={satisFiyati}
             onChange={(e) => setSatisFiyati(e.target.value)}
             placeholder="0.00"
-            className={alanSinifi}
+            className={`${alanSinifi} ${otomatikFiyat ? "text-nova-300" : ""}`}
           />
         </div>
         <div>
@@ -246,11 +327,6 @@ export function UrunFormu({ tenantId, mevcut }: Props) {
           />
         </div>
       </div>
-
-      <p className="text-[11px] text-slate-600">
-        💵 Dövizli alış fiyatı ve otomatik kur bazlı fiyatlama Gün 12&apos;de
-        eklenecek — şimdilik TL girin.
-      </p>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div>

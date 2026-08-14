@@ -14,6 +14,7 @@ type Props = {
   kullaniciAdi: string;
   email: string;
   kalanGun: number | null;
+  kurlar: { kod: string; kur: number | null }[];
   children: React.ReactNode;
 };
 
@@ -46,6 +47,7 @@ export function PanelKabuk({
   kullaniciAdi,
   email,
   kalanGun,
+  kurlar,
   children,
 }: Props) {
   const pathname = usePathname();
@@ -154,98 +156,107 @@ export function PanelKabuk({
       {/* ===== Sağ taraf ===== */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Üst bar */}
-        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-slate-800/60 bg-surface/90 px-4 backdrop-blur">
-          {/* Mobil logo */}
+        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-slate-800/60 bg-surface/90 px-4 backdrop-blur relative">
+          {/* Sol bölge: mobil logo */}
           <Link href="/panel" className="text-lg md:hidden">
             ⚡
           </Link>
 
-          {/* Arama / komut paleti */}
-          <button
-            onClick={() => setPaletAcik(true)}
-            className="hidden flex-1 max-w-md items-center gap-2 rounded-lg border border-slate-800 bg-surface-2 px-3 py-1.5 text-left text-[13px] text-slate-500 transition-colors hover:border-slate-600 sm:flex"
-            title="Komut paleti (Ctrl+K)"
-          >
-            <span>🔍</span>
-            <span className="flex-1">Ara: müşteri, servis no, seri no…</span>
-            <kbd className="rounded border border-slate-700 px-1.5 py-0.5 text-[10px] text-slate-600">
-              Ctrl K
-            </kbd>
-          </button>
-
-          <div className="flex-1 sm:hidden" />
-
-          {/* Kur göstergesi (Gün 12'de canlı) */}
-          <span
-            className="hidden items-center gap-1.5 rounded-lg border border-slate-800 px-2.5 py-1.5 font-mono text-[12px] text-slate-500 lg:flex"
-            title="Canlı kur takibi yakında"
-          >
-            💵 USD —,——
-          </span>
-
-          {/* Deneme rozeti */}
-          {kalanGun !== null && (
-            <span className="hidden rounded-full border border-nova-500/30 bg-nova-500/10 px-3 py-1 text-[11px] font-medium text-nova-300 sm:inline">
-              Deneme: {kalanGun} gün
-            </span>
-          )}
-
-          {/* Bildirim */}
-          <button
-            className="relative rounded-lg p-2 text-slate-400 transition-colors hover:text-slate-200"
-            title="Bildirimler — yakında"
-          >
-            🔔
-          </button>
-
-          {/* Profil menüsü */}
-          <div className="relative" ref={profilRef}>
+          {/* Orta bölge: arama / komut paleti — header'a göre tam ortalanmış,
+              sol/sağ içerik genişliğinden bağımsız (absolute + inset-x-0) */}
+          <div className="pointer-events-none absolute inset-x-0 hidden justify-center sm:flex">
             <button
-              onClick={() => setProfilAcik((a) => !a)}
-              className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-2 transition-colors hover:bg-slate-800/50"
+              onClick={() => setPaletAcik(true)}
+              className="pointer-events-auto flex w-full max-w-md items-center gap-2 rounded-lg border border-slate-800 bg-surface-2 px-3 py-1.5 text-left text-[13px] text-slate-500 transition-colors hover:border-slate-600"
+              title="Komut paleti (Ctrl+K)"
             >
-              {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={logoUrl}
-                  alt=""
-                  className="h-8 w-8 rounded-lg border border-slate-700 object-contain"
-                />
-              ) : (
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-nova-500/20 text-sm font-semibold text-nova-300">
-                  {tenantAdi.charAt(0).toUpperCase()}
+              <span>🔍</span>
+              <span className="flex-1">Ara: müşteri, servis no, seri no…</span>
+              <kbd className="rounded border border-slate-700 px-1.5 py-0.5 text-[10px] text-slate-600">
+                Ctrl K
+              </kbd>
+            </button>
+          </div>
+
+          {/* Sağ bölge: kur, deneme, bildirim, profil — sağa yaslı */}
+          <div className="ml-auto flex items-center gap-3">
+            {/* Kur göstergesi — TCMB günlük / dükkân override */}
+            <Link
+              href="/panel/ayarlar#doviz"
+              className="hidden items-center gap-2.5 rounded-lg border border-slate-800 px-2.5 py-1.5 font-mono text-[12px] text-slate-400 transition-colors hover:border-nova-500/40 lg:flex"
+              title="Döviz kurları — Ayarlar'dan güncelleyin"
+            >
+              {kurlar.map((k) => (
+                <span key={k.kod}>
+                  {k.kod} {k.kur != null ? k.kur.toLocaleString("tr-TR", { maximumFractionDigits: 2 }) : "—,——"}
                 </span>
-              )}
-              <span className="hidden max-w-[120px] truncate text-[13px] text-slate-300 md:inline">
-                {tenantAdi}
+              ))}
+            </Link>
+
+            {/* Deneme rozeti */}
+            {kalanGun !== null && (
+              <span className="hidden shrink-0 rounded-full border border-nova-500/30 bg-nova-500/10 px-3 py-1 text-[11px] font-medium text-nova-300 sm:inline">
+                Deneme: {kalanGun} gün
               </span>
+            )}
+
+            {/* Bildirim */}
+            <button
+              className="relative shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:text-slate-200"
+              title="Bildirimler — yakında"
+            >
+              🔔
             </button>
 
-            {profilAcik && (
-              <div className="glass absolute right-0 top-11 z-30 w-56 rounded-xl p-2 shadow-xl shadow-black/40">
-                <div className="border-b border-slate-800 px-3 pb-2 pt-1">
-                  <p className="truncate text-sm font-medium text-white">
-                    {kullaniciAdi}
-                  </p>
-                  <p className="truncate text-xs text-slate-500">{email}</p>
-                </div>
-                <Link
-                  href="/kurulum"
-                  onClick={() => setProfilAcik(false)}
-                  className="mt-1 block rounded-lg px-3 py-2 text-[13px] text-slate-300 transition-colors hover:bg-slate-800/60"
-                >
-                  🏪 İşletme bilgileri
-                </Link>
-                <form action={cikisYap}>
-                  <button
-                    type="submit"
-                    className="w-full rounded-lg px-3 py-2 text-left text-[13px] text-red-300 transition-colors hover:bg-red-500/10"
+            {/* Profil menüsü */}
+            <div className="relative shrink-0" ref={profilRef}>
+              <button
+                onClick={() => setProfilAcik((a) => !a)}
+                className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-2 transition-colors hover:bg-slate-800/50"
+              >
+                {logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={logoUrl}
+                    alt=""
+                    className="h-8 w-8 rounded-lg border border-slate-700 object-contain"
+                  />
+                ) : (
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-nova-500/20 text-sm font-semibold text-nova-300">
+                    {tenantAdi.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <span className="hidden max-w-[120px] truncate text-[13px] text-slate-300 md:inline">
+                  {tenantAdi}
+                </span>
+              </button>
+
+              {profilAcik && (
+                <div className="glass absolute right-0 top-11 z-30 w-56 rounded-xl p-2 shadow-xl shadow-black/40">
+                  <div className="border-b border-slate-800 px-3 pb-2 pt-1">
+                    <p className="truncate text-sm font-medium text-white">
+                      {kullaniciAdi}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">{email}</p>
+                  </div>
+                  <Link
+                    href="/kurulum"
+                    onClick={() => setProfilAcik(false)}
+                    className="mt-1 block rounded-lg px-3 py-2 text-[13px] text-slate-300 transition-colors hover:bg-slate-800/60"
                   >
-                    ↩ Çıkış yap
-                  </button>
-                </form>
-              </div>
-            )}
+                    🏪 İşletme bilgileri
+                  </Link>
+                  <form action={cikisYap}>
+                    <button
+                      type="submit"
+                      className="w-full rounded-lg px-3 py-2 text-left text-[13px] text-red-300 transition-colors hover:bg-red-500/10"
+                    >
+                      ↩ Çıkış yap
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 

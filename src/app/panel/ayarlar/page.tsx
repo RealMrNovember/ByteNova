@@ -4,7 +4,9 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { KullaniciYonetimi } from "@/components/panel/KullaniciYonetimi";
 import { EklentilerListesi } from "@/components/panel/EklentilerListesi";
+import { DovizKurlari } from "@/components/panel/DovizKurlari";
 import { yetkiVar } from "@/lib/yetki";
+import { TAKIP_EDILEN_KURLAR } from "@/lib/doviz";
 import type { EklentiAbonelikDurum, EklentiPaketi } from "@/lib/eklenti";
 
 export const metadata: Metadata = { title: "Ayarlar — ByteNova" };
@@ -65,6 +67,33 @@ export default async function AyarlarPage() {
 
   const ayarYonetebilir = yetkiVar(profil?.role, "ayar_yonet");
 
+  // Döviz kurları: TCMB (global) ve dükkân override'ı ayrı ayrı gösterilir
+  const [{ data: paraBirimleri }, { data: tumKurSatirlari }] = await Promise.all([
+    supabase
+      .from("currencies")
+      .select("code, name, symbol")
+      .in("code", TAKIP_EDILEN_KURLAR)
+      .order("sort_order"),
+    supabase
+      .from("exchange_rates")
+      .select("currency_code, tenant_id, rate_to_try"),
+  ]);
+
+  const globalKurHaritasi = new Map<string, number>();
+  const tenantKurHaritasi = new Map<string, number>();
+  for (const r of tumKurSatirlari ?? []) {
+    if (r.tenant_id === null) globalKurHaritasi.set(r.currency_code, Number(r.rate_to_try));
+    else tenantKurHaritasi.set(r.currency_code, Number(r.rate_to_try));
+  }
+
+  const kurSatirlari = (paraBirimleri ?? []).map((p) => ({
+    code: p.code,
+    name: p.name,
+    symbol: p.symbol,
+    globalRate: globalKurHaritasi.get(p.code) ?? null,
+    tenantRate: tenantKurHaritasi.get(p.code) ?? null,
+  }));
+
   return (
     <div className="mx-auto max-w-3xl">
       <h1 className="text-xl font-bold text-white">Ayarlar</h1>
@@ -117,6 +146,13 @@ export default async function AyarlarPage() {
           tenantId={profil?.tenant_id ?? ""}
           kullanicilar={kullanicilar ?? []}
           davetler={davetler ?? []}
+        />
+
+        {/* Döviz kurları — TCMB + dükkân override */}
+        <DovizKurlari
+          tenantId={profil?.tenant_id ?? ""}
+          yetkili={ayarYonetebilir}
+          kurlar={kurSatirlari}
         />
 
         {/* Eklentiler — ücretli modül kataloğu ve tek switch */}

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { efektifMenu } from "@/lib/flags";
+import { etkinKurlar, TAKIP_EDILEN_KURLAR } from "@/lib/doviz";
 import { PanelKabuk } from "@/components/panel/PanelKabuk";
 
 export default async function PanelLayout({
@@ -49,6 +50,11 @@ export default async function PanelLayout({
       : null;
 
   const menu = await efektifMenu(supabase);
+  const kurlar = await etkinKurlar(supabase);
+  const kurListesi = TAKIP_EDILEN_KURLAR.map((kod) => ({
+    kod,
+    kur: kurlar.get(kod)?.rate_to_try ?? null,
+  }));
 
   return (
     <PanelKabuk
@@ -58,6 +64,7 @@ export default async function PanelLayout({
       kullaniciAdi={profil?.full_name ?? "Kullanıcı"}
       email={user.email ?? ""}
       kalanGun={kalanGun}
+      kurlar={kurListesi}
     >
       {children}
     </PanelKabuk>

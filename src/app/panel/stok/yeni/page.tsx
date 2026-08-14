@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
+import { urunFormuIcinDovizVerisi } from "@/lib/doviz";
 import { UrunFormu } from "@/components/urun/UrunFormu";
 
 export const metadata: Metadata = { title: "Yeni Ürün — ByteNova" };
@@ -18,6 +19,8 @@ export default async function YeniUrunPage() {
     .eq("id", user.id)
     .single();
 
+  const { paraBirimleri, kurlar } = await urunFormuIcinDovizVerisi(supabase);
+
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="text-xl font-bold text-white">Yeni Ürün</h1>
@@ -25,7 +28,11 @@ export default async function YeniUrunPage() {
         Ürün kartını oluşturun — alış, satış ve servis kayıtları buna bağlanacak.
       </p>
       <div className="glass mt-6 rounded-xl p-6">
-        <UrunFormu tenantId={profil?.tenant_id ?? ""} />
+        <UrunFormu
+          tenantId={profil?.tenant_id ?? ""}
+          paraBirimleri={paraBirimleri}
+          kurlar={kurlar}
+        />
       </div>
     </div>
   );

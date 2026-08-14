@@ -153,10 +153,16 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] Menüde Stok → İnşada (tam döngü Gün 13/15'te tamamlanınca Aktif olacak)
 - [x] E2E: hızlı kategori oluşturma, ürün kaydı, mükerrer barkod reddi (409), kritik stok filtresi, Ctrl+K araması — tarayıcıda ve DB'de doğrulandı
 
-### Gün 12 — Döviz çekirdeği
-- [ ] `currencies` + `exchange_rates`; TCMB kur çekme (günlük cron) + manuel dükkân kuru
-- [ ] Dövizli alış fiyatı; fiyat kuralı: `satış = maliyet × kur × marj` + yuvarlama
-- [ ] Üst barda canlı kur göstergesi
+### Gün 12 — Döviz çekirdeği ✅
+- [x] `0013_doviz.sql`: `currencies` (TRY/USD/EUR/GBP — tek dövize kilitli değil, genişletilebilir), `exchange_rates` (tenant_id null=global TCMB, dolu=dükkân override), RLS — uygulandı
+- [x] TCMB günlük kur çekme: `/api/cron/kur-guncelle` (fast-xml-parser ile gerçek TCMB XML'i ayrıştırıyor, ForexSelling kuru kullanılıyor) + `vercel.json` cron (her gün 13:00 UTC) + `CRON_SECRET` korumalı
+- [x] Lokalde gerçek TCMB verisiyle test edildi ve seed edildi: USD 47,81 · EUR 55,24 · GBP 64,75
+- [x] Ayarlar → Döviz Kurları: her para birimi için TCMB kuru + manuel "dükkân kuru" override (owner/manager), anlık kaydet/TCMB'ye dön
+- [x] Ürün formu: dövizli alış fiyatı (para birimi seçici) + canlı TL karşılığı önizlemesi + "satış fiyatını otomatik hesapla" (maliyet × kur × marj, yukarı yuvarlanmış)
+- [x] Ürün detayında kâr marjı artık dövizli alışı güncel kurla TL'ye çevirip hesaplıyor (canlı testte bulunan bir hesaplama hatası düzeltildi)
+- [x] Üst barda canlı kur göstergesi (USD/EUR/GBP), tıklanınca Ayarlar'a gidiyor
+- [x] **Header düzeni düzeltmesi** (kullanıcı geri bildirimi): sol/orta/sağ üç bölgeli yerleşim, arama artık `position:absolute` ile header'a göre matematiksel olarak tam ortada (sol/sağ içerik genişliğinden bağımsız), profil grubu tam sağa yaslı — ölçümle doğrulandı (merkez farkı 0px)
+- [x] E2E: gerçek TCMB verisiyle header, manuel override (yalnız ilgili para birimini değiştirdiği doğrulandı), dövizli ürün formu (50 USD × 48,5 TL × %25 marj = 3032 TL), ürün detayında dövizli gösterim ve kâr marjı — tarayıcıda uçtan uca doğrulandı
 
 ### Gün 13 — Stok hareketleri
 - [ ] Hareket altyapısı: her hareket kayda bağlı (alış/satış/servis/iade/düzeltme)
