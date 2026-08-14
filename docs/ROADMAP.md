@@ -164,10 +164,14 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] **Header düzeni düzeltmesi** (kullanıcı geri bildirimi): sol/orta/sağ üç bölgeli yerleşim, arama artık `position:absolute` ile header'a göre matematiksel olarak tam ortada (sol/sağ içerik genişliğinden bağımsız), profil grubu tam sağa yaslı — ölçümle doğrulandı (merkez farkı 0px)
 - [x] E2E: gerçek TCMB verisiyle header, manuel override (yalnız ilgili para birimini değiştirdiği doğrulandı), dövizli ürün formu (50 USD × 48,5 TL × %25 marj = 3032 TL), ürün detayında dövizli gösterim ve kâr marjı — tarayıcıda uçtan uca doğrulandı
 
-### Gün 13 — Stok hareketleri
-- [ ] Hareket altyapısı: her hareket kayda bağlı (alış/satış/servis/iade/düzeltme)
-- [ ] Servis parça kullanımı → rezervasyon → onayla stok çıkışı (Sprint 2'ye bağlanır)
-- [ ] Sökülen parça akıbeti alanı
+### Gün 13 — Stok hareketleri ✅
+- [x] `0014_stok_hareketleri.sql`: `stock_movements` (her hareket kayda bağlı: alış/satış/servis/iade/düzeltme/sayım/açılış) + `stok_hareketi_ekle()` RPC — ürün satırını `FOR UPDATE` ile kilitleyip miktarı günceller ve öncesi/sonrası ile birlikte hareketi kaydeder (eşzamanlı işlemler birbirini ezemez)
+- [x] `service_parts` tablosu: servise parça eklendiğinde önce **rezerve edilir** (stok değişmez), teknisyen/yönetici onayladığında `stok_hareketi_ekle()` çağrılıp stoktan düşer ve satır `consumed` olur (Sprint 2'deki servis akışına bağlandı)
+- [x] Sökülen parça akıbeti alanı: değişim (parça takas) işaretlenirse akıbet (müşteriye teslim / imha / hurda stoğu) + opsiyonel not tutuluyor
+- [x] Ürün detay sayfası: stok hareket geçmişi (ikon, tip, neden, öncesi→sonrası, +/- rozet) + manuel stok düzeltme paneli (`StokDuzeltme`, sebep zorunlu — henüz alış modülü olmadığı için açılış stoğu bu yoldan giriliyor)
+- [x] Servis detay sayfası: "Kullanılan Parçalar" paneli (`ServisParcalari`) — ürün arama, miktar, rezerve et, onayla (stoktan düş), sökülen parça akıbeti formu
+- [x] **Canlı testte bulunan hata**: `stok_hareketi_ekle()` başlangıçta `SECURITY DEFINER` değildi; `stock_movements` tablosunda yalnızca SELECT RLS policy'si var (yazma sadece bu fonksiyon üzerinden olsun diye), fonksiyon `SECURITY DEFINER` olmayınca çağıran rol RLS'e takılıp "Stok güncellenemedi" hatası veriyordu. `0015_stok_hareketi_security_definer.sql` ile `audit_ekle()` ile aynı desene (`SECURITY DEFINER` + `SET search_path`) çekildi
+- [x] E2E: throwaway tenant/kullanıcı/müşteri/cihaz/servis/ürünle tarayıcıda uçtan uca doğrulandı — parça rezerve edilince stok değişmedi (10→10), onaylanınca doğru düştü (10→8, `stock_movements` satırı `reference_type=service_order` ile doğru), değişim + sökülen parça akıbeti formu doğru render edildi, manuel stok düzeltme çalıştı (8→15), ikinci bir throwaway tenant ile çapraz-tenant erişim reddedildi (RPC "ürün bulunamadı veya erişim yok", `service_parts` select 0 satır)
 
 ### Gün 14 — Fiyat yönetimi
 - [ ] "Kur değişti → etkilenen ürünler → toplu güncelle" ekranı
