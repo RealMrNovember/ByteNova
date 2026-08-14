@@ -70,12 +70,16 @@
 - [x] "Hazır olunca haber ver" kaydı (`0003_feature_notify.sql` + RLS, E2E doğrulandı)
 - [x] `Ctrl+K` komut paleti v1 (modül arama + klavye navigasyonu; müşteri/servis araması Sprint 2'de eklenecek)
 
-### Gün 5 — Tenant kurulumu + roller
-- [ ] Kurulum sihirbazı v1: işletme bilgileri, şube, kullanıcı daveti (tümü atlanabilir)
-- [ ] Rol temelleri: Sahip, Yönetici, Kasa, Teknisyen (yetki matrisi altyapısı)
-- [ ] Audit log servisi (kritik işlemlerde otomatik kayıt)
+### Gün 5 — Tenant kurulumu + roller ✅
+- [x] Roller ve yetki matrisi (`src/lib/yetki.ts`): 6 rol, eylem bazlı yetkiler
+- [x] Şubeler tablosu + her tenant'a otomatik "Merkez" şubesi (`0004_roller_davet.sql`)
+- [x] **Kullanıcı daveti:** link tabanlı davet akışı (7 gün geçerli), `/davet/[token]` kabul sayfası, davetlinin boş tenant'ının otomatik temizlenmesi
+- [x] **Ayarlar sayfası aktif:** işletme bilgileri, kullanıcı listesi, rol değiştirme (yalnız sahip), davet yönetimi
+- [x] Audit servisi (`audit_ekle` fonksiyonu): işletme güncelleme, rol değişimi, davet olayları kayıt altında
+- [x] E2E: davet → kabul → tenant taşınma → rol değişimi + izinsiz erişim negatif testleri geçti
+- [ ] Resend SMTP geçişi (DNS doğrulaması bekleniyor — `docs/RESEND_DNS.md`)
 
-**Sprint sonu:** Panel, ürünün tüm vizyonunu menüde gösteriyor; rol sistemi ve audit çalışıyor.
+**Sprint sonu:** ✅ Panel, ürünün tüm vizyonunu menüde gösteriyor; rol sistemi, davet ve audit çalışıyor.
 
 ---
 
@@ -252,7 +256,7 @@ Sıra pilot geri bildirimiyle revize edilir:
 | Sprint | Kapsam | Durum |
 |---|---|---|
 | 0 (Gün 1-2) | Canlıya çık + Auth | ✅ Tamamlandı — site canlıda |
-| 1 (Gün 3-5) | Panel iskeleti + flag + roller | Bekliyor |
+| 1 (Gün 3-5) | Panel iskeleti + flag + roller | ✅ Tamamlandı |
 | 2 (Gün 6-10) | Müşteri + Servis çekirdeği | Bekliyor |
 | 3 (Gün 11-15) | Ürün + Stok + Döviz | Bekliyor |
 | 4 (Gün 16-20) | Satış + Kasa + Gider | Bekliyor |

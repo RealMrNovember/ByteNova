@@ -144,7 +144,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "ayarlar",
     ad: "Ayarlar",
     ikon: "⚙️",
-    durum: "insa",
+    durum: "aktif",
     aciklama:
       "İşletme bilgileri, kullanıcılar ve roller, vergi kuralları, yazıcılar ve entegrasyonlar.",
   },

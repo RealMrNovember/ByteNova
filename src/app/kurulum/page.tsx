@@ -104,6 +104,13 @@ export default function KurulumPage() {
       return;
     }
 
+    await supabase.rpc("audit_ekle", {
+      p_action: "isletme_guncellendi",
+      p_entity: "tenant",
+      p_entity_id: tenantId,
+      p_new: { name: isletmeAdi.trim(), phone: telefon.trim() || null },
+    });
+
     router.push("/panel");
     router.refresh();
   }
