@@ -214,9 +214,12 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] Bu finansal işlemler `servis_yonet` değil `kasa_yonet` (owner/manager/cashier) ile ayrı yetkilendirildi — teknisyen teslimatı tamamlayabilir ama para tahsilatı ayrı bir yetki (`yetki.ts`'e `kasa_yonet` eklendi). Menüde Finans "yakında" → "insa"
 - [x] E2E: iki kasa hesabı (Ana Kasa, Garanti POS) oluşturuldu; bir satış otomatik olarak Ana Kasa'ya 500 TL işlendi ve hareket geçmişinde doğrulandı; bir serviste 300 TL kapora alınıp teslimde 850 TL toplam girilerek Garanti POS'tan 550 TL kalan tahsil edildi — `advance_paid`, `final_cost` ve her iki kasa hareketi DB'de doğru bulundu; yeni RPC'lerde (`kasa_hareketi_ekle`, `servis_tahsilat_al`) ve `cash_accounts` select'inde çapraz-tenant erişim reddi doğrulandı
 
-### Gün 19 — Gider + kasa kapanışı
-- [ ] Gider modülü (kategoriler, hızlı giriş, fiş fotoğrafı, tekrarlayan gider)
-- [ ] Kasa kapanışı (beklenen/fiili, fark + zorunlu açıklama)
+### Gün 19 — Gider + kasa kapanışı ✅
+- [x] Gider modülü: `expenses` (kategori, açıklama, tutar, kasa hesabı, `is_recurring`/`recurrence_day`, fiş fotoğrafı) + `gider_ekle()` RPC — kaydı oluşturur ve `kasa_hareketi_ekle()` ile ilgili hesabı düşer. `/panel/finans/giderler`: hızlı giriş formu (kategori → tutar → kasa → kaydet), fiş fotoğrafı `servis-belgeleri` bucket'ının tenant-scoped politikası yeniden kullanılarak yükleniyor
+- [x] Tekrarlayan gider hatırlatması: her (kategori, açıklama) çiftinin en son kaydı bu ayla karşılaştırılıp "bu ay henüz girilmedi" bandı gösteriliyor — ayrı bir bildirim/cron altyapısı gerekmeden
+- [x] Kasa kapanışı: `cash_closings` + `kasa_kapat()` RPC (beklenen sistem bakiyesi vs fiili sayılan tutar, fark varsa açıklama hem istemci hem sunucu tarafında zorunlu). Fark varsa `kasa_hareketi_ekle()` ile (`'duzeltme'`) hesabın önbelleklenen bakiyesi fiili tutara eşitleniyor — Gün 15'teki sayım (stok) deseniyle birebir aynı mantık. Hesap başına günde bir kapanış (unique constraint), geçmiş kapanışlar listeleniyor
+- [x] **Canlı testte bulunan hata**: `kasa_kapat()` "bugün"ü Postgres sunucusunun (UTC) `current_date`'i ile hesaplıyordu; gece yarısına yakın saatlerde (00:00-03:00 Türkiye saati) kapanış bir önceki güne kaydediliyordu. `Europe/Istanbul` saat dilimi açıkça kullanılacak şekilde düzeltildi (0022) — hem RPC hem sayfadaki "bugün" karşılaştırması
+- [x] E2E: geçen aya ait tekrarlayan bir gider hatırlatma bandında doğru göründü; yeni gider eklenince kasa hesabı doğru düştü; fark olmayan ve fark olan (açıklama zorunlu) kasa kapanışı senaryoları test edildi, düzeltme hareketi ve bakiye eşitlemesi DB'de doğrulandı, saat dilimi düzeltmesi sonrası doğru güne kaydedildiği doğrulandı; yeni RPC'lerde çapraz-tenant erişim reddi doğrulandı
 
 ### Gün 20 — Belge ve iade
 - [ ] Belge tipi seçimi: manuel ÖKC modu ("fiş no: ___") / "sonra kesilecek" kuyruk
