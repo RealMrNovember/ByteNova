@@ -33,21 +33,20 @@
 - [x] Showroom v0: hero, slogan, özellik vitrini, Giriş/Kayıt butonları
 - [x] `/giris`, `/kayit`, `/panel` route iskeletleri
 - [x] Vercel deploy zinciri (GitHub push → production)
-- [ ] Cloudflare DNS: `bytenova.cicibyte.com` → Vercel *(kullanıcı: Cloudflare + Vercel domain ekranı)*
+- [x] Cloudflare DNS: `bytenova.cicibyte.com` → Vercel (doğrulandı, canlı)
 
 ### Gün 2 — Supabase + Auth
 - [x] Supabase env bağlantısı (lokal `.env.local`)
-- [ ] Vercel env değişkenleri *(kullanıcı: Vercel → Settings → Environment Variables)*
-- [x] İlk migration dosyası: `tenants`, `profiles`, `audit_logs`, `feature_flags` (`supabase/migrations/0001_init.sql`)
-- [ ] Migration'ın Supabase'e uygulanması *(kullanıcı: SQL Editor'de çalıştır)*
+- [x] Vercel env değişkenleri
+- [x] İlk migration: `tenants`, `profiles`, `audit_logs`, `feature_flags` (`0001_init.sql` — uygulandı)
 - [x] RLS politikaları + yeni kayıt tetikleyicisi (tenant + owner profili otomatik)
 - [x] Kayıt → e-posta doğrulama → tenant oluşturma → panele düşme; giriş/çıkış/parola sıfırlama
 - [x] Korumalı `/panel` (middleware: oturumsuz erişim → `/giris`, oturumluyken `/giris` → `/panel`)
 
 ### Gün 2+ — Onboarding, Google, WhatsApp (kullanıcı talebi ile öne alındı)
-- [x] Google ile giriş/kayıt butonları (`signInWithOAuth`) — *Google Cloud OAuth client tanımı bekleniyor*
+- [x] Google ile giriş/kayıt (Supabase provider yapılandırıldı) — *consent screen "Testing" modunda: yayınlanana dek yalnız test kullanıcıları*
 - [x] Şirket bilgileri kurulum ekranı `/kurulum` (ad, telefon, adres, logo yükleme) + panel yönlendirmesi
-- [x] `0002_sirket_profili.sql` (tenant alanları + logo storage bucket/politikaları) — *uygulanması bekliyor*
+- [x] `0002_sirket_profili.sql` uygulandı (tenant alanları + logo storage) — E2E testten geçti
 - [x] WhatsApp destek hattı butonu (tüm sayfalarda, +90 535 489 50 50)
 - [x] Showroom oturum-duyarlı başlık (girişliyse "Panele Git")
 - [ ] Özel SMTP (dahili e-posta servisi saatte ~2-3 ile sınırlı — üretim öncesi şart)
@@ -250,7 +249,7 @@ Sıra pilot geri bildirimiyle revize edilir:
 
 | Sprint | Kapsam | Durum |
 |---|---|---|
-| 0 (Gün 1-2) | Canlıya çık + Auth | 🔨 Gün 1 tamamlandı |
+| 0 (Gün 1-2) | Canlıya çık + Auth | ✅ Tamamlandı — site canlıda |
 | 1 (Gün 3-5) | Panel iskeleti + flag + roller | Bekliyor |
 | 2 (Gün 6-10) | Müşteri + Servis çekirdeği | Bekliyor |
 | 3 (Gün 11-15) | Ürün + Stok + Döviz | Bekliyor |
