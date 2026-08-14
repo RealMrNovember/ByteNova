@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { KullaniciYonetimi } from "@/components/panel/KullaniciYonetimi";
 import { EklentilerListesi } from "@/components/panel/EklentilerListesi";
 import { DovizKurlari } from "@/components/panel/DovizKurlari";
+import { StokPolitikasi } from "@/components/panel/StokPolitikasi";
 import { yetkiVar } from "@/lib/yetki";
 import { TAKIP_EDILEN_KURLAR } from "@/lib/doviz";
 import type { EklentiAbonelikDurum, EklentiPaketi } from "@/lib/eklenti";
@@ -35,6 +36,7 @@ export default async function AyarlarPage() {
     phone: string | null;
     address: string | null;
     logo_url: string | null;
+    negative_stock_policy: "uyarili" | "onayli" | "yasak";
   } | null;
 
   // Aynı tenant'taki kullanıcılar (RLS zaten sınırlıyor)
@@ -153,6 +155,13 @@ export default async function AyarlarPage() {
           tenantId={profil?.tenant_id ?? ""}
           yetkili={ayarYonetebilir}
           kurlar={kurSatirlari}
+        />
+
+        {/* Negatif stok politikası */}
+        <StokPolitikasi
+          tenantId={profil?.tenant_id ?? ""}
+          yetkili={ayarYonetebilir}
+          mevcutPolitika={tenant?.negative_stock_policy ?? "uyarili"}
         />
 
         {/* Eklentiler — ücretli modül kataloğu ve tek switch */}

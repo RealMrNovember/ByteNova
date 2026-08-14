@@ -48,6 +48,12 @@ export default async function StokPage({
         </div>
         <div className="flex shrink-0 gap-2">
           <Link
+            href="/panel/stok/sayim"
+            className="rounded-lg border border-slate-700 px-3.5 py-2 text-center text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+          >
+            📋 Sayım
+          </Link>
+          <Link
             href="/panel/stok/fiyat-guncelle"
             className="rounded-lg border border-slate-700 px-3.5 py-2 text-center text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
           >

@@ -125,7 +125,7 @@ export function ServisParcalari({ servisId, tenantId, yetkili, parcalar: ilk }: 
     setNot("");
   }
 
-  async function onayla(parca: Parca) {
+  async function onayla(parca: Parca, negatifOnay = false) {
     setOnaylananId(parca.id);
     setHata(null);
     const supabase = createClient();
@@ -133,18 +133,33 @@ export function ServisParcalari({ servisId, tenantId, yetkili, parcalar: ilk }: 
       data: { user },
     } = await supabase.auth.getUser();
 
-    const { error: stokHata } = await supabase.rpc("stok_hareketi_ekle", {
+    const { data: yeniStok, error: stokHata } = await supabase.rpc("stok_hareketi_ekle", {
       p_product_id: parca.product_id,
       p_degisim: -parca.quantity,
       p_tip: "service_use",
       p_referans_tip: "service_order",
       p_referans_id: servisId,
       p_neden: `Servis parça kullanımı — ${parca.urunAdi}`,
+      p_negatif_onay: negatifOnay,
     });
 
     if (stokHata) {
       setOnaylananId(null);
-      setHata("Stok güncellenemedi.");
+      if (stokHata.message.includes("NEGATIF_STOK_ONAY_GEREKLI")) {
+        if (
+          window.confirm(
+            `${parca.urunAdi}: bu onay stoğu eksiye düşürecek. Yine de onaylıyor musunuz?`
+          )
+        ) {
+          onayla(parca, true);
+        }
+        return;
+      }
+      setHata(
+        stokHata.message.includes("STOK_YETERSIZ")
+          ? "İşletme politikanız negatif stoğa izin vermiyor — önce stok girin."
+          : "Stok güncellenemedi."
+      );
       return;
     }
 
@@ -164,6 +179,9 @@ export function ServisParcalari({ servisId, tenantId, yetkili, parcalar: ilk }: 
       setParcalar((p) =>
         p.map((x) => (x.id === parca.id ? { ...x, status: "consumed" } : x))
       );
+      if (typeof yeniStok === "number" && yeniStok < 0) {
+        setHata(`⚠️ Not: ${parca.urunAdi} stoğu artık eksi (${yeniStok}).`);
+      }
       router.refresh();
     }
   }

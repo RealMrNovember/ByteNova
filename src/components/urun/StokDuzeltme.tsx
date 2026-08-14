@@ -17,10 +17,11 @@ export function StokDuzeltme({ productId, mevcutStok, yetkili }: Props) {
   const [neden, setNeden] = useState("");
   const [yukleniyor, setYukleniyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
+  const [uyari, setUyari] = useState<string | null>(null);
 
   if (!yetkili) return null;
 
-  async function kaydet() {
+  async function kaydet(negatifOnay = false) {
     const hedef = Number(yeniMiktar);
     if (Number.isNaN(hedef)) {
       setHata("Geçerli bir miktar girin.");
@@ -39,18 +40,34 @@ export function StokDuzeltme({ productId, mevcutStok, yetkili }: Props) {
     setYukleniyor(true);
     setHata(null);
     const supabase = createClient();
-    const { error } = await supabase.rpc("stok_hareketi_ekle", {
+    const { data, error } = await supabase.rpc("stok_hareketi_ekle", {
       p_product_id: productId,
       p_degisim: degisim,
       p_tip: "adjustment",
       p_neden: neden.trim(),
+      p_negatif_onay: negatifOnay,
     });
-    setYukleniyor(false);
 
     if (error) {
-      setHata("Düzeltme kaydedilemedi.");
+      setYukleniyor(false);
+      if (error.message.includes("NEGATIF_STOK_ONAY_GEREKLI")) {
+        if (
+          window.confirm(
+            `Bu düzeltme stoğu eksiye düşürecek (${mevcutStok} → ${hedef}). Onaylıyor musunuz?`
+          )
+        ) {
+          kaydet(true);
+        }
+        return;
+      }
+      setHata(
+        error.message.includes("STOK_YETERSIZ")
+          ? "İşletme politikanız negatif stoğa izin vermiyor."
+          : "Düzeltme kaydedilemedi."
+      );
       return;
     }
+    setYukleniyor(false);
 
     await supabase.rpc("audit_ekle", {
       p_action: "stok_duzeltildi",
@@ -60,6 +77,9 @@ export function StokDuzeltme({ productId, mevcutStok, yetkili }: Props) {
       p_new: { stock_quantity: hedef, reason: neden.trim() },
     });
 
+    if (typeof data === "number" && data < 0) {
+      setUyari(`⚠️ Not: bu üründe stok artık eksi (${data}).`);
+    }
     setAcik(false);
     setNeden("");
     router.refresh();
@@ -67,12 +87,19 @@ export function StokDuzeltme({ productId, mevcutStok, yetkili }: Props) {
 
   if (!acik) {
     return (
-      <button
-        onClick={() => setAcik(true)}
-        className="rounded-lg border border-slate-700 px-3.5 py-1.5 text-xs font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
-      >
-        ✏️ Stok Düzelt
-      </button>
+      <div className="relative">
+        <button
+          onClick={() => setAcik(true)}
+          className="rounded-lg border border-slate-700 px-3.5 py-1.5 text-xs font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+        >
+          ✏️ Stok Düzelt
+        </button>
+        {uyari && (
+          <p className="absolute right-0 top-9 z-30 w-56 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-200 shadow-xl">
+            {uyari}
+          </p>
+        )}
+      </div>
     );
   }
 
@@ -98,7 +125,7 @@ export function StokDuzeltme({ productId, mevcutStok, yetkili }: Props) {
       {hata && <p className="mt-2 text-[11px] text-red-300">{hata}</p>}
       <div className="mt-3 flex gap-2">
         <button
-          onClick={kaydet}
+          onClick={() => kaydet()}
           disabled={yukleniyor}
           className="rounded-lg bg-nova-500 px-3.5 py-1.5 text-xs font-semibold text-slate-950 transition hover:bg-nova-400 disabled:opacity-60"
         >
