@@ -36,11 +36,13 @@
 - [ ] Cloudflare DNS: `bytenova.cicibyte.com` → Vercel *(kullanıcı: Cloudflare + Vercel domain ekranı)*
 
 ### Gün 2 — Supabase + Auth
-- [ ] Supabase env bağlantısı (URL + anon key, Vercel env'e ekleme)
-- [ ] Migration altyapısı + ilk migration: `tenants`, `profiles`, `audit_logs`, `feature_flags`
-- [ ] RLS politika şablonu + tenant izolasyon testi
-- [ ] Kayıt → tenant oluşturma → panele düşme; giriş/çıkış/parola sıfırlama
-- [ ] Korumalı `/panel` layout'u (oturumsuz erişim → `/giris`)
+- [x] Supabase env bağlantısı (lokal `.env.local`)
+- [ ] Vercel env değişkenleri *(kullanıcı: Vercel → Settings → Environment Variables)*
+- [x] İlk migration dosyası: `tenants`, `profiles`, `audit_logs`, `feature_flags` (`supabase/migrations/0001_init.sql`)
+- [ ] Migration'ın Supabase'e uygulanması *(kullanıcı: SQL Editor'de çalıştır)*
+- [x] RLS politikaları + yeni kayıt tetikleyicisi (tenant + owner profili otomatik)
+- [x] Kayıt → e-posta doğrulama → tenant oluşturma → panele düşme; giriş/çıkış/parola sıfırlama
+- [x] Korumalı `/panel` (middleware: oturumsuz erişim → `/giris`, oturumluyken `/giris` → `/panel`)
 
 **Sprint sonu:** Kayıt olan kullanıcı kendi tenant'ıyla panele giriyor; site `bytenova.cicibyte.com`'da yayında.
 
