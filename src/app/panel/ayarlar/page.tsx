@@ -3,9 +3,16 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { KullaniciYonetimi } from "@/components/panel/KullaniciYonetimi";
+import { EklentilerListesi } from "@/components/panel/EklentilerListesi";
 import { yetkiVar } from "@/lib/yetki";
+import type { EklentiAbonelikDurum, EklentiPaketi } from "@/lib/eklenti";
 
 export const metadata: Metadata = { title: "Ayarlar — ByteNova" };
+
+const WHATSAPP_NUMARA = "905354895050";
+const DESTEK_MESAJI = encodeURIComponent(
+  "Merhaba, ByteNova hakkında destek almak istiyorum."
+);
 
 export default async function AyarlarPage() {
   const supabase = await createClient();
@@ -40,6 +47,21 @@ export default async function AyarlarPage() {
     .select("id, email, role, token")
     .is("accepted_at", null)
     .order("created_at", { ascending: false });
+
+  // Eklenti kataloğu + tenant'ın mevcut abonelikleri
+  const [{ data: paketler }, { data: abonelikSatirlari }] = await Promise.all([
+    supabase
+      .from("addon_packages")
+      .select("*")
+      .eq("status", "available")
+      .order("sort_order"),
+    supabase.from("tenant_addon_subscriptions").select("addon_key, status"),
+  ]);
+
+  const abonelikler: Record<string, EklentiAbonelikDurum> = {};
+  for (const a of abonelikSatirlari ?? []) {
+    abonelikler[a.addon_key] = a.status as EklentiAbonelikDurum;
+  }
 
   const ayarYonetebilir = yetkiVar(profil?.role, "ayar_yonet");
 
@@ -97,6 +119,13 @@ export default async function AyarlarPage() {
           davetler={davetler ?? []}
         />
 
+        {/* Eklentiler — ücretli modül kataloğu ve tek switch */}
+        <EklentilerListesi
+          yetkili={ayarYonetebilir}
+          paketler={(paketler as EklentiPaketi[]) ?? []}
+          abonelikler={abonelikler}
+        />
+
         {/* Gelecek ayar blokları */}
         <div className="glass rounded-xl p-5 opacity-60">
           <h2 className="text-sm font-semibold text-slate-300">
@@ -105,6 +134,22 @@ export default async function AyarlarPage() {
           <p className="mt-0.5 text-xs text-slate-500">
             Bu ayar blokları ilgili modüllerle birlikte aktifleşecek.
           </p>
+        </div>
+
+        {/* Destek */}
+        <div className="glass rounded-xl p-5">
+          <h2 className="text-sm font-semibold text-white">Destek</h2>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Bir sorunuz mu var? Doğrudan ekibimize ulaşın.
+          </p>
+          <a
+            href={`https://wa.me/${WHATSAPP_NUMARA}?text=${DESTEK_MESAJI}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg border border-emerald-600/40 px-4 py-2 text-sm font-medium text-emerald-300 transition hover:bg-emerald-500/10"
+          >
+            🟢 WhatsApp&apos;tan Yazın
+          </a>
         </div>
       </div>
     </div>

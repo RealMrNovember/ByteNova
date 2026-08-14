@@ -28,6 +28,14 @@ export default async function MusterilerPage({
 
   const { data: musteriler } = await sorgu;
 
+  const { data: crmPlus } = await supabase
+    .from("tenant_addon_subscriptions")
+    .select("status")
+    .eq("addon_key", "crm_plus")
+    .maybeSingle();
+  const crmPlusEtkin =
+    crmPlus?.status === "active" || crmPlus?.status === "trial";
+
   return (
     <div className="mx-auto max-w-5xl">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -125,6 +133,24 @@ export default async function MusterilerPage({
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* CRM Plus üst satış — yalnız aktif değilse gösterilir */}
+      {!crmPlusEtkin && (
+        <Link
+          href="/panel/ayarlar#eklentiler"
+          className="glass mt-4 flex items-center gap-3 rounded-xl border border-purple-500/20 px-4 py-3 text-left transition-colors hover:border-purple-500/40"
+        >
+          <span className="text-lg">👥</span>
+          <span className="flex-1 text-xs text-slate-300">
+            <span className="font-medium text-purple-300">CRM Plus</span> ile
+            müşteri segmentasyonu, toplu kampanya mesajı ve sadakat programı
+            açın.
+          </span>
+          <span className="shrink-0 text-xs font-medium text-purple-300">
+            İncele →
+          </span>
+        </Link>
       )}
     </div>
   );

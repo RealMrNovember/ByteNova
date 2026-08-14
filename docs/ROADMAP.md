@@ -221,8 +221,20 @@
 
 ### Gün 30 — Sertleştirme
 - [ ] Admin davet/rol yönetimi + `platform_audit_logs` + feature flag yönetim ekranı
-- [ ] **Eklenti mimarisi temeli** (bkz. `docs/EKLENTI_MIMARISI.md`): `addon_packages` + `tenant_addon_subscriptions` tabloları, `efektifMenu()`'ye `kilitli` durumu, Konsol'da paket toggle ekranı
+- [x] ~~Eklenti mimarisi temeli~~ → **öne alındı, kullanıcı talebiyle bugün (Gün 8 arası) inşa edildi** (bkz. altta)
+- [ ] Konsol'da paket toggle ekranı (Master Admin tarafı — tenant tarafı zaten çalışıyor)
 - [ ] RLS güvenlik taraması + E2E test paketi (S1, S2, S3) + performans geçişi
+
+### Ek — Eklenti (Add-on) Pazarı v1 ✅ (kullanıcı talebiyle öne alındı)
+- [x] `0008_eklentiler.sql`: `addon_packages`, `tenant_addon_subscriptions`, `addon_usage_events` + RLS + 8 paketlik lansman kataloğu (uygulandı)
+- [x] `ModulDurum`'a `kilitli` durumu; `menu.ts`'e `addonKey` alanı (Teklifler/Sözleşmeler→kurumsal_satis, Belgeler→e_belge, PC Toplama→pc_toplama, Pazaryeri→pazaryeri, Bildirimler→whatsapp_sms)
+- [x] `efektifMenu()`: aktif+addonKey'li modül, abonelik yoksa otomatik `kilitli`
+- [x] Ayarlar → **Eklentiler**: katalog kartları, gerçek "Etkinleştir/Devre Dışı Bırak" switch'i (owner/manager, audit'li, iptalde veri silinmez)
+- [x] `[...modul]` "Çok Yakında" ekranı artık addon'lu modüllerde fiyat + "Eklentiler Sayfasına Git" CTA'sı gösteriyor
+- [x] Müşteriler listesinde CRM Plus üst satış kartı (yalnız abone değilken görünür)
+- [x] WhatsApp balonu panelde gizlendi, Ayarlar → Destek'e taşındı (kullanıcı talebiyle)
+- [x] E2E: paket kataloğu görüntüleme, etkinleştirme (audit'li), rozet güncellemesi, upsell kartının kaybolması doğrulandı
+- [ ] Otomatik ödeme (BillingProvider) + Konsol tarafı toggle — Sprint 11 planında duruyor
 
 **Sprint sonu:** 🎯 **MVP çekirdeği canlıda** — işletmeler kayıt olup çalışabilir, sen konsoldan yönetebilirsin.
 

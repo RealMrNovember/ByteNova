@@ -1,15 +1,17 @@
 // Panel menüsünün tek kaynağı (feature registry).
 // Menü, rozetler ve "Çok Yakında" ekranları buradan beslenir.
-// durum: "aktif" = kullanılabilir, "insa" = bu sprintte yapılıyor, "yakinda" = yol haritasında.
+// durum: "aktif" = kullanılabilir, "insa" = bu sprintte yapılıyor,
+//        "yakinda" = yol haritasında, "kilitli" = inşa edildi ama ücretli eklenti gerektiriyor.
 
-export type ModulDurum = "aktif" | "insa" | "yakinda";
+export type ModulDurum = "aktif" | "insa" | "yakinda" | "kilitli";
 
 export type MenuOgesi = {
   slug: string; // /panel/<slug> — boş string = /panel (Genel Bakış)
   ad: string;
   ikon: string;
   durum: ModulDurum;
-  aciklama: string; // Çok Yakında ekranında gösterilir
+  aciklama: string; // Çok Yakında / eklenti ekranında gösterilir
+  addonKey?: string; // dolu ise bu modül bir addon_packages.key'e bağlıdır (bkz. docs/EKLENTI_MIMARISI.md)
 };
 
 export const PANEL_MENU: MenuOgesi[] = [
@@ -51,6 +53,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     durum: "yakinda",
     aciklama:
       "Reçeteyle (BOM) parçalardan sistem topla: parçalar stoktan düşer, toplama PC kendi seri numarasıyla satışa hazır olur.",
+    addonKey: "pc_toplama",
   },
   {
     slug: "stok",
@@ -91,6 +94,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     durum: "yakinda",
     aciklama:
       "Kurumsal müşterilere PDF teklif hazırla, QR ile onay al, kabul edilince tek tıkla satışa/iş emrine dönüştür.",
+    addonKey: "kurumsal_satis",
   },
   {
     slug: "sozlesmeler",
@@ -99,6 +103,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     durum: "yakinda",
     aciklama:
       "Periyodik bakım sözleşmeleri: SLA takibi, otomatik ziyaret planları ve yenileme hatırlatmaları.",
+    addonKey: "kurumsal_satis",
   },
   {
     slug: "finans",
@@ -115,6 +120,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     durum: "yakinda",
     aciklama:
       "e-Fatura, e-Arşiv, gider pusulası ve servis formları: tüm resmi ve operasyonel belgeler arşivde.",
+    addonKey: "e_belge",
   },
   {
     slug: "raporlar",
@@ -131,6 +137,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     durum: "yakinda",
     aciklama:
       "Trendyol, Hepsiburada ve N11 ile stok senkronu: dükkânda satılan ürün pazaryerinde de düşer.",
+    addonKey: "pazaryeri",
   },
   {
     slug: "bildirimler",
@@ -139,6 +146,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     durum: "yakinda",
     aciklama:
       "Servis hazır, ödeme gecikti, kritik stok: WhatsApp/SMS bildirimleri ve İYS uyumlu kampanya yönetimi.",
+    addonKey: "whatsapp_sms",
   },
   {
     slug: "ayarlar",

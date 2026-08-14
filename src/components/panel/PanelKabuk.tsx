@@ -17,12 +17,22 @@ type Props = {
   children: React.ReactNode;
 };
 
-function Rozet({ durum }: { durum: "insa" | "yakinda" }) {
-  return durum === "insa" ? (
-    <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-300">
-      İnşada
-    </span>
-  ) : (
+function Rozet({ durum }: { durum: "insa" | "yakinda" | "kilitli" }) {
+  if (durum === "insa") {
+    return (
+      <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-300">
+        İnşada
+      </span>
+    );
+  }
+  if (durum === "kilitli") {
+    return (
+      <span className="rounded-full bg-purple-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-purple-300">
+        🔒 Eklenti
+      </span>
+    );
+  }
+  return (
     <span className="rounded-full bg-slate-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
       Yakında
     </span>

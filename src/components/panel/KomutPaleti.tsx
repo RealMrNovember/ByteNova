@@ -39,7 +39,13 @@ export function KomutPaleti({ menuOgeleri, acik, kapat }: Props) {
       ikon: m.ikon,
       baslik: m.ad,
       rozet:
-        m.durum === "insa" ? "inşada" : m.durum === "yakinda" ? "yakında" : undefined,
+        m.durum === "insa"
+          ? "inşada"
+          : m.durum === "kilitli"
+            ? "🔒 eklenti"
+            : m.durum === "yakinda"
+              ? "yakında"
+              : undefined,
       yol: m.slug ? `/panel/${m.slug}` : "/panel",
     }));
   }, [arama, menuOgeleri]);
