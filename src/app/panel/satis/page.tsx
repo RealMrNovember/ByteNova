@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { yetkiVar } from "@/lib/yetki";
-import { ODEME_YONTEMLERI } from "@/lib/satis";
+import { ODEME_YONTEMLERI_KARMA } from "@/lib/satis";
 import { HizliSatis } from "@/components/satis/HizliSatis";
 
 export const metadata: Metadata = { title: "Hızlı Satış — ByteNova" };
@@ -24,11 +24,14 @@ export default async function SatisPage() {
 
   const yetkili = yetkiVar(profil?.role, "satis_yap");
 
-  const { data: sonSatislar } = await supabase
-    .from("sales")
-    .select("id, sale_no, total_amount, payment_method, created_at, customers(name)")
-    .order("created_at", { ascending: false })
-    .limit(8);
+  const [{ data: sonSatislar }, { data: tenant }] = await Promise.all([
+    supabase
+      .from("sales")
+      .select("id, sale_no, total_amount, payment_method, created_at, customers(name)")
+      .order("created_at", { ascending: false })
+      .limit(8),
+    supabase.from("tenants").select("max_installments").eq("id", profil?.tenant_id ?? "").single(),
+  ]);
 
   if (!yetkili) {
     return (
@@ -52,7 +55,7 @@ export default async function SatisPage() {
       </div>
 
       <div className="mt-5">
-        <HizliSatis tenantId={profil?.tenant_id ?? ""} />
+        <HizliSatis tenantId={profil?.tenant_id ?? ""} maxTaksit={tenant?.max_installments ?? 1} />
       </div>
 
       {!!sonSatislar?.length && (
@@ -68,7 +71,7 @@ export default async function SatisPage() {
                   <div className="min-w-0">
                     <p className="font-mono text-sm text-slate-200">{s.sale_no}</p>
                     <p className="text-[11px] text-slate-500">
-                      {musteri?.name ?? "Misafir"} · {ODEME_YONTEMLERI[s.payment_method] ?? s.payment_method} ·{" "}
+                      {musteri?.name ?? "Misafir"} · {ODEME_YONTEMLERI_KARMA[s.payment_method] ?? s.payment_method} ·{" "}
                       {new Date(s.created_at).toLocaleString("tr-TR", {
                         day: "2-digit",
                         month: "2-digit",

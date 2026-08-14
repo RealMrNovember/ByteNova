@@ -6,6 +6,7 @@ import { KullaniciYonetimi } from "@/components/panel/KullaniciYonetimi";
 import { EklentilerListesi } from "@/components/panel/EklentilerListesi";
 import { DovizKurlari } from "@/components/panel/DovizKurlari";
 import { StokPolitikasi } from "@/components/panel/StokPolitikasi";
+import { TaksitAyari } from "@/components/panel/TaksitAyari";
 import { yetkiVar } from "@/lib/yetki";
 import { TAKIP_EDILEN_KURLAR } from "@/lib/doviz";
 import type { EklentiAbonelikDurum, EklentiPaketi } from "@/lib/eklenti";
@@ -37,6 +38,7 @@ export default async function AyarlarPage() {
     address: string | null;
     logo_url: string | null;
     negative_stock_policy: "uyarili" | "onayli" | "yasak";
+    max_installments: number;
   } | null;
 
   // Aynı tenant'taki kullanıcılar (RLS zaten sınırlıyor)
@@ -162,6 +164,13 @@ export default async function AyarlarPage() {
           tenantId={profil?.tenant_id ?? ""}
           yetkili={ayarYonetebilir}
           mevcutPolitika={tenant?.negative_stock_policy ?? "uyarili"}
+        />
+
+        {/* Taksit limiti */}
+        <TaksitAyari
+          tenantId={profil?.tenant_id ?? ""}
+          yetkili={ayarYonetebilir}
+          mevcutLimit={tenant?.max_installments ?? 12}
         />
 
         {/* Eklentiler — ücretli modül kataloğu ve tek switch */}

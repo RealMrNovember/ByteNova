@@ -45,3 +45,21 @@ export function yetkiVar(rol: string | null | undefined, yetki: Yetki): boolean 
   if (!rol) return false;
   return (YETKILER[yetki] as readonly string[]).includes(rol);
 }
+
+// Onaysız uygulanabilecek azami iskonto yüzdesi (rol bazlı).
+// null = sınırsız (owner/manager). Bu sınır satis_olustur() RPC'sinde
+// de aynı değerle tekrarlanır (public.satis_olustur — ISKONTO_ONAY_GEREKLI) —
+// istemci tarafı yalnızca UX içindir, gerçek zorlama sunucu tarafındadır.
+export const ISKONTO_LIMITLERI: Record<Rol, number | null> = {
+  owner: null,
+  manager: null,
+  cashier: 10,
+  technician: 0,
+  warehouse: 0,
+  accounting: 0,
+};
+
+export function iskontoLimiti(rol: string | null | undefined): number | null {
+  if (!rol || !(rol in ISKONTO_LIMITLERI)) return 0;
+  return ISKONTO_LIMITLERI[rol as Rol];
+}

@@ -10,6 +10,11 @@ export const ODEME_YONTEMLERI: Record<string, string> = {
   acik_hesap: "Açık Hesap",
 };
 
+export const ODEME_YONTEMLERI_KARMA: Record<string, string> = {
+  ...ODEME_YONTEMLERI,
+  karma: "Karma",
+};
+
 export function kalemEtiket(tip: string): string {
   return KALEM_TIPLERI[tip]?.etiket ?? tip;
 }
