@@ -200,9 +200,12 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] Menüde Satış modülü "yakında" → "insa" (Gün 16-20 boyunca inşa edilecek — stok modülünün Gün 11-15 deseniyle aynı)
 - [x] E2E: karma kalemli satış (ürün + işçilik) tarayıcıda uçtan uca doğrulandı — stok düşümü, `stock_movements` kaydı, `sale_items` ayrımı; müşterili açık hesap satışı; "yasak" negatif stok politikasıyla aşırı satışın tamamen engellendiği ve kısmi kayıt/sayaç sıçraması oluşmadığı (tek transaction rollback); ikinci bir tenant ile hem RPC hem select üzerinden çapraz-tenant erişim reddi doğrulandı
 
-### Gün 17 — İskonto ve ödeme
-- [ ] Satır + genel iskonto + yuvarlama; rol bazlı iskonto limiti + yönetici PIN onayı
-- [ ] Karma ödeme (nakit+kart) + taksit kaydı (parametrik limit kuralları)
+### Gün 17 — İskonto ve ödeme ✅
+- [x] Satır iskontosu (`sale_items.discount_amount`) + genel iskonto (`sales.discount_amount`) + "Küsuratı Sil" yuvarlama (`sales.rounding_amount`) — `satis_olustur()` RPC'si bunları hesaba katarak subtotal/total'ı yeniden hesaplıyor
+- [x] Rol bazlı iskonto limiti: kasiyer %10, owner/manager sınırsız (`yetki.ts` → `ISKONTO_LIMITLERI`, aynı sınır `satis_olustur()` içinde sunucu tarafında da uygulanıyor — istemci yalnız UX). Limit aşımında RPC `ISKONTO_ONAY_GEREKLI` döner; **PIN yerine yönetici e-posta/parola onayı** (`YoneticiOnayModal` + `dogrulama.ts`) — izole, `persistSession:false` bir istemciyle doğrulanır, kasiyerin oturumu hiç etkilenmez; onaylayanın owner/manager + aynı tenant olduğu RPC içinde bağımsızca tekrar doğrulanıyor
+- [x] Karma ödeme: `sale_payments` tablosu (yöntem + tutar + taksit), tek satıştan birden çok ödeme satırı (örn. 400 nakit + 600 kart). Taksit sayısı tenant'ın `max_installments` ayarına göre sunucuda doğrulanıyor (`TAKSIT_LIMITI_ASILDI`) — Ayarlar'da `TaksitAyari` ile yönetiliyor (parametrik, kural motoru değil — bilinçli v1 kapsamı)
+- [x] `HizliSatis`: satır başına indirim alanı, genel iskonto + yuvarlama butonu, tek ödeme (Gün 16'daki sade 3 butonluk akış varsayılan olarak korundu) / karma ödeme geçişi (satır ekle, taksit seç, kalan gösterge)
+- [x] E2E: kasiyer hesabıyla %20 satır iskontosu → onay isteniyor → yanlış parola reddediliyor → doğru parola ile owner onayı → satış tamamlanıyor ve `created_by` hâlâ kasiyer (oturum hiç değişmedi — izole doğrulama istemcisi doğru çalıştı); genel iskonto + yuvarlama (1000 → 333,33 iskonto → 0,67 yuvarlama → 666 TL) doğru hesaplandı; karma ödeme (400 nakit + 600 kart, 3 taksit) DB'de doğru satırlarla kaydedildi; taksit limiti sunucu tarafında zorlanıyor (azami 3 iken 6 taksit reddedildi); `sale_payments` için çapraz-tenant erişim reddi doğrulandı
 
 ### Gün 18 — Kasa ve tahsilat
 - [ ] Kasa hesapları (nakit, banka, POS cihazları) + hareketler
