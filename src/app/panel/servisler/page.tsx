@@ -1,32 +1,48 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cihazIkon } from "@/lib/cihaz";
-import { durumEtiket, durumSinifi, oncelikBul } from "@/lib/servis";
+import { durumEtiket, durumSinifi, ONCELIKLER, oncelikBul } from "@/lib/servis";
 
 export const metadata: Metadata = { title: "Servisler — ByteNova" };
 
 export default async function ServislerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; oncelik?: string; atanan?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, oncelik, atanan } = await searchParams;
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/giris");
 
   let sorgu = supabase
     .from("service_orders")
     .select(
-      "id, service_no, status, priority, declared_issue, created_at, customers(name), devices(device_type, brand, model)"
+      "id, service_no, status, priority, technician_id, created_at, customers(name), devices(device_type, brand, model)"
     )
     .order("created_at", { ascending: false })
     .limit(50);
 
-  if (q?.trim()) {
-    sorgu = sorgu.ilike("service_no", `%${q.trim()}%`);
-  }
+  if (q?.trim()) sorgu = sorgu.ilike("service_no", `%${q.trim()}%`);
+  if (oncelik) sorgu = sorgu.eq("priority", oncelik);
+  if (atanan === "ben") sorgu = sorgu.eq("technician_id", user.id);
 
   const { data: servisler } = await sorgu;
+
+  // Teknisyen adları için sözlük
+  const { data: kullanicilar } = await supabase
+    .from("profiles")
+    .select("id, full_name");
+  const adSozlugu = new Map(
+    (kullanicilar ?? []).map((k) => [k.id, k.full_name ?? "İsimsiz"])
+  );
+
+  const filtreliMi = !!(q || oncelik || atanan);
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -34,7 +50,7 @@ export default async function ServislerPage({
         <div>
           <h1 className="text-xl font-bold text-white">Servisler</h1>
           <p className="mt-0.5 text-sm text-slate-400">
-            {q ? `"${q}" için sonuçlar` : "Kabulden teslime tüm servis kayıtları"}
+            Kabulden teslime tüm servis kayıtları
           </p>
         </div>
         <Link
@@ -45,7 +61,47 @@ export default async function ServislerPage({
         </Link>
       </div>
 
-      <form method="get" className="mt-5">
+      {/* Filtreler */}
+      <div className="mt-5 flex flex-wrap items-center gap-2">
+        <Link
+          href="/panel/servisler"
+          className={`rounded-lg border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+            !atanan
+              ? "border-nova-500/60 bg-nova-500/10 text-nova-300"
+              : "border-slate-700 text-slate-400 hover:border-slate-500"
+          }`}
+        >
+          Tümü
+        </Link>
+        <Link
+          href="/panel/servisler?atanan=ben"
+          className={`rounded-lg border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+            atanan === "ben"
+              ? "border-nova-500/60 bg-nova-500/10 text-nova-300"
+              : "border-slate-700 text-slate-400 hover:border-slate-500"
+          }`}
+        >
+          🔧 Bana Atananlar
+        </Link>
+        <span className="mx-1 h-4 w-px bg-slate-800" />
+        {ONCELIKLER.map((o) => (
+          <Link
+            key={o.deger}
+            href={`/panel/servisler?${new URLSearchParams({
+              ...(atanan ? { atanan } : {}),
+              oncelik: oncelik === o.deger ? "" : o.deger,
+            }).toString()}`}
+            className={`rounded-full px-2.5 py-1 text-[10px] font-semibold transition-opacity ${o.sinif} ${
+              oncelik === o.deger ? "" : "opacity-50 hover:opacity-100"
+            }`}
+          >
+            {o.etiket}
+          </Link>
+        ))}
+      </div>
+
+      <form method="get" className="mt-3">
+        {atanan && <input type="hidden" name="atanan" value={atanan} />}
         <input
           type="search"
           name="q"
@@ -59,11 +115,11 @@ export default async function ServislerPage({
         <div className="glass mt-6 flex flex-col items-center rounded-2xl px-6 py-14 text-center">
           <span className="text-4xl">🔧</span>
           <h2 className="mt-4 font-semibold text-white">
-            {q ? "Sonuç bulunamadı" : "Henüz servis kaydı yok"}
+            {filtreliMi ? "Sonuç bulunamadı" : "Henüz servis kaydı yok"}
           </h2>
           <p className="mt-1.5 max-w-sm text-sm text-slate-400">
-            {q
-              ? "Farklı bir servis numarası deneyin."
+            {filtreliMi
+              ? "Farklı bir filtre deneyin."
               : "İlk servis kabulünüzü oluşturun — kabulden teslime tüm süreç burada izlenir."}
           </p>
           <Link
@@ -80,6 +136,9 @@ export default async function ServislerPage({
               <tr className="border-b border-slate-800 text-left text-[11px] uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3 font-medium">Servis No</th>
                 <th className="px-4 py-3 font-medium">Müşteri / Cihaz</th>
+                <th className="hidden px-4 py-3 font-medium md:table-cell">
+                  Teknisyen
+                </th>
                 <th className="hidden px-4 py-3 font-medium sm:table-cell">
                   Öncelik
                 </th>
@@ -94,7 +153,7 @@ export default async function ServislerPage({
                   brand: string | null;
                   model: string | null;
                 } | null;
-                const oncelik = oncelikBul(s.priority);
+                const oncelikBilgi = oncelikBul(s.priority);
                 return (
                   <tr
                     key={s.id}
@@ -123,11 +182,16 @@ export default async function ServislerPage({
                         )}
                       </Link>
                     </td>
+                    <td className="hidden px-4 py-2.5 text-xs text-slate-400 md:table-cell">
+                      {s.technician_id
+                        ? (adSozlugu.get(s.technician_id) ?? "—")
+                        : "—"}
+                    </td>
                     <td className="hidden px-4 py-2.5 sm:table-cell">
                       <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${oncelik.sinif}`}
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${oncelikBilgi.sinif}`}
                       >
-                        {oncelik.etiket}
+                        {oncelikBilgi.etiket}
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-right">

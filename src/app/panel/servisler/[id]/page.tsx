@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cihazIkon } from "@/lib/cihaz";
 import { durumEtiket, durumSinifi, oncelikBul } from "@/lib/servis";
+import { yetkiVar } from "@/lib/yetki";
+import { ServisIslemleri } from "@/components/servis/ServisIslemleri";
 
 type Aksesuar = { name: string; delivered: boolean };
 
@@ -14,9 +16,22 @@ export default async function ServisDetayPage({
   const { id } = await params;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/giris");
+
+  const { data: profil } = await supabase
+    .from("profiles")
+    .select("tenant_id, role")
+    .eq("id", user.id)
+    .single();
+
   const { data: s } = await supabase
     .from("service_orders")
-    .select("*, customers(id, name, phone), devices(id, device_type, brand, model, serial_no)")
+    .select(
+      "*, customers(id, name, phone), devices(id, device_type, brand, model, serial_no)"
+    )
     .eq("id", id)
     .maybeSingle();
 
@@ -35,16 +50,41 @@ export default async function ServisDetayPage({
     serial_no: string | null;
   } | null;
 
-  const { data: gecmis } = await supabase
-    .from("service_status_history")
-    .select("from_status, to_status, note, created_at")
-    .eq("service_order_id", id)
-    .order("created_at", { ascending: false });
+  const [
+    { data: gecmis },
+    { data: kullanicilar },
+    { data: notSatirlari },
+  ] = await Promise.all([
+    supabase
+      .from("service_status_history")
+      .select("from_status, to_status, note, created_at")
+      .eq("service_order_id", id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("profiles")
+      .select("id, full_name, role")
+      .order("full_name"),
+    supabase
+      .from("service_notes")
+      .select("id, content, created_at, user_id")
+      .eq("service_order_id", id)
+      .order("created_at", { ascending: false }),
+  ]);
 
+  const adSozlugu = new Map(
+    (kullanicilar ?? []).map((k) => [k.id, k.full_name ?? "İsimsiz"])
+  );
+  const notlar = (notSatirlari ?? []).map((n) => ({
+    ...n,
+    yazan: n.user_id ? (adSozlugu.get(n.user_id) ?? "Silinmiş kullanıcı") : "Sistem",
+  }));
+
+  const teknisyenAdi = s.technician_id ? adSozlugu.get(s.technician_id) : null;
   const checklist = (s.physical_condition ?? {}) as Record<string, boolean>;
   const checklistMaddeleri = Object.entries(checklist);
   const aksesuarlar = (s.accessories ?? []) as Aksesuar[];
   const oncelik = oncelikBul(s.priority);
+  const yetkili = yetkiVar(profil?.role, "servis_yonet");
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -59,7 +99,7 @@ export default async function ServisDetayPage({
       <div className="glass mt-3 rounded-xl p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5">
               <h1 className="font-mono text-lg font-bold text-white">
                 {s.service_no}
               </h1>
@@ -73,6 +113,11 @@ export default async function ServisDetayPage({
               >
                 {oncelik.etiket}
               </span>
+              {teknisyenAdi && (
+                <span className="rounded-full bg-slate-800 px-2.5 py-1 text-[10px] font-medium text-slate-300">
+                  🔧 {teknisyenAdi}
+                </span>
+              )}
             </div>
             <p className="mt-1 text-xs text-slate-500">
               Kabul: {new Date(s.created_at).toLocaleString("tr-TR")}
@@ -166,7 +211,7 @@ export default async function ServisDetayPage({
           </div>
         )}
 
-        {s.consent_accepted && (
+        {s.consent_accepted && s.consent_accepted_at && (
           <p className="mt-4 text-[11px] text-slate-600">
             ✓ Servis kabul koşulları müşteri huzurunda onaylandı —{" "}
             {new Date(s.consent_accepted_at).toLocaleString("tr-TR")}
@@ -174,13 +219,22 @@ export default async function ServisDetayPage({
         )}
       </div>
 
+      {/* Durum, teknisyen atama, teknik notlar */}
+      <div className="mt-4">
+        <ServisIslemleri
+          servisId={s.id}
+          tenantId={s.tenant_id}
+          mevcutDurum={s.status}
+          mevcutTeknisyenId={s.technician_id}
+          kullanicilar={kullanicilar ?? []}
+          notlar={notlar}
+          yetkili={yetkili}
+        />
+      </div>
+
       {/* Durum geçmişi */}
       <div className="glass mt-4 rounded-xl p-5">
         <h2 className="text-sm font-semibold text-white">Durum Geçmişi</h2>
-        <p className="mt-0.5 text-xs text-slate-500">
-          Durum değişim akışı ve teknisyen atama Gün 9&apos;da bu ekrana
-          eklenecek.
-        </p>
         <div className="mt-4 space-y-0">
           {(gecmis ?? []).map((g, i) => (
             <div key={i} className="flex gap-3">

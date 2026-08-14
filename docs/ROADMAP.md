@@ -109,10 +109,14 @@
 - [x] E2E: servis no formatı/sayaç, otomatik durum geçmişi tetikleyicisi, mükerrer no reddi (409), tenant izolasyonu — hepsi API seviyesinde doğrulandı
 - [x] **Tam UI akışı gerçek tarayıcıda uçtan uca test edildi** (S1 senaryosunun kabul kısmı): müşteri seç → cihaz oluştur/seç → checklist işaretle → aksesuar ekle → öncelik seç → onay → `BN-2026-000001` başarıyla oluştu
 
-### Gün 9 — Servis operasyonu
-- [ ] Servis listesi + detay ekranı + durum geçmişi
-- [ ] Teknisyen atama + teknisyen "bana atananlar" ekranı + teknik notlar
-- [ ] Öncelik sistemi (Düşük/Normal/Yüksek/Acil)
+### Gün 9 — Servis operasyonu ✅
+- [x] Servis listesi + detay ekranı + durum geçmişi (Gün 8'de temeli atıldı)
+- [x] `0009_servis_notlari.sql`: teknik notlar (müşteri beyanından ayrı, ekip-içi) — uygulandı
+- [x] `ServisIslemleri`: durum değiştirme (18 durumun tamamı) + teknisyen atama, ikisi de audit'li
+- [x] Servis listesi: "Tümü / Bana Atananlar" filtresi + öncelik filtresi + teknisyen sütunu
+- [x] Servis detayında teknisyen rozeti (🔧 Ad Soyad) başlık kartında görünür
+- [x] E2E (tarayıcı): durum değişikliği → geçmişe otomatik yazıldı, teknisyen atandı → listede/detay'da göründü, teknik not eklendi → DB'de doğrulandı, öncelik filtresi doğru boş/dolu sonuç verdi
+- [x] Ufak düzeltme: `consent_accepted_at` null iken epoch tarihi (1970) gösterme hatası giderildi
 
 ### Gün 10 — Servis çıktıları
 - [ ] Cihaz fotoğrafı yükleme (Supabase Storage, tenant izolasyonlu)
