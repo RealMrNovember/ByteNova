@@ -1,10 +1,14 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { PANEL_MENU } from "@/lib/menu";
+import { createClient } from "@/lib/supabase/server";
+import { efektifMenu } from "@/lib/flags";
 
 export const metadata: Metadata = { title: "Menü — ByteNova" };
 
-export default function MobilMenuPage() {
+export default async function MobilMenuPage() {
+  const supabase = await createClient();
+  const PANEL_MENU = await efektifMenu(supabase);
+
   return (
     <div className="mx-auto max-w-5xl">
       <h1 className="text-xl font-bold text-white">Tüm Modüller</h1>

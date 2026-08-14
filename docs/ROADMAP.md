@@ -65,10 +65,10 @@
 - [x] E2E doğrulandı: giriş → panel kabuğu → yakında ekranı
 - [ ] Çekirdek bileşen kitaplığının ayrıştırılması (Modal, Toast, Table — ihtiyaç oldukça)
 
-### Gün 4 — Feature flag + komut paleti
-- [ ] Feature flag'in DB'ye bağlanması (`feature_flags` tablosu, tenant/plan bazlı override)
-- [ ] "Hazır olunca haber ver" kaydı (feature_notify_requests)
-- [ ] `Ctrl+K` komut paleti v1 (navigasyon + arama)
+### Gün 4 — Feature flag + komut paleti ✅
+- [x] Feature flag DB'ye bağlandı (`efektifMenu`: tenant override > global > kod varsayılanı)
+- [x] "Hazır olunca haber ver" kaydı (`0003_feature_notify.sql` + RLS, E2E doğrulandı)
+- [x] `Ctrl+K` komut paleti v1 (modül arama + klavye navigasyonu; müşteri/servis araması Sprint 2'de eklenecek)
 
 ### Gün 5 — Tenant kurulumu + roller
 - [ ] Kurulum sihirbazı v1: işletme bilgileri, şube, kullanıcı daveti (tümü atlanabilir)

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { efektifMenu } from "@/lib/flags";
 import { PanelKabuk } from "@/components/panel/PanelKabuk";
 
 export default async function PanelLayout({
@@ -47,8 +48,11 @@ export default async function PanelLayout({
         )
       : null;
 
+  const menu = await efektifMenu(supabase);
+
   return (
     <PanelKabuk
+      menuOgeleri={menu}
       tenantAdi={tenant?.name ?? "İşletmem"}
       logoUrl={tenant?.logo_url ?? null}
       kullaniciAdi={profil?.full_name ?? "Kullanıcı"}

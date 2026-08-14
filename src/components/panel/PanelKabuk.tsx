@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { PANEL_MENU } from "@/lib/menu";
+import type { MenuOgesi } from "@/lib/menu";
 import { cikisYap } from "@/app/panel/actions";
+import { KomutPaleti } from "./KomutPaleti";
 
 type Props = {
+  menuOgeleri: MenuOgesi[];
   tenantAdi: string;
   logoUrl: string | null;
   kullaniciAdi: string;
@@ -28,6 +30,7 @@ function Rozet({ durum }: { durum: "insa" | "yakinda" }) {
 }
 
 export function PanelKabuk({
+  menuOgeleri,
   tenantAdi,
   logoUrl,
   kullaniciAdi,
@@ -38,7 +41,20 @@ export function PanelKabuk({
   const pathname = usePathname();
   const [menuDar, setMenuDar] = useState(false);
   const [profilAcik, setProfilAcik] = useState(false);
+  const [paletAcik, setPaletAcik] = useState(false);
   const profilRef = useRef<HTMLDivElement>(null);
+
+  // Ctrl+K / Cmd+K komut paleti
+  useEffect(() => {
+    function kisayol(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletAcik((a) => !a);
+      }
+    }
+    window.addEventListener("keydown", kisayol);
+    return () => window.removeEventListener("keydown", kisayol);
+  }, []);
 
   // Daraltma tercihini hatırla
   useEffect(() => {
@@ -94,7 +110,7 @@ export function PanelKabuk({
         </div>
 
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-3">
-          {PANEL_MENU.map((m) => (
+          {menuOgeleri.map((m) => (
             <Link
               key={m.slug}
               href={m.slug ? `/panel/${m.slug}` : "/panel"}
@@ -134,10 +150,11 @@ export function PanelKabuk({
             ⚡
           </Link>
 
-          {/* Arama (Ctrl+K Gün 4'te) */}
+          {/* Arama / komut paleti */}
           <button
+            onClick={() => setPaletAcik(true)}
             className="hidden flex-1 max-w-md items-center gap-2 rounded-lg border border-slate-800 bg-surface-2 px-3 py-1.5 text-left text-[13px] text-slate-500 transition-colors hover:border-slate-600 sm:flex"
-            title="Global arama — çok yakında"
+            title="Komut paleti (Ctrl+K)"
           >
             <span>🔍</span>
             <span className="flex-1">Ara: müşteri, servis no, seri no…</span>
@@ -227,6 +244,13 @@ export function PanelKabuk({
           {children}
         </main>
       </div>
+
+      {/* ===== Komut paleti ===== */}
+      <KomutPaleti
+        menuOgeleri={menuOgeleri}
+        acik={paletAcik}
+        kapat={() => setPaletAcik(false)}
+      />
 
       {/* ===== Mobil alt sekmeler ===== */}
       <nav className="fixed inset-x-0 bottom-0 z-20 flex border-t border-slate-800/60 bg-surface-2/95 backdrop-blur md:hidden">
