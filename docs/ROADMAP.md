@@ -218,9 +218,17 @@
 - [ ] Muhasebeci paketi v1 (ay sonu Excel export)
 
 ### Gün 28 — Yönetim Konsolu v1a
-- [ ] Konsol yüzeyi + `platform_admins` (ayrı kimlik, zorunlu MFA) + Master Admin seed
-      **→ İlk Master Admin: mozkarci1991@gmail.com (kullanıcı talebi, 14.08.2026)**
-- [ ] Tenant listesi + Tenant 360° + `tenant_events`
+- [x] ~~Konsol yüzeyi + `platform_admins` + Master Admin seed~~ → **öne alındı, kullanıcı talebiyle bugün (Gün 9-10 arası) inşa edildi** (bkz. altta). MFA + tam ayrı kimlik alanı (Bölüm 63) hâlâ bu güne planlı.
+- [x] Tenant listesi (temel) — Tenant 360°'nin ilerisi (`tenant_events`, uzatma/askıya alma) bu güne planlı
+
+### Ek — Konsol v0 ✅ (kullanıcı talebiyle öne alındı)
+- [x] `0010_konsol_v0.sql`: `platform_admins`, `is_platform_admin()`, `admin_tenant_listesi()`/`admin_tenant_detay()` (SECURITY DEFINER RPC'ler — tenant RLS'i gevşetmeden çapraz-tenant erişim) — uygulandı
+- [x] **İlk Master Admin seed edildi: mozkarci1991@gmail.com** (role='master')
+- [x] `/konsol`: ayrı üst bar (tenant menüsü yok), istatistik kartları (toplam işletme, son 7 gün yeni, deneme, aktif), arama, tenant tablosu
+- [x] `/konsol/[id]`: tenant detayı — bilgiler, kullanıcı listesi, müşteri/cihaz/servis sayaçları
+- [x] middleware: `/konsol/**` oturumsuz erişime kapalı; layout `is_platform_admin()` kontrolüyle yetkisiz tenant kullanıcısını `/panel`'e geri yönlendiriyor
+- [x] E2E: normal tenant kullanıcısı RPC'yi çağıramıyor (400 "yetkisiz") doğrulandı
+- [ ] MFA zorunluluğu + tam ayrı kimlik alanı, uzatma/askıya alma/plan değişikliği, `tenant_events`, feature flag yönetim ekranı — Gün 28-30 planında duruyor (bu adım o işi tekrarlamayacak şekilde kuruldu)
 
 ### Gün 29 — Yönetim Konsolu v1b
 - [ ] Abonelik modeli: Trial → Aktif → Ödeme Bekliyor → Askıda yaşam döngüsü + trial otomasyonu

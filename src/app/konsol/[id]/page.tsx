@@ -1,0 +1,150 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { tenantDurum } from "@/lib/konsol";
+import { ROL_ADLARI, type Rol } from "@/lib/yetki";
+
+type Detay = {
+  tenant: {
+    id: string;
+    name: string;
+    status: string;
+    phone: string | null;
+    address: string | null;
+    trial_ends_at: string | null;
+    created_at: string;
+    onboarding_completed: boolean;
+  };
+  kullanicilar: {
+    id: string;
+    full_name: string | null;
+    role: string;
+    email: string;
+    created_at: string;
+  }[];
+  musteri_sayisi: number;
+  cihaz_sayisi: number;
+  servis_sayisi: number;
+};
+
+export default async function KonsolTenantDetayPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc("admin_tenant_detay", {
+    p_tenant_id: id,
+  });
+
+  if (error || !data || !(data as Detay).tenant) notFound();
+
+  const { tenant, kullanicilar, musteri_sayisi, cihaz_sayisi, servis_sayisi } =
+    data as Detay;
+  const durum = tenantDurum(tenant.status);
+
+  const ozet = [
+    { etiket: "Kullanıcı", deger: kullanicilar.length, ikon: "👥" },
+    { etiket: "Müşteri", deger: musteri_sayisi, ikon: "🙋" },
+    { etiket: "Cihaz", deger: cihaz_sayisi, ikon: "💻" },
+    { etiket: "Servis", deger: servis_sayisi, ikon: "🔧" },
+  ];
+
+  return (
+    <div className="mx-auto max-w-3xl">
+      <Link
+        href="/konsol"
+        className="text-xs text-slate-500 transition-colors hover:text-purple-300"
+      >
+        ← Tenant Listesi
+      </Link>
+
+      <div className="glass mt-3 rounded-xl p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-lg font-bold text-white">🏢 {tenant.name}</h1>
+              <span
+                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${durum.sinif}`}
+              >
+                {durum.etiket}
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              Kayıt: {new Date(tenant.created_at).toLocaleString("tr-TR")}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-lg border border-slate-800 bg-surface px-3.5 py-3">
+            <p className="text-[10px] uppercase tracking-wide text-slate-500">
+              Telefon
+            </p>
+            <p className="mt-0.5 text-sm text-slate-200">
+              {tenant.phone ?? "—"}
+            </p>
+          </div>
+          <div className="rounded-lg border border-slate-800 bg-surface px-3.5 py-3">
+            <p className="text-[10px] uppercase tracking-wide text-slate-500">
+              Adres
+            </p>
+            <p className="mt-0.5 text-sm text-slate-200">
+              {tenant.address ?? "—"}
+            </p>
+          </div>
+        </div>
+
+        {tenant.status === "trial" && tenant.trial_ends_at && (
+          <p className="mt-4 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3.5 py-2.5 text-xs text-amber-300">
+            ⏳ Deneme süresi bitiş:{" "}
+            {new Date(tenant.trial_ends_at).toLocaleDateString("tr-TR")}
+          </p>
+        )}
+
+        <div className="mt-4 grid grid-cols-4 gap-2">
+          {ozet.map((o) => (
+            <div
+              key={o.etiket}
+              className="rounded-lg border border-slate-800 bg-surface px-3 py-2.5 text-center"
+            >
+              <p className="text-lg font-bold text-purple-300">{o.deger}</p>
+              <p className="text-[10px] uppercase tracking-wide text-slate-500">
+                {o.etiket}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="glass mt-4 rounded-xl p-5">
+        <h2 className="text-sm font-semibold text-white">Kullanıcılar</h2>
+        <div className="mt-3 divide-y divide-slate-800/60">
+          {kullanicilar.map((k) => (
+            <div key={k.id} className="flex items-center gap-3 py-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/15 text-xs font-semibold text-purple-300">
+                {(k.full_name ?? "?").charAt(0).toUpperCase()}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm text-slate-200">
+                  {k.full_name ?? "İsimsiz"}
+                </p>
+                <p className="truncate text-xs text-slate-500">{k.email}</p>
+              </div>
+              <span className="shrink-0 rounded-full bg-slate-800 px-2.5 py-1 text-[10px] text-slate-400">
+                {ROL_ADLARI[k.role as Rol] ?? k.role}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p className="mt-4 text-center text-[11px] text-slate-600">
+        Uzatma / askıya alma / plan değişikliği işlemleri Gün 29&apos;da bu
+        ekrana eklenecek.
+      </p>
+    </div>
+  );
+}
