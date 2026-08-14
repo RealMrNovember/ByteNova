@@ -24,13 +24,14 @@ export default async function SatisPage() {
 
   const yetkili = yetkiVar(profil?.role, "satis_yap");
 
-  const [{ data: sonSatislar }, { data: tenant }] = await Promise.all([
+  const [{ data: sonSatislar }, { data: tenant }, { data: kasaHesaplari }] = await Promise.all([
     supabase
       .from("sales")
       .select("id, sale_no, total_amount, payment_method, created_at, customers(name)")
       .order("created_at", { ascending: false })
       .limit(8),
     supabase.from("tenants").select("max_installments").eq("id", profil?.tenant_id ?? "").single(),
+    supabase.from("cash_accounts").select("id, name, type").eq("is_active", true).order("created_at"),
   ]);
 
   if (!yetkili) {
@@ -54,8 +55,22 @@ export default async function SatisPage() {
         </p>
       </div>
 
+      {!kasaHesaplari?.length && (
+        <div className="mt-5 rounded-lg border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-xs text-amber-200">
+          ⚠️ Henüz bir kasa hesabı yok. Nakit/kart tahsilatlarını kaydedebilmek için{" "}
+          <Link href="/panel/finans" className="underline hover:text-amber-100">
+            Finans&apos;tan bir hesap oluşturun
+          </Link>
+          .
+        </div>
+      )}
+
       <div className="mt-5">
-        <HizliSatis tenantId={profil?.tenant_id ?? ""} maxTaksit={tenant?.max_installments ?? 1} />
+        <HizliSatis
+          tenantId={profil?.tenant_id ?? ""}
+          maxTaksit={tenant?.max_installments ?? 1}
+          kasaHesaplari={kasaHesaplari ?? []}
+        />
       </div>
 
       {!!sonSatislar?.length && (

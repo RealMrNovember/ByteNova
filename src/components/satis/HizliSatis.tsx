@@ -10,6 +10,7 @@ import { YoneticiOnayModal } from "./YoneticiOnayModal";
 type Urun = { id: string; name: string; sku: string | null; stock_quantity: number; sale_price: number | null };
 type Musteri = { id: string; name: string; phone: string | null };
 type OdemeYontemi = "nakit" | "kart" | "acik_hesap";
+type KasaHesabi = { id: string; name: string; type: "nakit" | "banka" | "pos" };
 
 type Kalem = {
   localId: string;
@@ -26,12 +27,21 @@ type OdemeSatiri = {
   method: OdemeYontemi;
   amount: string;
   installments: number;
+  accountId: string;
 };
 
 type Props = {
   tenantId: string;
   maxTaksit: number;
+  kasaHesaplari: KasaHesabi[];
 };
+
+// nakit ödeme → nakit tipi hesaplar; kart ödeme → POS/banka hesapları
+function uygunHesaplar(kasaHesaplari: KasaHesabi[], method: OdemeYontemi): KasaHesabi[] {
+  if (method === "acik_hesap") return [];
+  if (method === "nakit") return kasaHesaplari.filter((h) => h.type === "nakit");
+  return kasaHesaplari.filter((h) => h.type === "pos" || h.type === "banka");
+}
 
 let sayac = 0;
 function yeniLocalId() {
@@ -41,7 +51,7 @@ function yeniLocalId() {
 
 const paraFmt = (n: number) => n.toLocaleString("tr-TR", { maximumFractionDigits: 2 });
 
-export function HizliSatis({ tenantId, maxTaksit }: Props) {
+export function HizliSatis({ tenantId, maxTaksit, kasaHesaplari }: Props) {
   const router = useRouter();
   const [arama, setArama] = useState("");
   const [sonuclar, setSonuclar] = useState<Urun[]>([]);
@@ -64,7 +74,16 @@ export function HizliSatis({ tenantId, maxTaksit }: Props) {
   const [odemeMod, setOdemeMod] = useState<"tek" | "karma">("tek");
   const [tekYontem, setTekYontem] = useState<OdemeYontemi>("nakit");
   const [tekTaksit, setTekTaksit] = useState(1);
+  const [tekHesapId, setTekHesapId] = useState("");
   const [karmaSatirlar, setKarmaSatirlar] = useState<OdemeSatiri[]>([]);
+
+  // Ödeme yöntemi değişince uygun tek hesap varsa otomatik seç
+  useEffect(() => {
+    const uygun = uygunHesaplar(kasaHesaplari, tekYontem);
+    if (uygun.length === 1) setTekHesapId(uygun[0].id);
+    else if (!uygun.some((h) => h.id === tekHesapId)) setTekHesapId("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tekYontem, kasaHesaplari]);
 
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
@@ -179,7 +198,13 @@ export function HizliSatis({ tenantId, maxTaksit }: Props) {
   // ---------- Ödeme satırları ----------
   function karmaModunaGec() {
     setKarmaSatirlar([
-      { localId: yeniLocalId(), method: tekYontem, amount: toplam.toFixed(2), installments: tekYontem === "kart" ? tekTaksit : 1 },
+      {
+        localId: yeniLocalId(),
+        method: tekYontem,
+        amount: toplam.toFixed(2),
+        installments: tekYontem === "kart" ? tekTaksit : 1,
+        accountId: tekHesapId,
+      },
     ]);
     setOdemeMod("karma");
   }
@@ -190,9 +215,16 @@ export function HizliSatis({ tenantId, maxTaksit }: Props) {
   function karmaSatirEkle() {
     const simdikiToplam = karmaSatirlar.reduce((t, o) => t + (Number(o.amount) || 0), 0);
     const kalan = Math.max(toplam - simdikiToplam, 0);
+    const uygun = uygunHesaplar(kasaHesaplari, "nakit");
     setKarmaSatirlar((s) => [
       ...s,
-      { localId: yeniLocalId(), method: "nakit", amount: kalan ? kalan.toFixed(2) : "", installments: 1 },
+      {
+        localId: yeniLocalId(),
+        method: "nakit",
+        amount: kalan ? kalan.toFixed(2) : "",
+        installments: 1,
+        accountId: uygun.length === 1 ? uygun[0].id : "",
+      },
     ]);
   }
   function karmaSatirSil(localId: string) {
@@ -202,22 +234,40 @@ export function HizliSatis({ tenantId, maxTaksit }: Props) {
     setKarmaSatirlar((s) => s.map((x) => (x.localId === localId ? { ...x, ...degisiklik } : x)));
   }
 
+  function karmaYontemDegistir(localId: string, method: OdemeYontemi) {
+    const uygun = uygunHesaplar(kasaHesaplari, method);
+    karmaSatirGuncelle(localId, { method, accountId: uygun.length === 1 ? uygun[0].id : "" });
+  }
+
   const karmaOdenen = karmaSatirlar.reduce((t, o) => t + (Number(o.amount) || 0), 0);
   const karmaKalan = toplam - karmaOdenen;
 
-  function odemelerYuku(): { method: string; amount: number; installments: number | null }[] {
+  function odemelerYuku(): { method: string; amount: number; installments: number | null; account_id: string | null }[] {
     if (odemeMod === "tek") {
-      return [{ method: tekYontem, amount: toplam, installments: tekYontem === "kart" && tekTaksit > 1 ? tekTaksit : null }];
+      return [
+        {
+          method: tekYontem,
+          amount: toplam,
+          installments: tekYontem === "kart" && tekTaksit > 1 ? tekTaksit : null,
+          account_id: tekYontem === "acik_hesap" ? null : tekHesapId || null,
+        },
+      ];
     }
     return karmaSatirlar.map((o) => ({
       method: o.method,
       amount: Number(o.amount) || 0,
       installments: o.method === "kart" && o.installments > 1 ? o.installments : null,
+      account_id: o.method === "acik_hesap" ? null : o.accountId || null,
     }));
   }
 
   const acikHesapSeciliMi =
     odemeMod === "tek" ? tekYontem === "acik_hesap" : karmaSatirlar.some((o) => o.method === "acik_hesap");
+
+  const hesapEksikMi =
+    odemeMod === "tek"
+      ? tekYontem !== "acik_hesap" && !tekHesapId
+      : karmaSatirlar.some((o) => o.method !== "acik_hesap" && !o.accountId);
 
   async function satisiTamamla(negatifOnay = false, iskontoOnaylayanId: string | null = null) {
     if (!kalemler.length) return;
@@ -262,6 +312,10 @@ export function HizliSatis({ tenantId, maxTaksit }: Props) {
       }
       if (error.message.includes("TAKSIT_LIMITI_ASILDI")) {
         setHata(`Azami taksit sayısı ${maxTaksit}.`);
+        return;
+      }
+      if (error.message.includes("kasa hesabı seçilmeli")) {
+        setHata("Her ödeme satırı için bir kasa hesabı seçin.");
         return;
       }
       setHata("Satış tamamlanamadı.");
@@ -505,6 +559,24 @@ export function HizliSatis({ tenantId, maxTaksit }: Props) {
                 </button>
               ))}
             </div>
+            {tekYontem !== "acik_hesap" && (
+              <div className="mt-2">
+                <select
+                  value={tekHesapId}
+                  onChange={(e) => setTekHesapId(e.target.value)}
+                  className={`w-full rounded-lg border bg-surface px-2.5 py-1.5 text-xs outline-none focus:border-nova-500 ${
+                    tekHesapId ? "border-slate-700 text-slate-200" : "border-amber-500/40 text-amber-300"
+                  }`}
+                >
+                  <option value="">Kasa hesabı seçin…</option>
+                  {uygunHesaplar(kasaHesaplari, tekYontem).map((h) => (
+                    <option key={h.id} value={h.id}>
+                      {h.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             {tekYontem === "kart" && (
               <div className="mt-2 flex items-center gap-2">
                 <label className="text-xs text-slate-500">Taksit</label>
@@ -532,47 +604,65 @@ export function HizliSatis({ tenantId, maxTaksit }: Props) {
         ) : (
           <div className="mt-1.5 space-y-2">
             {karmaSatirlar.map((o) => (
-              <div key={o.localId} className="flex items-center gap-1.5">
-                <select
-                  value={o.method}
-                  onChange={(e) => karmaSatirGuncelle(o.localId, { method: e.target.value as OdemeYontemi })}
-                  className="w-24 shrink-0 rounded-lg border border-slate-700 bg-surface px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-nova-500"
-                >
-                  {(Object.keys(ODEME_YONTEMLERI) as OdemeYontemi[]).map((k) => (
-                    <option key={k} value={k} disabled={k === "acik_hesap" && !musteri}>
-                      {ODEME_YONTEMLERI[k]}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={o.amount}
-                  onChange={(e) => karmaSatirGuncelle(o.localId, { amount: e.target.value })}
-                  placeholder="Tutar"
-                  className="flex-1 rounded-lg border border-slate-700 bg-surface px-2 py-1.5 text-right text-xs text-slate-200 outline-none placeholder:text-slate-600 focus:border-nova-500"
-                />
-                {o.method === "kart" && (
+              <div key={o.localId} className="space-y-1.5 rounded-lg border border-slate-800 bg-surface-2 p-2">
+                <div className="flex items-center gap-1.5">
                   <select
-                    value={o.installments}
-                    onChange={(e) => karmaSatirGuncelle(o.localId, { installments: Number(e.target.value) })}
-                    className="w-16 shrink-0 rounded-lg border border-slate-700 bg-surface px-1.5 py-1.5 text-xs text-slate-200 outline-none focus:border-nova-500"
+                    value={o.method}
+                    onChange={(e) => karmaYontemDegistir(o.localId, e.target.value as OdemeYontemi)}
+                    className="w-24 shrink-0 rounded-lg border border-slate-700 bg-surface px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-nova-500"
                   >
-                    {Array.from({ length: maxTaksit }, (_, i) => i + 1).map((n) => (
-                      <option key={n} value={n}>
-                        {n}x
+                    {(Object.keys(ODEME_YONTEMLERI) as OdemeYontemi[]).map((k) => (
+                      <option key={k} value={k} disabled={k === "acik_hesap" && !musteri}>
+                        {ODEME_YONTEMLERI[k]}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={o.amount}
+                    onChange={(e) => karmaSatirGuncelle(o.localId, { amount: e.target.value })}
+                    placeholder="Tutar"
+                    className="flex-1 rounded-lg border border-slate-700 bg-surface px-2 py-1.5 text-right text-xs text-slate-200 outline-none placeholder:text-slate-600 focus:border-nova-500"
+                  />
+                  {o.method === "kart" && (
+                    <select
+                      value={o.installments}
+                      onChange={(e) => karmaSatirGuncelle(o.localId, { installments: Number(e.target.value) })}
+                      className="w-16 shrink-0 rounded-lg border border-slate-700 bg-surface px-1.5 py-1.5 text-xs text-slate-200 outline-none focus:border-nova-500"
+                    >
+                      {Array.from({ length: maxTaksit }, (_, i) => i + 1).map((n) => (
+                        <option key={n} value={n}>
+                          {n}x
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => karmaSatirSil(o.localId)}
+                    className="shrink-0 text-slate-500 hover:text-red-300"
+                  >
+                    ✕
+                  </button>
+                </div>
+                {o.method !== "acik_hesap" && (
+                  <select
+                    value={o.accountId}
+                    onChange={(e) => karmaSatirGuncelle(o.localId, { accountId: e.target.value })}
+                    className={`w-full rounded-lg border bg-surface px-2 py-1.5 text-xs outline-none focus:border-nova-500 ${
+                      o.accountId ? "border-slate-700 text-slate-200" : "border-amber-500/40 text-amber-300"
+                    }`}
+                  >
+                    <option value="">Kasa hesabı seçin…</option>
+                    {uygunHesaplar(kasaHesaplari, o.method).map((h) => (
+                      <option key={h.id} value={h.id}>
+                        {h.name}
                       </option>
                     ))}
                   </select>
                 )}
-                <button
-                  type="button"
-                  onClick={() => karmaSatirSil(o.localId)}
-                  className="shrink-0 text-slate-500 hover:text-red-300"
-                >
-                  ✕
-                </button>
               </div>
             ))}
             <div className="flex items-center justify-between text-[11px]">
@@ -628,7 +718,8 @@ export function HizliSatis({ tenantId, maxTaksit }: Props) {
             !kalemler.length ||
             gonderiliyor ||
             (odemeMod === "karma" && (Math.abs(karmaKalan) > 0.01 || karmaSatirlar.length === 0)) ||
-            (acikHesapSeciliMi && !musteri)
+            (acikHesapSeciliMi && !musteri) ||
+            hesapEksikMi
           }
           className="mt-4 w-full rounded-lg bg-nova-500 py-3 text-sm font-bold text-slate-950 transition hover:bg-nova-400 disabled:cursor-not-allowed disabled:opacity-50"
         >

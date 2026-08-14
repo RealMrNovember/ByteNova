@@ -7,13 +7,26 @@ import { servisPdfOlustur } from "@/lib/pdf/olustur";
 export async function teslimiTamamla(
   servisId: string,
   aksesuarlar: { name: string; delivered: boolean }[],
-  teslimNotu: string
+  teslimNotu: string,
+  finalTutar: number | null,
+  kalanTahsilat: number | null,
+  kasaHesapId: string | null
 ) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { ok: false as const };
+
+  if (kalanTahsilat && kalanTahsilat > 0 && kasaHesapId) {
+    const { error: tahsilatHatasi } = await supabase.rpc("servis_tahsilat_al", {
+      p_service_id: servisId,
+      p_tutar: kalanTahsilat,
+      p_tip: "kapanis",
+      p_account_id: kasaHesapId,
+    });
+    if (tahsilatHatasi) return { ok: false as const };
+  }
 
   const { error } = await supabase
     .from("service_orders")
@@ -22,6 +35,7 @@ export async function teslimiTamamla(
       delivered_at: new Date().toISOString(),
       accessories: aksesuarlar,
       delivery_note: teslimNotu.trim() || null,
+      final_cost: finalTutar,
     })
     .eq("id", servisId);
 
@@ -31,6 +45,7 @@ export async function teslimiTamamla(
     p_action: "servis_teslim_edildi",
     p_entity: "service_order",
     p_entity_id: servisId,
+    p_new: { final_cost: finalTutar, kalan_tahsilat: kalanTahsilat },
   });
 
   revalidatePath(`/panel/servisler/${servisId}`);

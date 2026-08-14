@@ -109,7 +109,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "finans",
     ad: "Finans",
     ikon: "💰",
-    durum: "yakinda",
+    durum: "insa",
     aciklama:
       "Kasa, tahsilat, giderler, çek/senet portföyü, POS mutabakatı ve kur yönetimi tek çatı altında.",
   },

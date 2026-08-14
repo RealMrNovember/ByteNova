@@ -9,6 +9,7 @@ import { FotografYukle } from "@/components/servis/FotografYukle";
 import { TeslimPaneli } from "@/components/servis/TeslimPaneli";
 import { BelgeIslemleri } from "@/components/servis/BelgeIslemleri";
 import { ServisParcalari } from "@/components/servis/ServisParcalari";
+import { ServisTahsilat } from "@/components/servis/ServisTahsilat";
 
 type Aksesuar = { name: string; delivered: boolean };
 
@@ -61,6 +62,7 @@ export default async function ServisDetayPage({
     { data: fotograflar },
     { data: whatsappAbonelik },
     { data: parcalarHam },
+    { data: kasaHesaplari },
   ] = await Promise.all([
     supabase
       .from("service_status_history")
@@ -93,6 +95,7 @@ export default async function ServisDetayPage({
       )
       .eq("service_order_id", id)
       .order("reserved_at", { ascending: false }),
+    supabase.from("cash_accounts").select("id, name, type").eq("is_active", true).order("created_at"),
   ]);
 
   const adSozlugu = new Map(
@@ -109,6 +112,7 @@ export default async function ServisDetayPage({
   const aksesuarlar = (s.accessories ?? []) as Aksesuar[];
   const oncelik = oncelikBul(s.priority);
   const yetkili = yetkiVar(profil?.role, "servis_yonet");
+  const kasaYetkili = yetkiVar(profil?.role, "kasa_yonet");
   const teslimEdildiMi = s.status === "teslim_edildi";
   const whatsappEklentisiAktif =
     whatsappAbonelik?.status === "active" || whatsappAbonelik?.status === "trial";
@@ -291,6 +295,16 @@ export default async function ServisDetayPage({
         />
       </div>
 
+      {/* Kapora / avans */}
+      <div className="mt-4">
+        <ServisTahsilat
+          servisId={s.id}
+          avansAlinan={s.advance_paid ?? 0}
+          yetkili={kasaYetkili}
+          kasaHesaplari={kasaHesaplari ?? []}
+        />
+      </div>
+
       {/* Teslim işlemi */}
       <div className="mt-4">
         <TeslimPaneli
@@ -299,6 +313,10 @@ export default async function ServisDetayPage({
           teslimEdildiMi={teslimEdildiMi}
           teslimTarihi={s.delivered_at}
           yetkili={yetkili}
+          kasaYetkili={kasaYetkili}
+          mevcutFinalTutar={s.final_cost}
+          avansAlinan={s.advance_paid ?? 0}
+          kasaHesaplari={kasaHesaplari ?? []}
         />
       </div>
 
