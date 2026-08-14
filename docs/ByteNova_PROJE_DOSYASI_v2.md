@@ -140,6 +140,7 @@ ByteNova tek çekirdek, üç yüzeyden oluşur:
 | **Showroom** (bytenova.com) | Halka açık tanıtım sitesi; Giriş / Kayıt kapısı | Statik + hızlı, SEO dostu, etkileyici |
 | **Web Paneli** (app.bytenova.com) | Tam işletme yönetim paneli, her cihazdan | SPA/PWA, tam responsive |
 | **Masaüstü Uygulaması** (Windows öncelikli) | Online + Offline çalışma, yazıcı/barkod/ÖKC donanım köprüsü | Web çekirdeğini saran native istemci + lokal veritabanı |
+| **Yönetim Konsolu** (yalnız CiciByte ekibi) | Tüm tenant'ların, aboneliklerin, ödemelerin ve platform admin'lerinin yönetimi | Ayrı kimlik alanı, ayrı yüzey — bkz. Bölüm VIII |
 
 İleride: **Mobil Teknisyen** uygulaması (P2).
 
@@ -861,7 +862,7 @@ Teknoloji seçimi değişebilir; korunması gereken şey modüler mimari ve sağ
 
 ## 42. MODÜLER BACKEND — DOMAIN SINIRLARI
 
-`Identity` `Tenant` `Customer` `Device` `Service` `Inventory` `Assembly(BOM)` `Sales` `Purchasing` `Finance` `Cheques` `Expenses` `Contracts` `Documents(e-belge)` `TaxRules` `Currency` `Notifications(+İYS)` `Reporting` `Integrations` `Marketplace` `Audit` `Sync`
+`Identity` `Tenant` `Customer` `Device` `Service` `Inventory` `Assembly(BOM)` `Sales` `Purchasing` `Finance` `Cheques` `Expenses` `Contracts` `Documents(e-belge)` `TaxRules` `Currency` `Notifications(+İYS)` `Reporting` `Integrations` `Marketplace` `Audit` `Sync` `Platform(Konsol)` `Billing(Abonelik)`
 
 Modüller birbirine doğrudan tablo manipülasyonu ile değil domain servisleri/event'ler üzerinden bağlanır.
 
@@ -880,6 +881,10 @@ v1.0 listesine ek olarak (kalın olanlar v2.0'da eklendi):
 tenants, branches, users, roles, permissions, **feature_flags**, customers, customer_addresses, customer_contacts, **customer_consents (İYS)**, devices, device_types, device_serials, products, product_categories, product_barcodes, **product_compatibilities**, **price_lists, price_list_items, price_rules**, **currencies, exchange_rates**, warehouses, warehouse_locations, suppliers, **supplier_feeds**, purchases, purchase_items, purchase_payments, **purchase_requests**, sales, sale_items, sale_payments, **sale_discounts**, **installment_rules**, **license_keys**, stock_movements, stock_reservations, **assembly_recipes (BOM), assembly_orders, disassembly_orders**, service_orders, service_status_history, service_items, service_parts, **service_removed_parts**, **service_advances**, **external_service_jobs**, **shipments (kargo)**, **unclaimed_device_logs**, service_approvals, service_tests, service_photos, service_documents, **consent_templates (beyan şablonları)**, quotes, quote_items, **maintenance_contracts, contract_visits**, cash_accounts, cash_transactions, **expenses, expense_categories**, **cheques, cheque_events**, **pos_devices, pos_settlements**, accounts_receivable, accounts_payable, **fx_difference_records**, warranties, invoices, **expense_vouchers (gider pusulası)**, e_document_records, **fiscal_receipts (ÖKC)**, **tax_rules (versiyonlu)**, **commission_rules, commission_records (prim)**, notifications, **message_templates**, audit_logs, **sync_queue, sync_conflicts**, settings
 
 İlişkilerde tenant sınırı her sorguda enforce edilir.
+
+**Platform (konsol) seviyesi varlıklar** — tenant şemasından ayrı yaşar:
+
+**platform_admins, platform_roles, platform_audit_logs, subscription_plans, subscriptions, subscription_invoices, subscription_payments, manual_payment_records, billing_providers, coupons, announcements, impersonation_logs, tenant_events, feature_notify_requests**
 
 ## 45. ÇOKLU TENANT VE ŞUBE MİMARİSİ
 
@@ -1022,6 +1027,7 @@ Ayın 1'inde sahibi "Muhasebeci Paketi" butonuna basar: 214 satış belgesi, 38 
 - Kasa + tahsilat + **gider modülü** + kasa kapanışı
 - Temel raporlar (satış, kârlılık — maliyet yöntemi seçimli, servis, stok) + muhasebeci paketi (Excel)
 - Rol/yetki + audit log + yedekleme
+- **Yönetim Konsolu v1:** tenant listesi ve detayı, abonelik/deneme takibi, askıya alma / uzatma, manuel ödeme (havale-dekont) onayı, platform admin ve rol yönetimi, feature flag yönetimi (Bölüm VIII)
 - Excel import (müşteri, ürün, stok, tedarikçi, cihaz, cari bakiye, açık servis)
 - **Masaüstü uygulaması: online mod + lokal yazdırma + offline satış/servis kabul (çekirdek senaryolar)**
 - Feature flag altyapısı + tüm menünün "Çok Yakında" rozetli görünümü
@@ -1041,6 +1047,7 @@ Ayın 1'inde sahibi "Muhasebeci Paketi" butonuna basar: 214 satış belgesi, 38 
 - Uyumluluk matrisi; dijital ürün (lisans key)
 - Offline kapsam genişletme + çakışma yönetim ekranı
 - QR/barkod donanım akışları (etiket yazıcı, raf barkodu)
+- **Otomatik abonelik tahsilatı:** `BillingProvider` soyutlaması + ilk ödeme sağlayıcısı (iyzico/PayTR), dunning (otomatik hatırlatma/yeniden deneme), abonelik faturaları, impersonation (destek oturumu)
 
 ### P2 (4-12 ay)
 
@@ -1149,6 +1156,91 @@ Bu iki zincir kopmadığı sürece ByteNova güçlü bir üründür.
 - Kurulumda kullanıcı onlarca zorunlu alanla boğulmaz.
 - İlk sürümde gereksiz ERP karmaşıklığı oluşturulmaz — ama menüde ürünün tüm vizyonu görünür ("Çok Yakında" sistemi).
 - Offline modda resmi belge numarası üretilmez.
+
+---
+
+# BÖLÜM VIII — PLATFORM YÖNETİM KONSOLU (MASTER ADMIN)
+
+ByteNova'nın müşterisi işletmelerdir; işletmelerin ByteNova'sını yöneten ise **CiciByte ekibidir**. Bu bölüm, platform sahibinin (Master Admin) tüm tenant'ları, abonelikleri, ödemeleri ve platform ekibini yönettiği ayrı yüzeyi tanımlar.
+
+## 63. KONSEPT — İKİ AYRI DÜNYA
+
+| | Tenant Paneli | Yönetim Konsolu |
+|---|---|---|
+| Kullanıcı | İşletme sahibi ve personeli | CiciByte ekibi (Master Admin + platform admin'leri) |
+| Adres | `bytenova.cicibyte.com` | `konsol.bytenova.cicibyte.com` (veya `/konsol` ayrık route grubu) |
+| Kimlik havuzu | `users` (tenant'a bağlı) | `platform_admins` (tamamen ayrı tablo ve oturum) |
+| Veri kapsamı | Yalnız kendi tenant'ı (RLS) | Tüm tenant'lar — kontrollü, gerekçeli, loglu erişim |
+
+Kurallar:
+
+- Konsol hesabıyla tenant paneline, tenant hesabıyla konsola **girilemez**; iki kimlik havuzu birbirinden habersizdir.
+- Konsolda **MFA zorunludur**; opsiyonel IP allowlist tanımlanabilir.
+- Konsolun tenant verisine her erişimi (görüntüleme dahil kritik olanlar) `platform_audit_logs`'a gerekçesiyle yazılır — bu KVKK erişim kaydı yükümlülüğünün de karşılığıdır.
+- Konsol, tenant RLS'ini yalnız sunucu tarafı kontrollü servis rolüyle aşar; istemciye asla ham çapraz-tenant sorgu açılmaz.
+
+## 64. PLATFORM ROLLERİ
+
+| Rol | Yetki |
+|---|---|
+| **Master Admin** (kurucu) | Her şey. Platform admin ekleme/çıkarma ve rol atama **yalnız bu roldedir**. Tehlikeli işlemler (tenant kapatma/silme, plan fiyat değişikliği) bu rol + yeniden doğrulama ister. |
+| **Platform Yöneticisi** | Tenant yönetimi + abonelik işlemleri (uzatma, askıya alma). Admin ekleyemez. |
+| **Finans** | Abonelik, ödeme, fatura ve dekont onay ekranları. Tenant iş verisine (müşteri/servis) erişemez. |
+| **Destek** | Tenant detayına salt-okunur erişim + impersonation talebi. Finansal işlem yapamaz. |
+| **Analist** | Yalnız platform metrikleri; tenant detayı göremez. |
+
+- Sistemde her an **en az bir Master Admin** bulunur; son Master Admin silinemez ve düşürülemez.
+- Yeni admin daveti e-posta ile gider; hesap MFA kurulmadan aktifleşmez.
+- Kritik işlemler için **dört-göz opsiyonu**: tenant silme ve toplu işlemler ikinci bir admin onayına bağlanabilir.
+
+## 65. TENANT (MÜŞTERİ İŞLETME) YÖNETİMİ
+
+### Liste ve arama
+Tüm tenant'lar; plan, abonelik durumu, son aktivite, kullanıcı sayısı, MRR katkısı, kayıt tarihi ile filtrelenebilir. "Deneme süresi bu hafta bitenler", "ödemesi gecikenler", "30 gündür pasifler" hazır segmentlerdir.
+
+### Tenant detayı (Tenant 360°)
+- Profil: işletme bilgileri, şubeler, kullanıcılar, faaliyet türü
+- Kullanım metrikleri: aylık servis/satış hacmi, depolama kullanımı, son giriş
+- Abonelik geçmişi ve ödemeler
+- Feature flag override'ları (bu tenant'a özel modül aç/kapat — beta programları buradan yürür)
+- Destek notları ve olay zaman çizelgesi (`tenant_events`: plan değişti, askıya alındı, uzatıldı, dekont onaylandı…)
+
+### İşlemler
+- **Deneme/abonelik uzat (extend):** gün/ay seçimi + zorunlu sebep + audit
+- **Askıya al (pending):** tenant paneli salt-okunur moda düşer; kullanıcılar girişte "Aboneliğiniz beklemede" ekranı ve ödeme yolunu görür. **Veri asla silinmez.**
+- **Yeniden etkinleştir:** tek tık, anında
+- **Plan değiştir:** yükseltme anında, düşürme dönem sonunda (oranlama kuralları tanımlı)
+- **Kapat:** 30 gün salt-okunur + tam veri export imkânı → sonrasında saklama politikasına göre anonimleştirme/silme (KVKK uyumlu, geri dönüşü olmayan adım dört-göz onaylı)
+- **Tenant verisi export:** işletme kendi verisinin sahibidir; konsoldan da talep üzerine üretilebilir
+
+## 66. ABONELİK VE ÖDEME YÖNETİMİ
+
+### Abonelik yaşam döngüsü
+
+`Trial → Aktif → Ödeme Bekliyor (past_due) → Askıda (pending) → İptal/Kapalı`
+
+- Süre dolan trial otomatik `Ödeme Bekliyor`a düşer; tanımlı ek süre (grace period) sonunda otomatik askıya alınır. Her geçiş `tenant_events`e ve bildirimlere yansır.
+- Planlar (Starter/Professional/Business/Enterprise), dönemler (aylık/yıllık), kullanıcı-şube limitleri ve fiyatlar **konsoldan tanımlanır**; fiyat değişiklikleri versiyonlanır, mevcut abonelikleri yalnız yenilemede etkiler.
+
+### Ödeme altyapısı
+
+- **`BillingProvider` soyutlaması:** iyzico, PayTR, craftgate, Stripe adaptörleri. Kart saklama ve tahsilat sağlayıcı tarafındadır; ByteNova kart verisi tutmaz (PCI kapsamı dışında kalınır).
+- **Türkiye gerçeği — havale/EFT ile ödeme:** Otomatik kart tahsilatı istemeyen işletme için manuel akış: müşteri dekont yükler → Finans rolü onaylar → abonelik otomatik uzar. Onay/red audit'lidir.
+- **Dunning:** Başarısız kart tahsilatında otomatik yeniden deneme takvimi + e-posta/SMS hatırlatmaları → sonuçsuz kalırsa otomatik pending.
+- **Abonelik faturaları:** ByteNova'nın kestiği hizmet faturalarının kaydı (kendi e-Arşiv süreci, entegratör üzerinden) ve müşteriye otomatik iletimi.
+- Kupon/promosyon kodları ve iş ortağı (bayi) komisyon modeli (P2).
+
+## 67. DESTEK ARAÇLARI VE IMPERSONATION
+
+- **Impersonation ("müşteri gözünden gör"):** Destek, tenant panelini açabilir. Kurallar: aktif destek talebi kaydı veya tenant sahibinin uygulama içi onayı → süre sınırlı oturum → ekranda kalıcı "Destek oturumu" şeridi → tüm eylemler `impersonation_logs`'a yazılır → impersonation'da finansal işlem ve veri export **yapılamaz**.
+- **Duyuru sistemi:** Sürüm notları, bakım pencereleri ve kampanyalar tenant panellerine banner/bildirim olarak konsoldan yayınlanır; plan/şube/sürüm bazlı hedefleme yapılabilir.
+- **Sağlık izleme:** Tenant bazlı hata oranı, masaüstü senkron kuyruk birikimi, entegrasyon (e-belge/SMS) arıza durumları konsol panosunda görünür — müşteri aramadan önce sorunu görmek hedeftir.
+
+## 68. PLATFORM METRİKLERİ, FLAG YÖNETİMİ VE GÜVENLİK
+
+- **Metrikler:** MRR/ARR, aktif tenant, trial→ücretli dönüşüm oranı, churn, günlük aktif kullanıcı, modül kullanım oranları ve **"Çok Yakında" haber ver talepleri** (ürün önceliklendirmesi doğrudan buradan beslenir).
+- **Feature flag yönetimi:** Bölüm 9'daki flag sisteminin kaynağı konsoldur. Modül lansmanları (`coming_soon → beta → on`) tenant, plan veya yüzde bazlı kademeli açılışla buradan yönetilir.
+- **Güvenlik:** Ayrı kimlik havuzu + zorunlu MFA + opsiyonel IP kısıtı; tüm konsol eylemleri audit; tenant verisine erişimde gerekçe alanı; erişim kayıtları saklama politikasıyla korunur. Konsol kodu tenant paneliyle aynı repoda ama ayrık modüldedir; konsol build'i tenant bundle'ına sızmaz.
 
 ---
 

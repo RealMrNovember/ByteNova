@@ -87,6 +87,28 @@
 
 ---
 
+## FAZ 3B — Platform Yönetim Konsolu v1 🛡 (Master Admin)
+
+> Referans: Proje dosyası Bölüm VIII. Konsol, tenant panelinden ayrı kimlik havuzu ve ayrı yüzeydir.
+
+- [ ] Konsol yüzeyi (`konsol.` subdomain / ayrık route grubu) + `platform_admins` kimlik havuzu + **zorunlu MFA**
+- [ ] Master Admin seed hesabı + admin davet/rol yönetimi (Master, Yönetici, Finans, Destek, Analist)
+- [ ] "Son Master Admin silinemez" ve rol bazlı yetki kuralları
+- [ ] Tenant listesi: arama/filtre + hazır segmentler (deneme bitenler, ödemesi gecikenler, pasifler)
+- [ ] Tenant 360° detay: profil, kullanım metrikleri, olay zaman çizelgesi (`tenant_events`), destek notları
+- [ ] Abonelik modeli: `subscription_plans`, `subscriptions` — Trial → Aktif → Ödeme Bekliyor → Askıda → İptal yaşam döngüsü
+- [ ] Trial bitiş otomasyonu: süre dolunca otomatik `Ödeme Bekliyor` + grace period sonrası otomatik askı
+- [ ] İşlemler: **deneme/abonelik uzatma (sebep zorunlu), askıya alma, yeniden etkinleştirme, plan değiştirme**
+- [ ] Askıdaki tenant deneyimi: panel salt-okunur + "Aboneliğiniz beklemede" ekranı (veri asla silinmez)
+- [ ] **Manuel ödeme akışı (havale/EFT):** dekont yükleme → Finans onayı → otomatik uzatma
+- [ ] Feature flag yönetim ekranı (tenant/plan bazlı `coming_soon → beta → on` geçişleri)
+- [ ] `platform_audit_logs`: tüm konsol eylemleri gerekçeli loglanır
+- [ ] Duyuru sistemi v1 (tenant panellerine banner)
+
+**Bitti sayılır:** Deneme süresi biten tenant otomatik beklemeye düşüyor; konsoldan tek tıkla uzatılıp yeniden aktifleştirilebiliyor; dekont onayı aboneliği uzatıyor; ikinci bir admin davet edilip rolle çalışabiliyor.
+
+---
+
 ## FAZ 4 — Müşteri ve Cihaz 👥
 
 - [ ] Müşteri CRUD: bireysel/kurumsal, vergi bilgileri (TCKN/VKN), çoklu telefon/adres
@@ -217,6 +239,7 @@ Sıralama pilot geri bildirimine göre revize edilir; öngörülen öncelik:
 7. **Bakım sözleşmeleri:** SLA, periyodik ziyaret görevleri, otomatik faturalama
 8. **Prim modülü** + gelişmiş raporlar
 9. **Uyumluluk matrisi**, ÖKC entegrasyonu (ilk marka), vergi kural motoru tam sürüm (tevkifat/özel matrah)
+10. **Otomatik abonelik tahsilatı:** `BillingProvider` soyutlaması + ilk sağlayıcı (iyzico/PayTR), dunning, abonelik faturaları, impersonation (destek oturumu), platform metrik panosu (MRR, churn, dönüşüm)
 
 ---
 
@@ -251,6 +274,7 @@ Her faz tamamlandığında bu dosyada işaretlenir ve `docs/CHANGELOG.md`'ye öz
 | 1 — Tasarım sistemi + panel | Bekliyor | — |
 | 2 — Showroom | Bekliyor | — |
 | 3 — Kimlik/RBAC | Bekliyor | — |
+| 3B — Yönetim Konsolu v1 | Bekliyor | — |
 | 4 — Müşteri/Cihaz | Bekliyor | — |
 | 5 — Ürün/Stok/Döviz | Bekliyor | — |
 | 6 — Servis | Bekliyor | — |

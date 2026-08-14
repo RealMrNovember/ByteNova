@@ -65,6 +65,7 @@ Tek çekirdek, üç yüzey:
 | 🌐 **Showroom** | Halka açık tanıtım sitesi; Giriş / Kayıt kapısı ve etkileşimli demo |
 | 📊 **Web Paneli** | Tam responsive işletme yönetim paneli — telefonda, tablette, masaüstünde |
 | 💻 **Masaüstü Uygulaması** | **Online + Offline** çalışma, yazıcı / barkod / ÖKC donanım köprüsü |
+| 🛡 **Yönetim Konsolu** | Platform ekibi için tenant, abonelik ve ödeme yönetimi (dahili) |
 
 - İnternet kesildiğinde satış ve servis kabul **kesintisiz devam eder**; bağlantı gelince güvenli senkronizasyon yapılır.
 - Panele girildiğinde ürünün **tüm vizyonu menüde görünür** — henüz tamamlanmamış modüller zarif `YAKINDA` rozetleriyle yerini alır.
