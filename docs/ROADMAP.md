@@ -57,16 +57,18 @@
 
 ## SPRINT 1 — PANEL İSKELETİ (Gün 3-5)
 
-### Gün 3 — Tasarım sistemi + panel yerleşimi
-- [ ] Çekirdek bileşenler: Button, Input, Select, Badge, Card, Modal, Toast, Table (kompakt/rahat), Skeleton, EmptyState
-- [ ] Panel layout: daraltılabilir sol menü + üst bar (arama, `+ Yeni`, bildirim, profil)
-- [ ] Mobil: alt sekme çubuğu, menü hamburger dönüşümü
+### Gün 3 — Tasarım sistemi + panel yerleşimi ✅
+- [x] Panel layout: daraltılabilir sol menü (tercih hatırlanır) + üst bar (arama placeholder, kur göstergesi, deneme rozeti, bildirim, profil menüsü + çıkış)
+- [x] Mobil: alt sekme çubuğu (Genel/Servisler/Satış/Menü) + tüm modüller ekranı
+- [x] **Tam menü ağacı** tek kaynaktan (`src/lib/menu.ts` registry) — 17 modül, İnşada/Yakında rozetli
+- [x] "Çok Yakında" tanıtım ekranları (modül başına açıklama, catch-all route)
+- [x] E2E doğrulandı: giriş → panel kabuğu → yakında ekranı
+- [ ] Çekirdek bileşen kitaplığının ayrıştırılması (Modal, Toast, Table — ihtiyaç oldukça)
 
-### Gün 4 — Tam menü + feature flag + YAKINDA
-- [ ] Feature flag altyapısı (`off | coming_soon | beta | on`, tenant/plan bazlı)
-- [ ] **Tam menü ağacı** (proje dosyası Bölüm 10) — tüm modüller görünür, pasifler `YAKINDA` rozetli
-- [ ] "Çok Yakında" tanıtım ekranı + "Hazır olunca haber ver" kaydı
-- [ ] `Ctrl+K` komut paleti v1 (navigasyon)
+### Gün 4 — Feature flag + komut paleti
+- [ ] Feature flag'in DB'ye bağlanması (`feature_flags` tablosu, tenant/plan bazlı override)
+- [ ] "Hazır olunca haber ver" kaydı (feature_notify_requests)
+- [ ] `Ctrl+K` komut paleti v1 (navigasyon + arama)
 
 ### Gün 5 — Tenant kurulumu + roller
 - [ ] Kurulum sihirbazı v1: işletme bilgileri, şube, kullanıcı daveti (tümü atlanabilir)
