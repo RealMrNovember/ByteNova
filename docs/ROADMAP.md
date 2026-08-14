@@ -193,9 +193,12 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 
 ## SPRINT 4 — SATIŞ VE KASA (Gün 16-20)
 
-### Gün 16 — Hızlı satış
-- [ ] POS ekranı: `F2 → ara/barkod → miktar → ödeme` klavye akışı
-- [ ] Karma kalemler (ürün + işçilik + hizmet)
+### Gün 16 — Hızlı satış ✅
+- [x] POS ekranı (`/panel/satis`, `HizliSatis.tsx`): `F2 → ara/barkod → miktar → ödeme` klavye akışı. F2 panelin her yerinden POS'a gider (Ctrl+K ile aynı global kısayol deseni, `PanelKabuk.tsx`), POS ekranındaki arama kutusuna da F2 ile odaklanılır
+- [x] Karma kalemler: tek satışta ürün + işçilik + hizmet bir arada (`sale_items.item_type`). `sales`/`sale_items`/`sale_no_counters` şeması + `satis_olustur()` RPC'si — satış başlığı, kalemler ve ürün kalemlerinin stok düşümü tek atomik işlemdir (`stok_hareketi_ekle()` üzerinden, bu sayede Gün 15'in negatif stok politikası satışlarda da otomatik geçerli). Satış no formatı `SN-YYYY-NNNNNN` (`service_no` ile aynı sayaç deseni)
+- [x] Müşteri seç (opsiyonel, `MusteriSec`'in hızlı-kayıt akışı yeniden kullanıldı), ödeme yöntemi (nakit/kart/açık hesap — açık hesap müşteri gerektirir), sayfada son satışlar listesi
+- [x] Menüde Satış modülü "yakında" → "insa" (Gün 16-20 boyunca inşa edilecek — stok modülünün Gün 11-15 deseniyle aynı)
+- [x] E2E: karma kalemli satış (ürün + işçilik) tarayıcıda uçtan uca doğrulandı — stok düşümü, `stock_movements` kaydı, `sale_items` ayrımı; müşterili açık hesap satışı; "yasak" negatif stok politikasıyla aşırı satışın tamamen engellendiği ve kısmi kayıt/sayaç sıçraması oluşmadığı (tek transaction rollback); ikinci bir tenant ile hem RPC hem select üzerinden çapraz-tenant erişim reddi doğrulandı
 
 ### Gün 17 — İskonto ve ödeme
 - [ ] Satır + genel iskonto + yuvarlama; rol bazlı iskonto limiti + yönetici PIN onayı
