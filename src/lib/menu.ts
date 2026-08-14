@@ -34,9 +34,9 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "satis",
     ad: "Satış",
     ikon: "🧾",
-    durum: "yakinda",
+    durum: "insa",
     aciklama:
-      "Klavye öncelikli hızlı satış: barkod okut, iskonto uygula, karma ödeme al, fiş/fatura seç. Gün 16-20'de aktif.",
+      "Klavye öncelikli hızlı satış: barkod okut, iskonto uygula, karma ödeme al, fiş/fatura seç. Gün 16-20'de tamamlanacak.",
   },
   {
     slug: "alis",

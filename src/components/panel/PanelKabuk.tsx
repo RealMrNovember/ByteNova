@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { MenuOgesi } from "@/lib/menu";
 import { cikisYap } from "@/app/panel/actions";
@@ -51,22 +51,28 @@ export function PanelKabuk({
   children,
 }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
   const [menuDar, setMenuDar] = useState(false);
   const [profilAcik, setProfilAcik] = useState(false);
   const [paletAcik, setPaletAcik] = useState(false);
   const profilRef = useRef<HTMLDivElement>(null);
 
-  // Ctrl+K / Cmd+K komut paleti
+  // Ctrl+K / Cmd+K komut paleti, F2 hızlı satış
   useEffect(() => {
     function kisayol(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setPaletAcik((a) => !a);
+        return;
+      }
+      if (e.key === "F2" && pathname !== "/panel/satis") {
+        e.preventDefault();
+        router.push("/panel/satis");
       }
     }
     window.addEventListener("keydown", kisayol);
     return () => window.removeEventListener("keydown", kisayol);
-  }, []);
+  }, [pathname, router]);
 
   // Daraltma tercihini hatırla
   useEffect(() => {
