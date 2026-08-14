@@ -72,7 +72,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "musteriler",
     ad: "Müşteriler",
     ikon: "👥",
-    durum: "insa",
+    durum: "aktif",
     aciklama:
       "Müşteri 360°: satın alımlar, servisler, cihazlar, bakiye ve iletişim geçmişi tek ekranda.",
   },

@@ -85,9 +85,13 @@
 
 ## SPRINT 2 — İLK GERÇEK DEĞER: MÜŞTERİ + SERVİS (Gün 6-10)
 
-### Gün 6 — Müşteri
-- [ ] Müşteri CRUD (bireysel/kurumsal, vergi alanları, çoklu telefon) + arama
-- [ ] Müşteri 360° iskeleti + iletişim geçmişi kaydı
+### Gün 6 — Müşteri ✅
+- [x] Müşteri CRUD (bireysel/kurumsal, vergi alanları, çoklu telefon, notlar) + `0005_musteriler.sql`
+- [x] Liste + ad/telefon/e-posta araması; hard delete yok (pasifleştirme)
+- [x] Müşteri 360° iskeleti (özet şerit; servis/satış/cihaz modülleri geldikçe dolacak) + WhatsApp hızlı erişim
+- [x] İletişim geçmişi (not/arama/WhatsApp/SMS/e-posta kayıtları)
+- [x] E2E: CRUD + arama + olay + **tenant izolasyonu negatif testleri** geçti
+- [x] Menüde Müşteriler AKTİF
 
 ### Gün 7 — Cihaz
 - [ ] Cihaz varlığı: tür, marka/model, seri no (tenant içi benzersiz), IMEI/MAC
