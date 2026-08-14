@@ -173,10 +173,12 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] **Canlı testte bulunan hata**: `stok_hareketi_ekle()` başlangıçta `SECURITY DEFINER` değildi; `stock_movements` tablosunda yalnızca SELECT RLS policy'si var (yazma sadece bu fonksiyon üzerinden olsun diye), fonksiyon `SECURITY DEFINER` olmayınca çağıran rol RLS'e takılıp "Stok güncellenemedi" hatası veriyordu. `0015_stok_hareketi_security_definer.sql` ile `audit_ekle()` ile aynı desene (`SECURITY DEFINER` + `SET search_path`) çekildi
 - [x] E2E: throwaway tenant/kullanıcı/müşteri/cihaz/servis/ürünle tarayıcıda uçtan uca doğrulandı — parça rezerve edilince stok değişmedi (10→10), onaylanınca doğru düştü (10→8, `stock_movements` satırı `reference_type=service_order` ile doğru), değişim + sökülen parça akıbeti formu doğru render edildi, manuel stok düzeltme çalıştı (8→15), ikinci bir throwaway tenant ile çapraz-tenant erişim reddedildi (RPC "ürün bulunamadı veya erişim yok", `service_parts` select 0 satır)
 
-### Gün 14 — Fiyat yönetimi
-- [ ] "Kur değişti → etkilenen ürünler → toplu güncelle" ekranı
-- [ ] Fiyat listeleri: perakende (KDV dahil) / toptan (hariç)
-- [ ] Kritik stok uyarıları
+### Gün 14 — Fiyat yönetimi ✅
+- [x] `/panel/stok/fiyat-guncelle`: dövizli maliyetle otomatik fiyatlanan (`auto_price=true`, `purchase_currency != TRY`) ürünler güncel kurla yeniden hesaplanır, mevcut fiyattan farklı olanlar işaretli listelenir, seçilenler tek tıkla toplu güncellenir (`audit_ekle` ile `toplu_fiyat_guncellendi` kaydı). Ayarlar → Döviz Kurları'ndan doğrudan bağlantı eklendi
+- [x] Fiyat listeleri: Stok listesinde **Perakende (KDV dahil) / Toptan (KDV hariç)** görünüm anahtarı (`kdvHaricFiyat()` — `src/lib/doviz.ts`); ürün detayında satış fiyatının altında toptan karşılığı da gösteriliyor
+- [x] Kritik stok uyarıları: Genel Bakış'taki "Kritik Stok" kartı artık canlı sayım gösteriyor (önceden statik "—"), kritik ürün varsa üstte tıklanabilir kırmızı uyarı şeridi çıkıyor → `/panel/stok?kritik=1`'e yönlendiriyor
+- [x] **Canlı testte bulunan hata**: Toplu güncelleme sonrası tüm ürünler güncel kurla uyumlu hale gelince (`degisenler` boşalınca) bileşen "tümü güncel" ekranına düşüyor ve az önce gösterilen "N üründe fiyat güncellendi" başarı mesajı kayboluyordu — `TopluFiyatGuncelle.tsx`'te bu ekranda da `sonuc` state'i gösterilecek şekilde düzeltildi
+- [x] E2E: throwaway tenant'ta USD kuru elle 40 TL'ye ayarlandı, eski kurla (30 TL) hesaplanmış `sale_price`'lı bir ürün oluşturuldu; ürün detayında güncel kurla kâr marjının negatife düştüğü gözlemlendi (tam da bu ekranın çözdüğü sorun), toplu güncelleme sonrası fiyat 3.600→4.800 TL doğru hesaplandı ve DB'de doğrulandı, Perakende/Toptan görünüm anahtarı (500→416,67 TL, 3.600→3.000 TL) ve kritik stok uyarısı tarayıcıda uçtan uca doğrulandı
 
 ### Gün 15 — Stok disiplini
 - [ ] Negatif stok politikası (tenant ayarı: uyarılı/onaylı/yasak)
