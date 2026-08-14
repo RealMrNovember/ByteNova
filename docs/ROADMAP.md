@@ -207,9 +207,12 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] `HizliSatis`: satır başına indirim alanı, genel iskonto + yuvarlama butonu, tek ödeme (Gün 16'daki sade 3 butonluk akış varsayılan olarak korundu) / karma ödeme geçişi (satır ekle, taksit seç, kalan gösterge)
 - [x] E2E: kasiyer hesabıyla %20 satır iskontosu → onay isteniyor → yanlış parola reddediliyor → doğru parola ile owner onayı → satış tamamlanıyor ve `created_by` hâlâ kasiyer (oturum hiç değişmedi — izole doğrulama istemcisi doğru çalıştı); genel iskonto + yuvarlama (1000 → 333,33 iskonto → 0,67 yuvarlama → 666 TL) doğru hesaplandı; karma ödeme (400 nakit + 600 kart, 3 taksit) DB'de doğru satırlarla kaydedildi; taksit limiti sunucu tarafında zorlanıyor (azami 3 iken 6 taksit reddedildi); `sale_payments` için çapraz-tenant erişim reddi doğrulandı
 
-### Gün 18 — Kasa ve tahsilat
-- [ ] Kasa hesapları (nakit, banka, POS cihazları) + hareketler
-- [ ] Servis kapanışında tahsilat + kapora/avans alma ve mahsup
+### Gün 18 — Kasa ve tahsilat ✅
+- [x] Kasa hesapları (nakit/banka/POS): `cash_accounts` + `cash_movements` + `kasa_hareketi_ekle()` RPC — `stok_hareketi_ekle()` ile birebir aynı desen (`FOR UPDATE` kilidi, bakiye önce/sonra kaydı). `/panel/finans`: hesap listesi + toplam bakiye + hesap detayında hareket geçmişi, yeni hesap oluşturma (owner/manager)
+- [x] Satış ödemeleri kasaya bağlandı: `sale_payments.account_id`, her nakit/kart ödeme satırı `satis_olustur()` içinde `kasa_hareketi_ekle()` çağırıyor (açık hesap hariç — cari borç doğuyor, kasaya para girmiyor). `HizliSatis`'te ödeme yöntemi seçilince uygun tipteki hesap tek ise otomatik seçiliyor
+- [x] Servis kapora/avans + kapanış tahsilatı + mahsup: `servis_tahsilat_al()` RPC'si (`'kapora'|'kapanis'`), her ikisi de `kasa_hareketi_ekle()` çağırır; kapora ayrıca `service_orders.advance_paid`'i artırır. `ServisTahsilat` bileşeni servis süresince her an kapora alınmasını sağlıyor; `TeslimPaneli`'de toplam tutar girilince "Kalan Tahsilat = toplam − alınan kapora" canlı hesaplanıyor (mahsup budur, ayrı mekanizma gerekmedi) ve teslim tamamlanırken tahsil ediliyor
+- [x] Bu finansal işlemler `servis_yonet` değil `kasa_yonet` (owner/manager/cashier) ile ayrı yetkilendirildi — teknisyen teslimatı tamamlayabilir ama para tahsilatı ayrı bir yetki (`yetki.ts`'e `kasa_yonet` eklendi). Menüde Finans "yakında" → "insa"
+- [x] E2E: iki kasa hesabı (Ana Kasa, Garanti POS) oluşturuldu; bir satış otomatik olarak Ana Kasa'ya 500 TL işlendi ve hareket geçmişinde doğrulandı; bir serviste 300 TL kapora alınıp teslimde 850 TL toplam girilerek Garanti POS'tan 550 TL kalan tahsil edildi — `advance_paid`, `final_cost` ve her iki kasa hareketi DB'de doğru bulundu; yeni RPC'lerde (`kasa_hareketi_ekle`, `servis_tahsilat_al`) ve `cash_accounts` select'inde çapraz-tenant erişim reddi doğrulandı
 
 ### Gün 19 — Gider + kasa kapanışı
 - [ ] Gider modülü (kategoriler, hızlı giriş, fiş fotoğrafı, tekrarlayan gider)
