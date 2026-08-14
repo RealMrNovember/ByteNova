@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { yetkiVar } from "@/lib/yetki";
 import { hesapEtiket, hesapIkon, kasaHareketEtiket, kasaHareketIkon } from "@/lib/kasa";
 import { paraFormatla } from "@/lib/doviz";
+import { KasaKapat } from "@/components/finans/KasaKapat";
 
 export const metadata: Metadata = { title: "Kasa Hesabı — ByteNova" };
 
@@ -22,7 +23,8 @@ export default async function KasaHesabiPage({
   if (!user) redirect("/giris");
 
   const { data: profil } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (!yetkiVar(profil?.role, "kasa_yonet")) redirect("/panel/finans");
+  const kasaYetkili = yetkiVar(profil?.role, "kasa_yonet");
+  if (!kasaYetkili) redirect("/panel/finans");
 
   const { data: hesap } = await supabase
     .from("cash_accounts")
@@ -32,12 +34,30 @@ export default async function KasaHesabiPage({
 
   if (!hesap) notFound();
 
-  const { data: hareketler } = await supabase
-    .from("cash_movements")
-    .select("id, movement_type, amount, balance_before, balance_after, reference_type, reason, created_at")
-    .eq("account_id", id)
-    .order("created_at", { ascending: false })
-    .limit(50);
+  // "sv-SE" biçimi YYYY-MM-DD üretir; Postgres'teki kasa_kapat() de
+  // aynı şekilde Europe/Istanbul saatine göre "bugün"ü hesaplıyor.
+  const bugun = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Istanbul" });
+
+  const [{ data: hareketler }, { data: bugunkuKapanis }, { data: gecmisKapanislar }] = await Promise.all([
+    supabase
+      .from("cash_movements")
+      .select("id, movement_type, amount, balance_before, balance_after, reference_type, reason, created_at")
+      .eq("account_id", id)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    supabase
+      .from("cash_closings")
+      .select("id")
+      .eq("account_id", id)
+      .eq("closing_date", bugun)
+      .maybeSingle(),
+    supabase
+      .from("cash_closings")
+      .select("id, closing_date, expected_balance, actual_balance, difference, explanation")
+      .eq("account_id", id)
+      .order("closing_date", { ascending: false })
+      .limit(10),
+  ]);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -54,6 +74,50 @@ export default async function KasaHesabiPage({
         </p>
         <p className="mt-3 text-3xl font-bold text-nova-300">{paraFormatla(hesap.balance)}</p>
       </div>
+
+      <div className="mt-4">
+        <KasaKapat
+          accountId={hesap.id}
+          beklenenBakiye={hesap.balance}
+          bugunKapandiMi={!!bugunkuKapanis}
+          yetkili={kasaYetkili}
+        />
+      </div>
+
+      {!!gecmisKapanislar?.length && (
+        <div className="glass mt-4 overflow-hidden rounded-xl">
+          <div className="border-b border-slate-800 px-4 py-3">
+            <h2 className="text-sm font-semibold text-white">Kapanış Geçmişi</h2>
+          </div>
+          <div className="divide-y divide-slate-800/60">
+            {gecmisKapanislar.map((k) => (
+              <div key={k.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                <div>
+                  <p className="text-sm text-slate-200">
+                    {new Date(`${k.closing_date}T12:00:00`).toLocaleDateString("tr-TR")}
+                  </p>
+                  <p className="text-[11px] text-slate-600">
+                    Beklenen {paraFormatla(k.expected_balance)} · Fiili {paraFormatla(k.actual_balance)}
+                    {k.explanation && ` — ${k.explanation}`}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 text-sm font-semibold ${
+                    k.difference === 0
+                      ? "text-slate-500"
+                      : k.difference > 0
+                        ? "text-emerald-300"
+                        : "text-red-300"
+                  }`}
+                >
+                  {k.difference > 0 ? "+" : ""}
+                  {paraFormatla(k.difference)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="glass mt-4 overflow-hidden rounded-xl">
         <div className="border-b border-slate-800 px-4 py-3">

@@ -52,11 +52,19 @@ export default async function FinansPage() {
           <h1 className="text-xl font-bold text-white">Finans</h1>
           <p className="mt-0.5 text-sm text-slate-400">Kasa hesapları ve tahsilat hareketleri</p>
         </div>
-        {ayarYonetebilir && (
-          <div className="relative shrink-0">
-            <YeniKasaHesabi tenantId={profil?.tenant_id ?? ""} />
-          </div>
-        )}
+        <div className="flex shrink-0 gap-2">
+          <Link
+            href="/panel/finans/giderler"
+            className="rounded-lg border border-slate-700 px-3.5 py-2 text-center text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+          >
+            💸 Giderler
+          </Link>
+          {ayarYonetebilir && (
+            <div className="relative">
+              <YeniKasaHesabi tenantId={profil?.tenant_id ?? ""} />
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="glass mt-5 rounded-xl p-5 text-center">
