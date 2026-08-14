@@ -50,10 +50,11 @@ export default async function KasaHesabiPage({
       .select("id")
       .eq("account_id", id)
       .eq("closing_date", bugun)
+      .is("reversed_at", null)
       .maybeSingle(),
     supabase
       .from("cash_closings")
-      .select("id, closing_date, expected_balance, actual_balance, difference, explanation")
+      .select("id, closing_date, expected_balance, actual_balance, difference, explanation, reversed_at, reversal_reason")
       .eq("account_id", id)
       .order("closing_date", { ascending: false })
       .limit(10),
@@ -95,11 +96,21 @@ export default async function KasaHesabiPage({
                 <div>
                   <p className="text-sm text-slate-200">
                     {new Date(`${k.closing_date}T12:00:00`).toLocaleDateString("tr-TR")}
+                    {k.reversed_at && (
+                      <span className="ml-2 rounded-full bg-slate-700 px-2 py-0.5 text-[10px] font-semibold text-slate-300">
+                        Geri alındı
+                      </span>
+                    )}
                   </p>
                   <p className="text-[11px] text-slate-600">
                     Beklenen {paraFormatla(k.expected_balance)} · Fiili {paraFormatla(k.actual_balance)}
                     {k.explanation && ` — ${k.explanation}`}
                   </p>
+                  {k.reversed_at && (
+                    <p className="mt-0.5 text-[11px] text-amber-300">
+                      ByteNova destek tarafından geri alındı — {k.reversal_reason}
+                    </p>
+                  )}
                 </div>
                 <span
                   className={`shrink-0 text-sm font-semibold ${

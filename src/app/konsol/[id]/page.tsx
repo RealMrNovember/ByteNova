@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { tenantDurum } from "@/lib/konsol";
 import { ROL_ADLARI, type Rol } from "@/lib/yetki";
+import { paraFormatla } from "@/lib/doviz";
+import { KasaKapanisiGeriAl } from "@/components/konsol/KasaKapanisiGeriAl";
 
 type Detay = {
   tenant: {
@@ -25,6 +27,19 @@ type Detay = {
   musteri_sayisi: number;
   cihaz_sayisi: number;
   servis_sayisi: number;
+  kasa_kapanislari: {
+    id: string;
+    account_id: string;
+    account_name: string;
+    closing_date: string;
+    expected_balance: number;
+    actual_balance: number;
+    difference: number;
+    explanation: string | null;
+    closed_at: string;
+    reversed_at: string | null;
+    reversal_reason: string | null;
+  }[];
 };
 
 export default async function KonsolTenantDetayPage({
@@ -35,15 +50,23 @@ export default async function KonsolTenantDetayPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc("admin_tenant_detay", {
-    p_tenant_id: id,
-  });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [{ data, error }, { data: platformProfil }] = await Promise.all([
+    supabase.rpc("admin_tenant_detay", { p_tenant_id: id }),
+    user
+      ? supabase.from("platform_admins").select("role").eq("id", user.id).single()
+      : Promise.resolve({ data: null }),
+  ]);
 
   if (error || !data || !(data as Detay).tenant) notFound();
 
-  const { tenant, kullanicilar, musteri_sayisi, cihaz_sayisi, servis_sayisi } =
+  const { tenant, kullanicilar, musteri_sayisi, cihaz_sayisi, servis_sayisi, kasa_kapanislari } =
     data as Detay;
   const durum = tenantDurum(tenant.status);
+  const kapanisGeriAlabilir = ["master", "finance"].includes(platformProfil?.role ?? "");
 
   const ozet = [
     { etiket: "Kullanıcı", deger: kullanicilar.length, ikon: "👥" },
@@ -140,6 +163,69 @@ export default async function KonsolTenantDetayPage({
           ))}
         </div>
       </div>
+
+      {kasa_kapanislari.length > 0 && (
+        <div className="glass mt-4 rounded-xl p-5">
+          <h2 className="text-sm font-semibold text-white">Kasa Kapanışları</h2>
+          <p className="mt-0.5 text-xs text-slate-500">
+            İşletme kendi kapanışını geri alamaz — yanlışlıkla alınmış bir
+            gün sonu burada, gerekçeyle, geri alınabilir.
+          </p>
+          <div className="mt-3 space-y-2">
+            {kasa_kapanislari.map((k) => (
+              <div
+                key={k.id}
+                className={`rounded-lg border px-3.5 py-3 ${
+                  k.reversed_at
+                    ? "border-slate-800 bg-surface opacity-60"
+                    : "border-slate-800 bg-surface"
+                }`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm text-slate-200">
+                      {k.account_name} —{" "}
+                      {new Date(`${k.closing_date}T12:00:00`).toLocaleDateString("tr-TR")}
+                      {k.reversed_at && (
+                        <span className="ml-2 rounded-full bg-slate-700 px-2 py-0.5 text-[10px] font-semibold text-slate-300">
+                          Geri alındı
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-[11px] text-slate-500">
+                      Beklenen {paraFormatla(k.expected_balance)} · Fiili{" "}
+                      {paraFormatla(k.actual_balance)}
+                      {k.explanation && ` — ${k.explanation}`}
+                    </p>
+                    {k.reversed_at && (
+                      <p className="mt-0.5 text-[11px] text-amber-300">
+                        Geri alınma gerekçesi: {k.reversal_reason}
+                      </p>
+                    )}
+                  </div>
+                  <span
+                    className={`shrink-0 text-sm font-semibold ${
+                      k.difference === 0
+                        ? "text-slate-500"
+                        : k.difference > 0
+                          ? "text-emerald-300"
+                          : "text-red-300"
+                    }`}
+                  >
+                    {k.difference > 0 ? "+" : ""}
+                    {paraFormatla(k.difference)}
+                  </span>
+                </div>
+                {!k.reversed_at && kapanisGeriAlabilir && (
+                  <div className="mt-2">
+                    <KasaKapanisiGeriAl closingId={k.id} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <p className="mt-4 text-center text-[11px] text-slate-600">
         Uzatma / askıya alma / plan değişikliği işlemleri Gün 29&apos;da bu
