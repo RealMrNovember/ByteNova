@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -146,6 +147,13 @@ export function DovizKurlari({ tenantId, yetkili, kurlar: ilk }: Props) {
           </div>
         ))}
       </div>
+
+      <Link
+        href="/panel/stok/fiyat-guncelle"
+        className="mt-4 inline-flex items-center gap-1.5 text-xs text-nova-300 hover:text-nova-100"
+      >
+        💱 Kur değişti mi? Etkilenen ürün fiyatlarını toplu güncelleyin →
+      </Link>
     </div>
   );
 }

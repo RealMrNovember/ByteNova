@@ -112,6 +112,11 @@ export function paraFormatla(tutar: number, sembol = "₺"): string {
   return `${sembol}${tutar.toLocaleString("tr-TR", { maximumFractionDigits: 2 })}`;
 }
 
+/** KDV dahil (perakende) fiyattan KDV hariç (toptan) fiyatı çıkarır. */
+export function kdvHaricFiyat(kdvDahilTutar: number, kdvOraniYuzde: number): number {
+  return kdvDahilTutar / (1 + kdvOraniYuzde / 100);
+}
+
 /** Ürün formları için: para birimi kataloğu + tenant'ın etkin kurları (basit obje). */
 export async function urunFormuIcinDovizVerisi(supabase: SupabaseClient) {
   const [{ data: paraBirimleri }, kurHaritasi] = await Promise.all([

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { etkinKurlar, paraFormatla } from "@/lib/doviz";
+import { etkinKurlar, kdvHaricFiyat, paraFormatla } from "@/lib/doviz";
 import { hareketEtiket, hareketIkon } from "@/lib/stok";
 import { yetkiVar } from "@/lib/yetki";
 import { StokDuzeltme } from "@/components/urun/StokDuzeltme";
@@ -120,8 +120,13 @@ export default async function UrunDetayPage({
               {u.sale_price != null ? `${u.sale_price.toLocaleString("tr-TR")}` : "—"}
             </p>
             <p className="text-[10px] uppercase tracking-wide text-slate-500">
-              Satış (TL)
+              Perakende (KDV Dahil)
             </p>
+            {u.sale_price != null && (
+              <p className="mt-0.5 text-[10px] text-slate-600">
+                Toptan: {paraFormatla(kdvHaricFiyat(u.sale_price, u.vat_rate))}
+              </p>
+            )}
           </div>
           <div className="rounded-lg border border-slate-800 bg-surface px-3 py-2.5 text-center">
             <p className="text-lg font-bold text-slate-200">

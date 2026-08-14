@@ -1,21 +1,23 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
+import { kdvHaricFiyat, paraFormatla } from "@/lib/doviz";
 
 export const metadata: Metadata = { title: "Stok — ByteNova" };
 
 export default async function StokPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; kritik?: string }>;
+  searchParams: Promise<{ q?: string; kritik?: string; gorunum?: string }>;
 }) {
-  const { q, kritik } = await searchParams;
+  const { q, kritik, gorunum } = await searchParams;
+  const toptanGorunum = gorunum === "toptan";
   const supabase = await createClient();
 
   let sorgu = supabase
     .from("products")
     .select(
-      "id, name, sku, barcode, brand, sale_price, stock_quantity, critical_stock, product_categories(name)"
+      "id, name, sku, barcode, brand, sale_price, vat_rate, stock_quantity, critical_stock, product_categories(name)"
     )
     .eq("is_active", true)
     .order("created_at", { ascending: false })
@@ -44,16 +46,26 @@ export default async function StokPage({
             Ürün kartları ve stok durumu
           </p>
         </div>
-        <Link
-          href="/panel/stok/yeni"
-          className="rounded-lg bg-nova-500 px-4 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-nova-400"
-        >
-          + Yeni Ürün
-        </Link>
+        <div className="flex shrink-0 gap-2">
+          <Link
+            href="/panel/stok/fiyat-guncelle"
+            className="rounded-lg border border-slate-700 px-3.5 py-2 text-center text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+          >
+            💱 Kur Güncellemesi
+          </Link>
+          <Link
+            href="/panel/stok/yeni"
+            className="rounded-lg bg-nova-500 px-4 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-nova-400"
+          >
+            + Yeni Ürün
+          </Link>
+        </div>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-2">
         <form method="get" className="flex-1">
+          {toptanGorunum && <input type="hidden" name="gorunum" value="toptan" />}
+          {kritik && <input type="hidden" name="kritik" value="1" />}
           <input
             type="search"
             name="q"
@@ -62,8 +74,33 @@ export default async function StokPage({
             className="w-full max-w-md rounded-lg border border-slate-700 bg-surface-2 px-3.5 py-2.5 text-sm text-slate-200 outline-none transition-colors placeholder:text-slate-600 focus:border-nova-500"
           />
         </form>
+        <div className="flex overflow-hidden rounded-lg border border-slate-700 text-xs font-medium">
+          <Link
+            href={{ pathname: "/panel/stok", query: { q, kritik } }}
+            className={`px-3 py-2 transition-colors ${
+              !toptanGorunum
+                ? "bg-nova-500 text-slate-950"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            Perakende
+          </Link>
+          <Link
+            href={{ pathname: "/panel/stok", query: { q, kritik, gorunum: "toptan" } }}
+            className={`px-3 py-2 transition-colors ${
+              toptanGorunum
+                ? "bg-nova-500 text-slate-950"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            Toptan
+          </Link>
+        </div>
         <Link
-          href={kritik ? "/panel/stok" : "/panel/stok?kritik=1"}
+          href={{
+            pathname: "/panel/stok",
+            query: { q, gorunum, kritik: kritik ? undefined : "1" },
+          }}
           className={`rounded-lg border px-3.5 py-2.5 text-xs font-medium transition-colors ${
             kritik
               ? "border-red-500/50 bg-red-500/10 text-red-300"
@@ -104,7 +141,7 @@ export default async function StokPage({
                   Kategori
                 </th>
                 <th className="hidden px-4 py-3 font-medium sm:table-cell">
-                  Satış Fiyatı
+                  {toptanGorunum ? "Toptan Fiyat (KDV Hariç)" : "Satış Fiyatı (KDV Dahil)"}
                 </th>
                 <th className="px-4 py-3 text-right font-medium">Stok</th>
               </tr>
@@ -137,7 +174,12 @@ export default async function StokPage({
                     </td>
                     <td className="hidden px-4 py-2.5 text-slate-400 sm:table-cell">
                       {u.sale_price != null
-                        ? `${u.sale_price.toLocaleString("tr-TR")} TL`
+                        ? paraFormatla(
+                            toptanGorunum
+                              ? kdvHaricFiyat(u.sale_price, u.vat_rate)
+                              : u.sale_price,
+                            ""
+                          ) + " TL"
                         : "—"}
                     </td>
                     <td className="px-4 py-2.5 text-right">
