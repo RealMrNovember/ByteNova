@@ -118,12 +118,18 @@
 - [x] E2E (tarayıcı): durum değişikliği → geçmişe otomatik yazıldı, teknisyen atandı → listede/detay'da göründü, teknik not eklendi → DB'de doğrulandı, öncelik filtresi doğru boş/dolu sonuç verdi
 - [x] Ufak düzeltme: `consent_accepted_at` null iken epoch tarihi (1970) gösterme hatası giderildi
 
-### Gün 10 — Servis çıktıları
-- [ ] Cihaz fotoğrafı yükleme (Supabase Storage, tenant izolasyonlu)
-- [ ] Servis kabul formu + teslim tutanağı PDF (QR kodlu)
-- [ ] Teslim akışı: aksesuar kontrolü + kapanış
+### Gün 10 — Servis çıktıları ✅
+- [x] `0011_servis_ciktilari.sql`: `service_photos` tablosu, `delivery_note` alanı, özel (private) `servis-belgeleri` bucket'ı — imzalı URL ile erişim (uygulandı)
+- [x] Cihaz fotoğrafı yükleme (çoklu, galeri görünümü, imzalı URL'lerle)
+- [x] **PDF motoru** (`@react-pdf/renderer` + `qrcode`): Servis Kabul Formu + Teslim Tutanağı, QR kodlu, işletme/müşteri/cihaz/checklist/aksesuar/beyan içerikli — `/api/servis/[id]/pdf` route'undan indirilebilir
+- [x] Teslim akışı: aksesuar teslim kontrolü (checkbox) + teslim notu + "Teslimi Tamamla" → durum + `delivered_at` + aksesuar durumları tek işlemde güncelleniyor
+- [x] **Eklenti-korumalı WhatsApp gönderimi:** PDF indirme her zaman ücretsiz/serbest; "WhatsApp'tan Gönder" yalnızca `whatsapp_sms` eklentisi aktifse görünür — pasifken Eklentiler'e yönlendiren kilit rozeti
+- [x] WhatsApp akışı: PDF → özel bucket'a yükle → 7 gün geçerli imzalı URL → `wa.me` derin bağlantısı (müşteri telefonu önceden dolu)
+- [x] Menüde Servisler **AKTİF** — tam döngü (kabul→durum→teknisyen→teslim→PDF) tamamlandı
+- [x] E2E (tarayıcı): fotoğraf bölümü, PDF indirme (gerçek `%PDF-` başlıklı, 200 OK), teslim akışı (durum→Teslim Edildi, aksesuarlar✓, Teslim Tutanağı linki belirdi), eklenti aktifken WhatsApp butonları belirdi, storage+audit doğrulandı
+- [x] **Canlı testte bulunup düzeltilen hata:** WhatsApp gönderiminde `window.open` async işlem sonrası çağrıldığından pop-up engelleyiciye takılabiliyordu — pencere artık tıklamayla senkron açılıp sonra yönlendiriliyor
 
-**Sprint sonu:** 🎯 **Dükkânda kullanılabilir ilk sürüm** — S1 senaryosunun servis tarafı uçtan uca dönüyor.
+**Sprint sonu:** 🎯 **Dükkânda kullanılabilir ilk sürüm** — S1 senaryosunun servis tarafı (kabul→teşhis→onarım→teslim→belge) uçtan uca dönüyor.
 
 ---
 
@@ -295,11 +301,11 @@ Sıra pilot geri bildirimiyle revize edilir:
 |---|---|---|
 | 0 (Gün 1-2) | Canlıya çık + Auth | ✅ Tamamlandı — site canlıda |
 | 1 (Gün 3-5) | Panel iskeleti + flag + roller | ✅ Tamamlandı |
-| 2 (Gün 6-10) | Müşteri + Servis çekirdeği | Bekliyor |
+| 2 (Gün 6-10) | Müşteri + Servis çekirdeği | ✅ Tamamlandı — dükkânda kullanılabilir ilk sürüm |
 | 3 (Gün 11-15) | Ürün + Stok + Döviz | Bekliyor |
 | 4 (Gün 16-20) | Satış + Kasa + Gider | Bekliyor |
 | 5 (Gün 21-24) | Alış + Cari | Bekliyor |
-| 6 (Gün 25-30) | Dashboard + Rapor + Konsol = MVP | Bekliyor |
+| 6 (Gün 25-30) | Dashboard + Rapor + Konsol = MVP | 🔨 Konsol v0 öne alınıp tamamlandı (Gün 28-30'un temeli) |
 | 7-8 | Derinlik + pilot | Bekliyor |
 | 9-12 | P1 modülleri | Bekliyor |
 | 13+ | Masaüstü/Offline + P2 | Bekliyor |

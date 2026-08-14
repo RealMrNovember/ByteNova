@@ -5,6 +5,9 @@ import { cihazIkon } from "@/lib/cihaz";
 import { durumEtiket, durumSinifi, oncelikBul } from "@/lib/servis";
 import { yetkiVar } from "@/lib/yetki";
 import { ServisIslemleri } from "@/components/servis/ServisIslemleri";
+import { FotografYukle } from "@/components/servis/FotografYukle";
+import { TeslimPaneli } from "@/components/servis/TeslimPaneli";
+import { BelgeIslemleri } from "@/components/servis/BelgeIslemleri";
 
 type Aksesuar = { name: string; delivered: boolean };
 
@@ -54,6 +57,8 @@ export default async function ServisDetayPage({
     { data: gecmis },
     { data: kullanicilar },
     { data: notSatirlari },
+    { data: fotograflar },
+    { data: whatsappAbonelik },
   ] = await Promise.all([
     supabase
       .from("service_status_history")
@@ -69,6 +74,16 @@ export default async function ServisDetayPage({
       .select("id, content, created_at, user_id")
       .eq("service_order_id", id)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("service_photos")
+      .select("id, storage_path")
+      .eq("service_order_id", id)
+      .order("created_at"),
+    supabase
+      .from("tenant_addon_subscriptions")
+      .select("status")
+      .eq("addon_key", "whatsapp_sms")
+      .maybeSingle(),
   ]);
 
   const adSozlugu = new Map(
@@ -85,6 +100,9 @@ export default async function ServisDetayPage({
   const aksesuarlar = (s.accessories ?? []) as Aksesuar[];
   const oncelik = oncelikBul(s.priority);
   const yetkili = yetkiVar(profil?.role, "servis_yonet");
+  const teslimEdildiMi = s.status === "teslim_edildi";
+  const whatsappEklentisiAktif =
+    whatsappAbonelik?.status === "active" || whatsappAbonelik?.status === "trial";
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -219,6 +237,15 @@ export default async function ServisDetayPage({
         )}
       </div>
 
+      {/* Cihaz fotoğrafları */}
+      <div className="mt-4">
+        <FotografYukle
+          servisId={s.id}
+          tenantId={s.tenant_id}
+          mevcut={fotograflar ?? []}
+        />
+      </div>
+
       {/* Durum, teknisyen atama, teknik notlar */}
       <div className="mt-4">
         <ServisIslemleri
@@ -229,6 +256,26 @@ export default async function ServisDetayPage({
           kullanicilar={kullanicilar ?? []}
           notlar={notlar}
           yetkili={yetkili}
+        />
+      </div>
+
+      {/* Teslim işlemi */}
+      <div className="mt-4">
+        <TeslimPaneli
+          servisId={s.id}
+          aksesuarlar={aksesuarlar}
+          teslimEdildiMi={teslimEdildiMi}
+          teslimTarihi={s.delivered_at}
+          yetkili={yetkili}
+        />
+      </div>
+
+      {/* Belgeler: PDF + WhatsApp */}
+      <div className="mt-4">
+        <BelgeIslemleri
+          servisId={s.id}
+          teslimEdildiMi={teslimEdildiMi}
+          whatsappEklentisiAktif={whatsappEklentisiAktif}
         />
       </div>
 

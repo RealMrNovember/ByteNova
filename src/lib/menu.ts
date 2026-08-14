@@ -26,7 +26,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "servisler",
     ad: "Servisler",
     ikon: "🔧",
-    durum: "insa",
+    durum: "aktif",
     aciklama:
       "Servis kabulünden teslime tüm süreç: fotoğraflı kabul, durum takibi, teknisyen atama, müşteri onayı, kapora ve teslim tutanağı.",
   },
