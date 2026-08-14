@@ -102,9 +102,12 @@
 - [x] E2E: CRUD + mükerrer seri no reddi (409) + arama + sahiplik ilişkisi geçti
 - [x] Menüde Cihazlar AKTİF
 
-### Gün 8 — Servis kabul
-- [ ] Kabul akışı: müşteri → cihaz → beyan → aksesuarlar → dinamik checklist → beyan metni onayı
-- [ ] Servis no üretimi (`BN-2026-XXXXXX`) + durum makinesi altyapısı
+### Gün 8 — Servis kabul ✅
+- [x] Kabul akışı: müşteri seç/oluştur → cihaz seç/oluştur (akıştan çıkmadan) → beyan → dinamik checklist (cihaz türüne göre) → aksesuar chip'leri → öncelik → beyan metni onayı
+- [x] Servis no üretimi (`BN-YYYY-NNNNNN`, tenant+yıl bazlı sayaç) + durum makinesi altyapısı (`0007_servisler.sql`, uygulandı)
+- [x] Servis listesi (arama: servis no) + minimal detay sayfası (durum geçmişi zaman çizelgesi, checklist/aksesuar/onay gösterimi)
+- [x] E2E: servis no formatı/sayaç, otomatik durum geçmişi tetikleyicisi, mükerrer no reddi (409), tenant izolasyonu — hepsi API seviyesinde doğrulandı
+- [x] **Tam UI akışı gerçek tarayıcıda uçtan uca test edildi** (S1 senaryosunun kabul kısmı): müşteri seç → cihaz oluştur/seç → checklist işaretle → aksesuar ekle → öncelik seç → onay → `BN-2026-000001` başarıyla oluştu
 
 ### Gün 9 — Servis operasyonu
 - [ ] Servis listesi + detay ekranı + durum geçmişi
@@ -212,6 +215,7 @@
 
 ### Gün 28 — Yönetim Konsolu v1a
 - [ ] Konsol yüzeyi + `platform_admins` (ayrı kimlik, zorunlu MFA) + Master Admin seed
+      **→ İlk Master Admin: mozkarci1991@gmail.com (kullanıcı talebi, 14.08.2026)**
 - [ ] Tenant listesi + Tenant 360° + `tenant_events`
 
 ### Gün 29 — Yönetim Konsolu v1b
