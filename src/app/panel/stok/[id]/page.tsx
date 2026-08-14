@@ -1,7 +1,10 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { etkinKurlar, paraFormatla } from "@/lib/doviz";
+import { hareketEtiket, hareketIkon } from "@/lib/stok";
+import { yetkiVar } from "@/lib/yetki";
+import { StokDuzeltme } from "@/components/urun/StokDuzeltme";
 
 export default async function UrunDetayPage({
   params,
@@ -11,6 +14,17 @@ export default async function UrunDetayPage({
   const { id } = await params;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/giris");
+
+  const { data: profil } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
   const { data: u } = await supabase
     .from("products")
     .select("*, product_categories(name)")
@@ -18,6 +32,15 @@ export default async function UrunDetayPage({
     .maybeSingle();
 
   if (!u) notFound();
+
+  const { data: hareketler } = await supabase
+    .from("stock_movements")
+    .select("id, movement_type, quantity_change, quantity_before, quantity_after, reason, created_at")
+    .eq("product_id", id)
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  const yetkili = yetkiVar(profil?.role, "stok_yonet");
 
   const kategori = u.product_categories as unknown as { name: string } | null;
   const kritikMi = u.stock_quantity <= u.critical_stock;
@@ -66,12 +89,19 @@ export default async function UrunDetayPage({
               {u.sku ? ` • SKU: ${u.sku}` : ""}
             </p>
           </div>
-          <Link
-            href={`/panel/stok/${u.id}/duzenle`}
-            className="shrink-0 rounded-lg border border-slate-700 px-3.5 py-1.5 text-xs font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
-          >
-            Düzenle
-          </Link>
+          <div className="relative flex shrink-0 gap-2">
+            <StokDuzeltme
+              productId={u.id}
+              mevcutStok={u.stock_quantity}
+              yetkili={yetkili}
+            />
+            <Link
+              href={`/panel/stok/${u.id}/duzenle`}
+              className="rounded-lg border border-slate-700 px-3.5 py-1.5 text-xs font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+            >
+              Düzenle
+            </Link>
+          </div>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -152,10 +182,47 @@ export default async function UrunDetayPage({
 
       <div className="glass mt-4 rounded-xl p-5">
         <h2 className="text-sm font-semibold text-white">Stok Hareketleri</h2>
-        <p className="mt-2 text-center text-xs text-slate-600">
-          Alış, satış, servis kullanımı ve sayım hareketleri Gün 13&apos;te bu
-          ekrana eklenecek.
-        </p>
+        {!hareketler?.length ? (
+          <p className="mt-4 text-center text-xs text-slate-600">
+            Henüz stok hareketi yok.
+          </p>
+        ) : (
+          <div className="mt-3 divide-y divide-slate-800/60">
+            {hareketler.map((h) => (
+              <div key={h.id} className="flex items-center gap-3 py-2.5">
+                <span className="text-base">{hareketIkon(h.movement_type)}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-slate-200">
+                    {hareketEtiket(h.movement_type)}
+                    {h.reason && (
+                      <span className="text-slate-500"> — {h.reason}</span>
+                    )}
+                  </p>
+                  <p className="text-[11px] text-slate-600">
+                    {h.quantity_before} → {h.quantity_after} ·{" "}
+                    {new Date(h.created_at).toLocaleString("tr-TR", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                    h.quantity_change > 0
+                      ? "bg-emerald-500/15 text-emerald-300"
+                      : "bg-red-500/15 text-red-300"
+                  }`}
+                >
+                  {h.quantity_change > 0 ? "+" : ""}
+                  {h.quantity_change}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

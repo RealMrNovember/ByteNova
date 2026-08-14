@@ -8,6 +8,7 @@ import { ServisIslemleri } from "@/components/servis/ServisIslemleri";
 import { FotografYukle } from "@/components/servis/FotografYukle";
 import { TeslimPaneli } from "@/components/servis/TeslimPaneli";
 import { BelgeIslemleri } from "@/components/servis/BelgeIslemleri";
+import { ServisParcalari } from "@/components/servis/ServisParcalari";
 
 type Aksesuar = { name: string; delivered: boolean };
 
@@ -59,6 +60,7 @@ export default async function ServisDetayPage({
     { data: notSatirlari },
     { data: fotograflar },
     { data: whatsappAbonelik },
+    { data: parcalarHam },
   ] = await Promise.all([
     supabase
       .from("service_status_history")
@@ -84,6 +86,13 @@ export default async function ServisDetayPage({
       .select("status")
       .eq("addon_key", "whatsapp_sms")
       .maybeSingle(),
+    supabase
+      .from("service_parts")
+      .select(
+        "id, product_id, quantity, unit_price, status, removed_part_disposition, removed_part_note, products(name)"
+      )
+      .eq("service_order_id", id)
+      .order("reserved_at", { ascending: false }),
   ]);
 
   const adSozlugu = new Map(
@@ -103,6 +112,19 @@ export default async function ServisDetayPage({
   const teslimEdildiMi = s.status === "teslim_edildi";
   const whatsappEklentisiAktif =
     whatsappAbonelik?.status === "active" || whatsappAbonelik?.status === "trial";
+  const parcalar = (parcalarHam ?? []).map((p) => {
+    const urun = p.products as unknown as { name: string } | null;
+    return {
+      id: p.id,
+      product_id: p.product_id,
+      quantity: p.quantity,
+      unit_price: p.unit_price,
+      status: p.status as "reserved" | "consumed" | "cancelled",
+      removed_part_disposition: p.removed_part_disposition,
+      removed_part_note: p.removed_part_note,
+      urunAdi: urun?.name ?? "Silinmiş ürün",
+    };
+  });
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -256,6 +278,16 @@ export default async function ServisDetayPage({
           kullanicilar={kullanicilar ?? []}
           notlar={notlar}
           yetkili={yetkili}
+        />
+      </div>
+
+      {/* Kullanılan parçalar */}
+      <div className="mt-4">
+        <ServisParcalari
+          servisId={s.id}
+          tenantId={s.tenant_id}
+          yetkili={yetkili}
+          parcalar={parcalar}
         />
       </div>
 
