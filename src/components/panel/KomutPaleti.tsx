@@ -13,7 +13,7 @@ type Props = {
 };
 
 type Sonuc = {
-  tur: "modul" | "musteri" | "cihaz";
+  tur: "modul" | "musteri" | "cihaz" | "urun";
   ikon: string;
   baslik: string;
   altYazi?: string;
@@ -59,7 +59,7 @@ export function KomutPaleti({ menuOgeleri, acik, kapat }: Props) {
     }
     const zamanlayici = setTimeout(async () => {
       const supabase = createClient();
-      const [mus, cih] = await Promise.all([
+      const [mus, cih, urun] = await Promise.all([
         supabase
           .from("customers")
           .select("id, name, phone, type")
@@ -72,6 +72,12 @@ export function KomutPaleti({ menuOgeleri, acik, kapat }: Props) {
           .or(
             `serial_no.ilike.%${q}%,imei.ilike.%${q}%,brand.ilike.%${q}%,model.ilike.%${q}%`
           )
+          .limit(4),
+        supabase
+          .from("products")
+          .select("id, name, sku, barcode")
+          .or(`name.ilike.%${q}%,sku.ilike.%${q}%,barcode.ilike.%${q}%`)
+          .eq("is_active", true)
           .limit(4),
       ]);
       const sonuclar: Sonuc[] = [
@@ -89,6 +95,13 @@ export function KomutPaleti({ menuOgeleri, acik, kapat }: Props) {
             [c.brand, c.model].filter(Boolean).join(" ") || "İsimsiz cihaz",
           altYazi: c.serial_no ?? c.imei ?? undefined,
           yol: `/panel/cihazlar/${c.id}`,
+        })),
+        ...(urun.data ?? []).map((p) => ({
+          tur: "urun" as const,
+          ikon: "📦",
+          baslik: p.name,
+          altYazi: p.sku ?? p.barcode ?? undefined,
+          yol: `/panel/stok/${p.id}`,
         })),
       ];
       setKayitlar(sonuclar);
@@ -138,6 +151,7 @@ export function KomutPaleti({ menuOgeleri, acik, kapat }: Props) {
   const TUR_BASLIKLARI: Record<string, string> = {
     musteri: "Müşteriler",
     cihaz: "Cihazlar",
+    urun: "Ürünler",
     modul: "Modüller",
   };
 
@@ -158,7 +172,7 @@ export function KomutPaleti({ menuOgeleri, acik, kapat }: Props) {
             value={arama}
             onChange={(e) => setArama(e.target.value)}
             onKeyDown={tusla}
-            placeholder="Müşteri adı, telefon, seri no, IMEI veya modül ara…"
+            placeholder="Müşteri, telefon, seri no, ürün/SKU veya modül ara…"
             className="w-full bg-transparent py-3.5 text-sm text-slate-200 outline-none placeholder:text-slate-600"
           />
           <kbd className="rounded border border-slate-700 px-1.5 py-0.5 text-[10px] text-slate-600">

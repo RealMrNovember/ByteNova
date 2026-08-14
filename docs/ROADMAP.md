@@ -144,9 +144,14 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 
 ## SPRINT 3 — ÜRÜN, STOK, DÖVİZ (Gün 11-15)
 
-### Gün 11 — Ürün
-- [ ] Ürün kartı (SKU, barkodlar, kategori, KDV, min/kritik stok, seri no zorunluluğu)
-- [ ] Kategori yönetimi + hızlı ürün ekleme
+### Gün 11 — Ürün ✅
+- [x] `0012_urunler.sql`: `products` + `product_categories`, barkod tenant içinde benzersiz, RLS — uygulandı
+- [x] Ürün kartı: SKU, barkod, marka, kategori, birim, alış/satış fiyatı (TL — Gün 12'de döviz eklenecek), KDV, min/kritik stok, seri no zorunluluğu, garanti (ay)
+- [x] `KategoriSec`: dropdown + akıştan çıkmadan hızlı kategori ekleme (Gün 10'daki `MusteriSec` deseniyle tutarlı)
+- [x] Liste: arama (ad/SKU/barkod) + kritik stok filtresi; detay: kâr marjı otomatik hesaplanıyor
+- [x] Ctrl+K paletine ürün araması eklendi (ad/SKU/barkod)
+- [x] Menüde Stok → İnşada (tam döngü Gün 13/15'te tamamlanınca Aktif olacak)
+- [x] E2E: hızlı kategori oluşturma, ürün kaydı, mükerrer barkod reddi (409), kritik stok filtresi, Ctrl+K araması — tarayıcıda ve DB'de doğrulandı
 
 ### Gün 12 — Döviz çekirdeği
 - [ ] `currencies` + `exchange_rates`; TCMB kur çekme (günlük cron) + manuel dükkân kuru

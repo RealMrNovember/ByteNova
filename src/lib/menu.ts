@@ -59,7 +59,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "stok",
     ad: "Stok",
     ikon: "📦",
-    durum: "yakinda",
+    durum: "insa",
     aciklama:
       "Her stok hareketinin nedeni belli: alış, satış, servis kullanımı, sayım. Kritik stok uyarıları ve kur bazlı fiyat güncelleme.",
   },
