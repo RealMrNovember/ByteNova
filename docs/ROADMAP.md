@@ -1,287 +1,254 @@
-# BYTENOVA — İNŞA YOL HARİTASI
+# BYTENOVA — GÜN GÜN İNŞA PLANI
 
 **Referans doküman:** [ByteNova_PROJE_DOSYASI_v2.md](ByteNova_PROJE_DOSYASI_v2.md)
+**Yaklaşım:** *Ship-first* — proje 1. günden canlıda çalışır; her gün bir eksik kapatılır, her gün sonu deploy edilir.
 **Son güncelleme:** 14 Ağustos 2026
 
-## Altyapı Kararları
+## Altyapı
 
 | Bileşen | Karar |
 |---|---|
-| Hosting / CI-CD | Vercel (proje: `byte-nova`) — her push'ta preview, `main` → production |
-| Veritabanı / Auth / Storage | Supabase (PostgreSQL + Auth + Storage + Realtime) |
-| DNS | Cloudflare — `bytenova.cicibyte.com` subdomain → Vercel |
+| Hosting / CI-CD | Vercel (proje: `byte-nova`) — `main` push → otomatik production deploy |
+| Veritabanı / Auth / Storage | Supabase (PostgreSQL + Auth + Storage) |
+| DNS | Cloudflare — `bytenova.cicibyte.com` → Vercel |
 | Frontend | Next.js (App Router) + TypeScript + Tailwind CSS |
-| Masaüstü (ileri faz) | Tauri — lokal SQLite replika + donanım köprüsü |
-| İzleme | Vercel Analytics + Sentry |
+| Masaüstü (ileri sprint) | Tauri — lokal SQLite replika + donanım köprüsü |
 
-**Ortamlar:** `production` (bytenova.cicibyte.com) • `preview` (Vercel otomatik) • `local` (supabase CLI ile lokal stack)
+## Çalışma Ritmi
 
-**Çalışma prensipleri:**
-- Her faz sonunda çalışan, deploy edilmiş bir ürün olacak; faz atlanmaz.
-- Şema değişiklikleri yalnız migration dosyalarıyla yapılır (`supabase/migrations`), panelden elle şema değişikliği yasak.
-- Tenant izolasyonu 1. günden RLS (Row Level Security) ile kurulur; sonradan eklenmez.
-- Vergi/mevzuat değerleri koda gömülmez (kural tabloları).
-- Her modül, proje dosyasındaki "UI → Service → Domain Rule → DB → Audit → Event" zinciriyle geliştirilir.
-
----
-
-## FAZ 0 — Proje İskeleti ve Altyapı ✅ Hedef: "Merhaba ByteNova" canlıda
-
-- [ ] Next.js projesi oluştur (App Router, TypeScript, Tailwind, ESLint/Prettier)
-- [ ] Depo yapısı: `app/` `components/` `lib/` `supabase/` `docs/`
-- [ ] Vercel projesine bağla, ilk deploy
-- [ ] Cloudflare DNS: `bytenova.cicibyte.com` CNAME → Vercel, SSL doğrulama
-- [ ] Supabase CLI kurulumu, migration altyapısı, tip üretimi (`database.types.ts`)
-- [ ] Ortam değişkenleri düzeni (`.env.local`, Vercel env, `.env.example`)
-- [ ] Temel tablolar migration'ı: `tenants`, `branches`, `users_profile`, `roles`, `feature_flags`, `audit_logs`, `settings`
-- [ ] RLS politika şablonu: her tabloda `tenant_id` zorunlu + izolasyon testi
-- [ ] Supabase Auth: e-posta/parola kayıt, giriş, parola sıfırlama akışları
-- [ ] Sentry entegrasyonu + hata sayfaları (kullanıcıya ham exception gösterilmez)
-
-**Bitti sayılır:** `bytenova.cicibyte.com` açılıyor, kayıt/giriş çalışıyor, tenant izolasyon testi geçiyor.
+1. **Her gün sonunda `main`'e push → canlı deploy.** Yarım özellik feature flag arkasında gizlenir, deploy asla bekletilmez.
+2. Gün tamamlanınca bu dosyada işaretlenir; önemli değişiklikler `CHANGELOG.md`'ye düşülür.
+3. Şema değişiklikleri yalnız migration ile (`supabase/migrations`); panelden elle şema değişikliği yasak.
+4. Tenant izolasyonu (RLS) 2. günden itibaren her tabloda; sonradan eklenmez.
+5. Vergi/mevzuat değerleri koda gömülmez; kural tablolarından okunur.
+6. Her modül "UI → Service → Domain Rule → DB → Audit → Event" zinciriyle yazılır (proje dosyası Bölüm 52).
 
 ---
 
-## FAZ 1 — Tasarım Sistemi ve Panel İskeleti 🎨 Hedef: "Ürünün tüm vizyonu ekranda"
+## SPRINT 0 — CANLIYA ÇIK (Gün 1-2)
 
-- [ ] Tasarım token'ları: renk (koyu tema varsayılan + aydınlık), tipografi, spacing, radius
-- [ ] Çekirdek bileşen seti: Button, Input, Select, Table (kompakt/rahat mod), Card, Badge, Modal, Toast, Skeleton, EmptyState
-- [ ] Panel yerleşimi: daraltılabilir sol menü + global üst bar (arama, `+ Yeni`, kur göstergesi placeholder, bildirim, şube, profil)
-- [ ] **Tam menü ağacı** (proje dosyası Bölüm 10) — feature flag'e bağlı `YAKINDA` / `BETA` / `PRO` rozetleri
-- [ ] Feature flag altyapısı: `feature_flags` tablosu + istemci çözümü (`off | coming_soon | beta | on`)
-- [ ] "Çok Yakında" tanıtım ekranı şablonu + "Hazır olunca haber ver" kaydı
-- [ ] `Ctrl+K` komut paleti (arama + hızlı eylemler; şimdilik navigasyon)
-- [ ] Responsive kırılımlar: mobil alt sekme çubuğu, tablo→kart dönüşümü
-- [ ] Mikro animasyon standartları (150-250ms, `prefers-reduced-motion` desteği)
+### ✅ Gün 1 — İskelet + markalı Showroom canlıda
+- [x] Next.js + TypeScript + Tailwind iskeleti (repo kökü)
+- [x] Koyu tema tasarım temelleri (ByteNova renk paleti, tipografi)
+- [x] Showroom v0: hero, slogan, özellik vitrini, Giriş/Kayıt butonları
+- [x] `/giris`, `/kayit`, `/panel` route iskeletleri
+- [x] Vercel deploy zinciri (GitHub push → production)
+- [ ] Cloudflare DNS: `bytenova.cicibyte.com` → Vercel *(kullanıcı: Cloudflare + Vercel domain ekranı)*
 
-**Bitti sayılır:** Panele giren kullanıcı TÜM modülleri menüde görüyor; aktif olmayanlar zarif YAKINDA ekranı açıyor; mobilde kusursuz.
+### Gün 2 — Supabase + Auth
+- [ ] Supabase env bağlantısı (URL + anon key, Vercel env'e ekleme)
+- [ ] Migration altyapısı + ilk migration: `tenants`, `profiles`, `audit_logs`, `feature_flags`
+- [ ] RLS politika şablonu + tenant izolasyon testi
+- [ ] Kayıt → tenant oluşturma → panele düşme; giriş/çıkış/parola sıfırlama
+- [ ] Korumalı `/panel` layout'u (oturumsuz erişim → `/giris`)
 
----
-
-## FAZ 2 — Showroom 🌐 Hedef: Vitrin + kayıt kapısı
-
-- [ ] Hero + slogan + panel önizleme animasyonu
-- [ ] Sorun/çözüm şeridi ve modül turu (scroll animasyonlu kartlar)
-- [ ] "Türkiye'nin gerçeklerine göre yazıldı" bölümü (döviz, e-belge, çek/senet, İYS...)
-- [ ] Fiyatlandırma tablosu (Starter/Professional/Business/Enterprise)
-- [ ] SSS, iletişim, KVKK/aydınlatma sayfaları
-- [ ] Giriş/Kayıt butonları → panel auth akışına bağlantı
-- [ ] 14 gün deneme akışı: kayıt → tenant oluşturma → "örnek veriyle keşfet / boş başla" seçimi
-- [ ] SEO: meta, OpenGraph, sitemap; LCP < 2sn hedefi
-
-**Bitti sayılır:** Showroom'dan kayıt olan kullanıcı kendi tenant'ıyla panele düşüyor.
+**Sprint sonu:** Kayıt olan kullanıcı kendi tenant'ıyla panele giriyor; site `bytenova.cicibyte.com`'da yayında.
 
 ---
 
-## FAZ 3 — Kimlik, Kurulum Sihirbazı, RBAC, Audit 🔐
+## SPRINT 1 — PANEL İSKELETİ (Gün 3-5)
 
-- [ ] Kurulum sihirbazı (12 adım, tümü atlanabilir — proje dosyası Bölüm 55)
-- [ ] Rol sistemi: Sahip, Yönetici, Kasa, Teknisyen, Depo, Muhasebe, Şube Yöneticisi
-- [ ] Eylem seviyesi yetkiler (maliyet görme, iskonto limiti, silme/iptal yetkisi)
-- [ ] Kullanıcı davet akışı (e-posta ile personel ekleme)
-- [ ] Audit log servisi: her kritik işlemde kim/ne zaman/önceki-yeni değer/sebep
-- [ ] Audit görüntüleme ekranı (yönetici)
-- [ ] MFA opsiyonu
+### Gün 3 — Tasarım sistemi + panel yerleşimi
+- [ ] Çekirdek bileşenler: Button, Input, Select, Badge, Card, Modal, Toast, Table (kompakt/rahat), Skeleton, EmptyState
+- [ ] Panel layout: daraltılabilir sol menü + üst bar (arama, `+ Yeni`, bildirim, profil)
+- [ ] Mobil: alt sekme çubuğu, menü hamburger dönüşümü
 
-**Bitti sayılır:** İki farklı rolle girildiğinde ekranlar ve yetkiler doğru ayrışıyor; kritik işlemler audit'te izleniyor.
+### Gün 4 — Tam menü + feature flag + YAKINDA
+- [ ] Feature flag altyapısı (`off | coming_soon | beta | on`, tenant/plan bazlı)
+- [ ] **Tam menü ağacı** (proje dosyası Bölüm 10) — tüm modüller görünür, pasifler `YAKINDA` rozetli
+- [ ] "Çok Yakında" tanıtım ekranı + "Hazır olunca haber ver" kaydı
+- [ ] `Ctrl+K` komut paleti v1 (navigasyon)
 
----
+### Gün 5 — Tenant kurulumu + roller
+- [ ] Kurulum sihirbazı v1: işletme bilgileri, şube, kullanıcı daveti (tümü atlanabilir)
+- [ ] Rol temelleri: Sahip, Yönetici, Kasa, Teknisyen (yetki matrisi altyapısı)
+- [ ] Audit log servisi (kritik işlemlerde otomatik kayıt)
 
-## FAZ 3B — Platform Yönetim Konsolu v1 🛡 (Master Admin)
-
-> Referans: Proje dosyası Bölüm VIII. Konsol, tenant panelinden ayrı kimlik havuzu ve ayrı yüzeydir.
-
-- [ ] Konsol yüzeyi (`konsol.` subdomain / ayrık route grubu) + `platform_admins` kimlik havuzu + **zorunlu MFA**
-- [ ] Master Admin seed hesabı + admin davet/rol yönetimi (Master, Yönetici, Finans, Destek, Analist)
-- [ ] "Son Master Admin silinemez" ve rol bazlı yetki kuralları
-- [ ] Tenant listesi: arama/filtre + hazır segmentler (deneme bitenler, ödemesi gecikenler, pasifler)
-- [ ] Tenant 360° detay: profil, kullanım metrikleri, olay zaman çizelgesi (`tenant_events`), destek notları
-- [ ] Abonelik modeli: `subscription_plans`, `subscriptions` — Trial → Aktif → Ödeme Bekliyor → Askıda → İptal yaşam döngüsü
-- [ ] Trial bitiş otomasyonu: süre dolunca otomatik `Ödeme Bekliyor` + grace period sonrası otomatik askı
-- [ ] İşlemler: **deneme/abonelik uzatma (sebep zorunlu), askıya alma, yeniden etkinleştirme, plan değiştirme**
-- [ ] Askıdaki tenant deneyimi: panel salt-okunur + "Aboneliğiniz beklemede" ekranı (veri asla silinmez)
-- [ ] **Manuel ödeme akışı (havale/EFT):** dekont yükleme → Finans onayı → otomatik uzatma
-- [ ] Feature flag yönetim ekranı (tenant/plan bazlı `coming_soon → beta → on` geçişleri)
-- [ ] `platform_audit_logs`: tüm konsol eylemleri gerekçeli loglanır
-- [ ] Duyuru sistemi v1 (tenant panellerine banner)
-
-**Bitti sayılır:** Deneme süresi biten tenant otomatik beklemeye düşüyor; konsoldan tek tıkla uzatılıp yeniden aktifleştirilebiliyor; dekont onayı aboneliği uzatıyor; ikinci bir admin davet edilip rolle çalışabiliyor.
+**Sprint sonu:** Panel, ürünün tüm vizyonunu menüde gösteriyor; rol sistemi ve audit çalışıyor.
 
 ---
 
-## FAZ 4 — Müşteri ve Cihaz 👥
+## SPRINT 2 — İLK GERÇEK DEĞER: MÜŞTERİ + SERVİS (Gün 6-10)
 
-- [ ] Müşteri CRUD: bireysel/kurumsal, vergi bilgileri (TCKN/VKN), çoklu telefon/adres
-- [ ] İYS izin alanları (arama/SMS/e-posta — şimdilik kayıt, entegrasyon P1)
-- [ ] Müşteri 360° ekranı (özet şerit: satış/servis/cihaz/bakiye)
-- [ ] İletişim geçmişi kaydı (manuel not + otomatik olaylar)
+### Gün 6 — Müşteri
+- [ ] Müşteri CRUD (bireysel/kurumsal, vergi alanları, çoklu telefon) + arama
+- [ ] Müşteri 360° iskeleti + iletişim geçmişi kaydı
+
+### Gün 7 — Cihaz
 - [ ] Cihaz varlığı: tür, marka/model, seri no (tenant içi benzersiz), IMEI/MAC
-- [ ] Cihaz zaman çizelgesi (alış→satış→servis geçmişi iskeleti)
-- [ ] Global arama v1: müşteri adı, telefon, seri no
+- [ ] Cihaz-müşteri ilişkisi + cihaz zaman çizelgesi iskeleti
+- [ ] Global arama: telefon/seri no ile anında bulma
 
-**Bitti sayılır:** Telefon numarası yazınca müşteri ve cihazları saniyeler içinde bulunuyor.
+### Gün 8 — Servis kabul
+- [ ] Kabul akışı: müşteri → cihaz → beyan → aksesuarlar → dinamik checklist → beyan metni onayı
+- [ ] Servis no üretimi (`BN-2026-XXXXXX`) + durum makinesi altyapısı
+
+### Gün 9 — Servis operasyonu
+- [ ] Servis listesi + detay ekranı + durum geçmişi
+- [ ] Teknisyen atama + teknisyen "bana atananlar" ekranı + teknik notlar
+- [ ] Öncelik sistemi (Düşük/Normal/Yüksek/Acil)
+
+### Gün 10 — Servis çıktıları
+- [ ] Cihaz fotoğrafı yükleme (Supabase Storage, tenant izolasyonlu)
+- [ ] Servis kabul formu + teslim tutanağı PDF (QR kodlu)
+- [ ] Teslim akışı: aksesuar kontrolü + kapanış
+
+**Sprint sonu:** 🎯 **Dükkânda kullanılabilir ilk sürüm** — S1 senaryosunun servis tarafı uçtan uca dönüyor.
 
 ---
 
-## FAZ 5 — Ürün, Stok ve Döviz 📦💵
+## SPRINT 3 — ÜRÜN, STOK, DÖVİZ (Gün 11-15)
 
-- [ ] Ürün kartı (tam alan seti: SKU, barkodlar, kategori, birim, KDV, min/kritik stok, seri no zorunluluğu...)
-- [ ] **Döviz altyapısı:** `currencies`, `exchange_rates`; TCMB kur çekme (günlük cron) + manuel "dükkân kuru"
-- [ ] Dövizli alış fiyatı + TL satış fiyatı; fiyat listeleri (perakende KDV dahil / toptan hariç)
-- [ ] Fiyat kuralları: `satış = maliyet × kur × marj` + yuvarlama
+### Gün 11 — Ürün
+- [ ] Ürün kartı (SKU, barkodlar, kategori, KDV, min/kritik stok, seri no zorunluluğu)
+- [ ] Kategori yönetimi + hızlı ürün ekleme
+
+### Gün 12 — Döviz çekirdeği
+- [ ] `currencies` + `exchange_rates`; TCMB kur çekme (günlük cron) + manuel dükkân kuru
+- [ ] Dövizli alış fiyatı; fiyat kuralı: `satış = maliyet × kur × marj` + yuvarlama
+- [ ] Üst barda canlı kur göstergesi
+
+### Gün 13 — Stok hareketleri
+- [ ] Hareket altyapısı: her hareket kayda bağlı (alış/satış/servis/iade/düzeltme)
+- [ ] Servis parça kullanımı → rezervasyon → onayla stok çıkışı (Sprint 2'ye bağlanır)
+- [ ] Sökülen parça akıbeti alanı
+
+### Gün 14 — Fiyat yönetimi
 - [ ] "Kur değişti → etkilenen ürünler → toplu güncelle" ekranı
-- [ ] Stok hareketleri altyapısı: her hareket kayda bağlı (alış/satış/servis/iade/transfer/sayım/düzeltme)
-- [ ] Negatif stok politikası (tenant ayarı: izinli-uyarılı / onaylı / yasak)
-- [ ] Depo + raf konumu; sayım akışı (snapshot → fark → onay → düzeltme)
+- [ ] Fiyat listeleri: perakende (KDV dahil) / toptan (hariç)
 - [ ] Kritik stok uyarıları
-- [ ] Üst bar kur göstergesi canlıya bağlanır
 
-**Bitti sayılır:** USD'li ürün alışı girilip kur değişince tek ekrandan TL fiyatlar güncellenebiliyor; her stok değişiminin "neden"i var.
+### Gün 15 — Stok disiplini
+- [ ] Negatif stok politikası (tenant ayarı: uyarılı/onaylı/yasak)
+- [ ] Sayım v1 (snapshot → fark → onay → düzeltme + audit)
 
----
-
-## FAZ 6 — SERVİS MODÜLÜ (Ürünün Kalbi) 🔧
-
-- [ ] Servis kabul akışı: müşteri → cihaz → beyan → aksesuarlar → checklist → fotoğraflar → beyan metinleri onayı → servis no (`BN-YYYY-XXXXXX`)
-- [ ] Durum makinesi + durum geçmişi (tüm durumlar, tek aktif ana durum kuralı)
-- [ ] Teknisyen atama + teknisyen ana ekranı ("bana atananlar", öncelikler)
-- [ ] Kanban görünümü (sürükle-bırak durum değişimi)
-- [ ] Teşhis → teklif → müşteri onayı akışı (onay kanalı + tarih/saat kaydı)
-- [ ] Parça kullanımı: stoktan rezervasyon → onay sonrası çıkış; müşteri parçası; **sökülen parça akıbeti (zorunlu alan)**
-- [ ] Kapora/avans alma + teslim anında mahsup
-- [ ] Ücretli teşhis kuralı (red senaryosu)
-- [ ] Stokta olmayan parça → `Parça Bekleniyor` + satın alma talebi
-- [ ] Servis formu + teslim tutanağı PDF (QR kodlu, beyan metinleriyle)
-- [ ] Servis fotoğrafları (Supabase Storage, tenant izolasyonlu)
-- [ ] Teslim alınmayan cihaz sayaçları + hatırlatma görevleri (SMS entegrasyonu P1'de, şimdilik görev/uyarı)
-- [ ] Servis garantisi ilişkisi (tekrar gelen cihaz → kaynak servis bağlantısı)
-- [ ] Azami tamir süresi (20 iş günü) sayacı — garanti kapsamı işaretli servislerde
-
-**Bitti sayılır:** Proje dosyasındaki S1 (ekran kırık laptop) ve S2 (onay vermeyen müşteri) senaryoları uçtan uca sistemde yürüyor.
+**Sprint sonu:** USD'li alış → kur → TL satış fiyatı zinciri çalışıyor; her stok değişiminin "neden"i var.
 
 ---
 
-## FAZ 7 — Satış, Kasa ve Giderler 💰
+## SPRINT 4 — SATIŞ VE KASA (Gün 16-20)
 
-- [ ] Hızlı satış (POS) ekranı: `F2 → ara/barkod → miktar → iskonto → ödeme → belge tipi` (klavye öncelikli)
-- [ ] Karma satış kalemleri (ürün + işçilik + hizmet aynı fişte)
-- [ ] İskonto: satır + genel + yuvarlama; **rol bazlı iskonto limiti + yönetici onayı (PIN)**
-- [ ] Karma ödeme (nakit + kart bölüşümü); taksit kaydı + parametrik taksit limit kuralları
-- [ ] Belge tipi seçimi: manuel ÖKC modu ("fiş no: ___") / "sonra kesilecek" (e-belge P1)
-- [ ] Servisle ilişkili satış (servis kapanışı → tahsilat → satış kaydı otomatik)
-- [ ] İade akışı: `İade Alındı → Kontrol → Satılabilir/Arızalı/Hurda/Servise` + orijinal satış bağı
-- [ ] Kasa hesapları (nakit kasa, banka, POS cihazları) + kasa hareketleri
-- [ ] Kasa kapanışı: beklenen/fiili nakit, POS toplamları, fark + zorunlu açıklama
-- [ ] **Gider modülü:** kategoriler, hızlı giriş, fiş fotoğrafı, tekrarlayan gider hatırlatması
-- [ ] Dijital ürün (lisans key havuzu) — basit sürüm
+### Gün 16 — Hızlı satış
+- [ ] POS ekranı: `F2 → ara/barkod → miktar → ödeme` klavye akışı
+- [ ] Karma kalemler (ürün + işçilik + hizmet)
 
-**Bitti sayılır:** Sabah satış → akşam kasa kapanışı döngüsü gerçek bir dükkân temposunda sorunsuz; iskonto limiti aşımı onaysız kapanmıyor.
+### Gün 17 — İskonto ve ödeme
+- [ ] Satır + genel iskonto + yuvarlama; rol bazlı iskonto limiti + yönetici PIN onayı
+- [ ] Karma ödeme (nakit+kart) + taksit kaydı (parametrik limit kuralları)
 
----
+### Gün 18 — Kasa ve tahsilat
+- [ ] Kasa hesapları (nakit, banka, POS cihazları) + hareketler
+- [ ] Servis kapanışında tahsilat + kapora/avans alma ve mahsup
 
-## FAZ 8 — Alış, Tedarikçi ve Cari 🚚
+### Gün 19 — Gider + kasa kapanışı
+- [ ] Gider modülü (kategoriler, hızlı giriş, fiş fotoğrafı, tekrarlayan gider)
+- [ ] Kasa kapanışı (beklenen/fiili, fark + zorunlu açıklama)
 
-- [ ] Tedarikçi kartı (çalışma para birimi, IBAN, XML feed alanı)
-- [ ] Alış faturası girişi: dövizli, seri numaralı ürün girişi, masraf dağıtımı, geriye dönük belge tarihi
-- [ ] Alış → stok girişi → maliyet güncelleme (ortalama + son alış) → fiyat kuralı tetikleme
-- [ ] Satın alma talepleri ekranı (servisten ve kritik stoktan gelenler)
-- [ ] Cari altyapısı: müşteri/tedarikçi bakiyeleri, vade takibi, yaşlandırma (30/60/90)
-- [ ] Dövizli cari (USD borç izleme, ödeme anında kur farkı kaydı)
-- [ ] Açık hesap satış → cari borçlanma; tahsilat → bakiye düşme
-- [ ] Cari ekstre PDF
-- [ ] Konsinye mal bayrağı (basit sürüm)
+### Gün 20 — Belge ve iade
+- [ ] Belge tipi seçimi: manuel ÖKC modu ("fiş no: ___") / "sonra kesilecek" kuyruk
+- [ ] İade akışı (`İade Alındı → Kontrol → Satılabilir/Arızalı/Hurda/Servise`)
 
-**Bitti sayılır:** S3 (stoksuz parça → talep → alış → servise otomatik bağlanma) senaryosu uçtan uca çalışıyor; toptancıya USD borç doğru izleniyor.
+**Sprint sonu:** 🎯 Sabah satış → akşam kasa kapanışı döngüsü gerçek dükkân temposunda tamam.
 
 ---
 
-## FAZ 9 — Dashboard ve Raporlar 📊
+## SPRINT 5 — ALIŞ, TEDARİKÇİ, CARİ (Gün 21-24)
 
-- [ ] Rol bazlı dashboard kartları (satış, tahsilat, açık servisler, teslimler, kritik stok, kur etkisi, teslim alınmayanlar)
-- [ ] Akıllı özet cümleleri ("Bugün teslim edilecek 7 servis var...")
-- [ ] Satış raporları (gün/ay/ürün/kategori/personel/iskonto)
-- [ ] Kârlılık raporları — **maliyet yöntemi seçilebilir** (ortalama / son alış / güncel kur)
-- [ ] Servis raporları (süre, teknisyen performansı, tekrar oranı)
-- [ ] Stok raporları (kritik, hareketsiz, değer — TL + döviz, negatif stok)
-- [ ] Finans: nakit akış görünümü, cari yaşlandırma
-- [ ] **Muhasebeci paketi v1:** ay sonu Excel export (satışlar, alışlar, giderler)
+### Gün 21 — Tedarikçi + alış
+- [ ] Tedarikçi kartı (para birimi, IBAN) + dövizli alış faturası girişi (geriye dönük tarih destekli)
+- [ ] Alış → stok girişi → maliyet güncelleme → fiyat kuralı tetikleme
 
-**Bitti sayılır:** Sahibi akşam tek ekrandan günü görüyor; ay sonunda SMMM'ye tek tıkla paket gidiyor.
+### Gün 22 — Cari
+- [ ] Müşteri/tedarikçi bakiyeleri + açık hesap satış → borçlanma → tahsilat düşme
+- [ ] Dövizli cari (USD borç, ödeme anında kur farkı kaydı)
 
----
+### Gün 23 — Satın alma talepleri
+- [ ] Talep ekranı (servisten "parça bekleniyor" + kritik stoktan otomatik)
+- [ ] Parça geldi → alış → stok → servise otomatik bağlanma (S3 senaryosu)
 
-## FAZ 10 — Devir, Sertleştirme ve Pilot 🚀 = MVP LANSMANI
+### Gün 24 — Cari çıktılar
+- [ ] Cari ekstre PDF + yaşlandırma (30/60/90)
+- [ ] Cari açılış bakiyesi import'u (devir)
 
-- [ ] Excel import sihirbazı: müşteri, ürün, stok, tedarikçi, cihaz, **cari açılış bakiyeleri, açık servisler**
-- [ ] Demo veri seti ("örnek veriyle keşfet")
-- [ ] Yedekleme stratejisi: Supabase otomatik yedek + tenant bazlı tam export
-- [ ] Performans: kritik listelerde sanal kaydırma, sorgu optimizasyonu, indeksler
-- [ ] Güvenlik taraması: RLS testleri, rate limiting, dosya yükleme sertleştirme
-- [ ] E2E test paketi (S1, S2, S3, S11 senaryoları otomatik)
-- [ ] Onboarding dokümanları + kısa eğitim videoları
-- [ ] 2-3 gerçek bilgisayarcıyla pilot; geri bildirim döngüsü
-- [ ] Fiyatlandırma/paket kilitleri (Starter/Pro ayrımı feature flag'lerle)
-
-**Bitti sayılır:** Gerçek bir dükkân bir haftasını yalnız ByteNova ile yönetebiliyor.
+**Sprint sonu:** Toptancıya USD borç doğru izleniyor; S3 uçtan uca çalışıyor.
 
 ---
 
-## FAZ 11 — P1 Modülleri (Lansman sonrası 2-4 ay) 📈
+## SPRINT 6 — DASHBOARD, RAPOR, KONSOL (Gün 25-30)
 
-Sıralama pilot geri bildirimine göre revize edilir; öngörülen öncelik:
+### Gün 25 — Dashboard
+- [ ] Rol bazlı gerçek kartlar (satış, tahsilat, açık servisler, kritik stok, kur etkisi, teslim alınmayanlar)
+- [ ] Akıllı özet cümleleri
 
-1. **e-Belge:** Entegratör soyutlaması + ilk entegratör (e-Arşiv/e-Fatura), gider pusulası, entegratörsüz "portal modu"
-2. **WhatsApp/SMS + İYS:** Sağlayıcı soyutlaması, servis bildirimleri, İYS izin senkronu, müşteri onay linki
-3. **Çek/Senet + POS mutabakat:** Portföy, vade takvimi, nakit akış uyarıları
-4. **PC Toplama (BOM):** Reçeteler, toplama emri, demontaj, parça hasadı
-5. **Toptancı XML:** İlk 2-3 distribütör adaptörü, eşleştirme, fiyat kuralı entegrasyonu
-6. **Müşteri servis takip sayfası:** QR ile servis durumu görüntüleme + online onay
-7. **Bakım sözleşmeleri:** SLA, periyodik ziyaret görevleri, otomatik faturalama
-8. **Prim modülü** + gelişmiş raporlar
-9. **Uyumluluk matrisi**, ÖKC entegrasyonu (ilk marka), vergi kural motoru tam sürüm (tevkifat/özel matrah)
-10. **Otomatik abonelik tahsilatı:** `BillingProvider` soyutlaması + ilk sağlayıcı (iyzico/PayTR), dunning, abonelik faturaları, impersonation (destek oturumu), platform metrik panosu (MRR, churn, dönüşüm)
+### Gün 26 — Raporlar I
+- [ ] Satış raporları (gün/ay/ürün/personel/iskonto) + servis raporları (süre, teknisyen, tekrar)
 
----
+### Gün 27 — Raporlar II
+- [ ] Kârlılık (maliyet yöntemi seçilebilir) + stok raporları
+- [ ] Muhasebeci paketi v1 (ay sonu Excel export)
 
-## FAZ 12 — Masaüstü Uygulaması (Online + Offline) 💻
+### Gün 28 — Yönetim Konsolu v1a
+- [ ] Konsol yüzeyi + `platform_admins` (ayrı kimlik, zorunlu MFA) + Master Admin seed
+- [ ] Tenant listesi + Tenant 360° + `tenant_events`
 
-- [ ] Tauri kabuğu: panel + imzalı otomatik güncelleme + sistem tepsisi
-- [ ] Lokal SQLite replika (müşteri/ürün/stok/açık servis/kur) + delta senkron
-- [ ] Outbox deseni: offline satış ve servis kabul kuyruğu, idempotent sunucu işleme
-- [ ] Çakışma kutusu ekranı (yetkili onaylı çözüm)
-- [ ] "Resmi belge offline üretilmez" kuralı — belge bekleyenler kuyruğu
-- [ ] Donanım köprüsü: termal/A4/etiket yazıcı, barkod okuyucu; ÖKC köprüsü
-- [ ] Lokal DB şifreleme + offline oturum güvenliği
-- [ ] Bağlantı kopma/gelme simülasyon testleri
+### Gün 29 — Yönetim Konsolu v1b
+- [ ] Abonelik modeli: Trial → Aktif → Ödeme Bekliyor → Askıda yaşam döngüsü + trial otomasyonu
+- [ ] Uzatma / askıya alma / yeniden etkinleştirme; askıdaki tenant salt-okunur deneyimi
+- [ ] Manuel ödeme (havale/dekont onay) akışı
 
-**Bitti sayılır:** S10 senaryosu (internet kesildi, dükkân çalışmaya devam etti) gerçek donanımda doğrulanıyor.
+### Gün 30 — Sertleştirme
+- [ ] Admin davet/rol yönetimi + `platform_audit_logs` + feature flag yönetim ekranı
+- [ ] RLS güvenlik taraması + E2E test paketi (S1, S2, S3) + performans geçişi
+
+**Sprint sonu:** 🎯 **MVP çekirdeği canlıda** — işletmeler kayıt olup çalışabilir, sen konsoldan yönetebilirsin.
 
 ---
 
-## FAZ 13 — P2 Ufku 🔭
+## SPRINT 7-8 — DERİNLİK VE CİLA (Hafta 5-6)
 
-Çok şube (transfer, konsolide rapor) • Mobil teknisyen uygulaması • Pazaryeri entegrasyonları (Trendyol/Hepsiburada/N11) + cayma hakkı akışı • Kargo entegrasyonları • Sanal POS/ödeme linki • AI asistan (arıza özeti, fiyat önerisi, stok tahmini) • Marketplace/eklenti altyapısı • Dışa açık API (Enterprise)
+Sıra pilot geri bildirimiyle revize edilir:
+
+- [ ] Showroom tam sürüm (modül turu, fiyatlandırma, SSS, canlı demo, SEO)
+- [ ] Excel import sihirbazı tam set (müşteri/ürün/stok/cihaz/açık servis)
+- [ ] Servis derinliği: teslim alınmayan cihaz otomasyonu, ücretli teşhis, servis garantisi ilişkisi, kanban görünümü, azami süre sayacı
+- [ ] Teklif modülü + PDF
+- [ ] Dijital ürün (lisans key) + demo veri seti
+- [ ] Kurulum sihirbazı tam sürüm + onboarding dokümanları
+- [ ] 2-3 gerçek bilgisayarcıyla **pilot başlangıcı**
+
+## SPRINT 9-12 — P1 MODÜLLERİ (Hafta 7-12)
+
+Öngörülen öncelik (pilot verisiyle güncellenir):
+
+1. **WhatsApp/SMS + İYS** — sağlayıcı soyutlaması, servis bildirimleri, onay linki
+2. **e-Belge** — entegratör soyutlaması + ilk entegratör, gider pusulası, portal modu
+3. **Çek/Senet + POS mutabakat** — portföy, vade takvimi, nakit akış uyarıları
+4. **Otomatik abonelik tahsilatı** — `BillingProvider` (iyzico/PayTR), dunning, impersonation
+5. **PC Toplama (BOM)** — reçete, toplama emri, demontaj
+6. **Toptancı XML** — ilk 2-3 distribütör adaptörü
+7. **Müşteri servis takip sayfası** (QR) + bakım sözleşmeleri + prim + uyumluluk matrisi + ÖKC entegrasyonu
+
+## SPRINT 13+ — MASAÜSTÜ (OFFLINE) VE P2 (Hafta 13+)
+
+- [ ] Tauri kabuğu + lokal SQLite replika + outbox senkron + çakışma kutusu
+- [ ] Donanım köprüsü (termal/etiket yazıcı, barkod okuyucu, ÖKC)
+- [ ] Çok şube, mobil teknisyen, pazaryeri, kargo, AI asistan, marketplace
 
 ---
 
-## İlerleme Takibi
+## İLERLEME TABLOSU
 
-Her faz tamamlandığında bu dosyada işaretlenir ve `docs/CHANGELOG.md`'ye özet düşülür. Faz içi görevler GitHub Issues/Projects üzerinden yürütülebilir.
-
-| Faz | Durum | Tarih |
+| Sprint | Kapsam | Durum |
 |---|---|---|
-| 0 — İskelet ve altyapı | ⏳ Sırada | — |
-| 1 — Tasarım sistemi + panel | Bekliyor | — |
-| 2 — Showroom | Bekliyor | — |
-| 3 — Kimlik/RBAC | Bekliyor | — |
-| 3B — Yönetim Konsolu v1 | Bekliyor | — |
-| 4 — Müşteri/Cihaz | Bekliyor | — |
-| 5 — Ürün/Stok/Döviz | Bekliyor | — |
-| 6 — Servis | Bekliyor | — |
-| 7 — Satış/Kasa/Gider | Bekliyor | — |
-| 8 — Alış/Tedarikçi/Cari | Bekliyor | — |
-| 9 — Dashboard/Raporlar | Bekliyor | — |
-| 10 — Devir/Pilot (MVP) | Bekliyor | — |
-| 11 — P1 | Bekliyor | — |
-| 12 — Masaüstü/Offline | Bekliyor | — |
-| 13 — P2 | Bekliyor | — |
+| 0 (Gün 1-2) | Canlıya çık + Auth | 🔨 Gün 1 tamamlandı |
+| 1 (Gün 3-5) | Panel iskeleti + flag + roller | Bekliyor |
+| 2 (Gün 6-10) | Müşteri + Servis çekirdeği | Bekliyor |
+| 3 (Gün 11-15) | Ürün + Stok + Döviz | Bekliyor |
+| 4 (Gün 16-20) | Satış + Kasa + Gider | Bekliyor |
+| 5 (Gün 21-24) | Alış + Cari | Bekliyor |
+| 6 (Gün 25-30) | Dashboard + Rapor + Konsol = MVP | Bekliyor |
+| 7-8 | Derinlik + pilot | Bekliyor |
+| 9-12 | P1 modülleri | Bekliyor |
+| 13+ | Masaüstü/Offline + P2 | Bekliyor |
+
+> Modül ayrıntıları için proje dosyasının ilgili bölümleri esastır: Servis (B12), Satış (B14), Alış (B15), BOM (B16), Stok (B17), İkinci el (B19), Kasa (B21), Çek/Senet (B22), Cari (B23), Gider (B24), Konsol (B63-68).
