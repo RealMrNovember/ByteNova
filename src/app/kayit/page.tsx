@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { GoogleGiris } from "@/components/GoogleGiris";
 
 export default function KayitPage() {
   const [isletmeAdi, setIsletmeAdi] = useState("");
@@ -167,6 +168,18 @@ export default function KayitPage() {
                 {yukleniyor ? "Hesap oluşturuluyor…" : "Hesap Oluştur"}
               </button>
             </form>
+
+            <div className="mt-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-slate-800" />
+              <span className="text-[11px] uppercase tracking-wide text-slate-600">
+                veya
+              </span>
+              <div className="h-px flex-1 bg-slate-800" />
+            </div>
+
+            <div className="mt-5">
+              <GoogleGiris metin="Google ile kayıt ol" />
+            </div>
 
             <p className="mt-5 text-center text-xs text-slate-500">
               Zaten hesabınız var mı?{" "}

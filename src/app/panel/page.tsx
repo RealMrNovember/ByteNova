@@ -37,7 +37,7 @@ export default async function PanelPage() {
 
   const { data: profil } = await supabase
     .from("profiles")
-    .select("full_name, role, tenants(name, status, trial_ends_at)")
+    .select("full_name, role, tenants(*)")
     .eq("id", user.id)
     .single();
 
@@ -45,7 +45,15 @@ export default async function PanelPage() {
     name: string;
     status: string;
     trial_ends_at: string;
+    logo_url?: string | null;
+    onboarding_completed?: boolean;
   } | null;
+
+  // Şirket bilgileri henüz alınmadıysa kurulum ekranına yönlendir.
+  // (Kolon migration'dan önce undefined kalırsa yönlendirme yapılmaz.)
+  if (tenant && tenant.onboarding_completed === false) {
+    redirect("/kurulum");
+  }
 
   const kalanGun = tenant?.trial_ends_at
     ? Math.max(
@@ -70,16 +78,26 @@ export default async function PanelPage() {
       <div className="relative mx-auto w-full max-w-4xl">
         {/* Üst şerit */}
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">
-              İşletme Paneli
-            </p>
-            <h1 className="mt-1 text-2xl font-bold text-white">
-              {tenant?.name ?? "İşletmem"}
-            </h1>
-            <p className="mt-1 text-sm text-slate-400">
-              Hoş geldin{profil?.full_name ? `, ${profil.full_name}` : ""} 👋
-            </p>
+          <div className="flex items-center gap-4">
+            {tenant?.logo_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={tenant.logo_url}
+                alt={`${tenant.name} logosu`}
+                className="h-14 w-14 rounded-xl border border-slate-700 object-contain"
+              />
+            )}
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">
+                İşletme Paneli
+              </p>
+              <h1 className="mt-1 text-2xl font-bold text-white">
+                {tenant?.name ?? "İşletmem"}
+              </h1>
+              <p className="mt-1 text-sm text-slate-400">
+                Hoş geldin{profil?.full_name ? `, ${profil.full_name}` : ""} 👋
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             {tenant?.status === "trial" && kalanGun !== null && (

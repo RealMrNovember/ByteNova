@@ -44,6 +44,14 @@
 - [x] Kayıt → e-posta doğrulama → tenant oluşturma → panele düşme; giriş/çıkış/parola sıfırlama
 - [x] Korumalı `/panel` (middleware: oturumsuz erişim → `/giris`, oturumluyken `/giris` → `/panel`)
 
+### Gün 2+ — Onboarding, Google, WhatsApp (kullanıcı talebi ile öne alındı)
+- [x] Google ile giriş/kayıt butonları (`signInWithOAuth`) — *Google Cloud OAuth client tanımı bekleniyor*
+- [x] Şirket bilgileri kurulum ekranı `/kurulum` (ad, telefon, adres, logo yükleme) + panel yönlendirmesi
+- [x] `0002_sirket_profili.sql` (tenant alanları + logo storage bucket/politikaları) — *uygulanması bekliyor*
+- [x] WhatsApp destek hattı butonu (tüm sayfalarda, +90 535 489 50 50)
+- [x] Showroom oturum-duyarlı başlık (girişliyse "Panele Git")
+- [ ] Özel SMTP (dahili e-posta servisi saatte ~2-3 ile sınırlı — üretim öncesi şart)
+
 **Sprint sonu:** Kayıt olan kullanıcı kendi tenant'ıyla panele giriyor; site `bytenova.cicibyte.com`'da yayında.
 
 ---

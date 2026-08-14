@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
 const moduller = [
   {
@@ -48,7 +49,12 @@ const turkiyeMaddeleri = [
   "İYS uyumlu müşteri bildirimleri",
 ];
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <main className="flex-1">
       {/* Üst bar */}
@@ -61,18 +67,29 @@ export default function Home() {
             </span>
           </div>
           <nav className="flex items-center gap-2 sm:gap-3">
-            <Link
-              href="/giris"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:text-white"
-            >
-              Giriş Yap
-            </Link>
-            <Link
-              href="/kayit"
-              className="rounded-lg bg-nova-500 px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-nova-400"
-            >
-              Ücretsiz Dene
-            </Link>
+            {user ? (
+              <Link
+                href="/panel"
+                className="rounded-lg bg-nova-500 px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-nova-400"
+              >
+                Panele Git →
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/giris"
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:text-white"
+                >
+                  Giriş Yap
+                </Link>
+                <Link
+                  href="/kayit"
+                  className="rounded-lg bg-nova-500 px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-nova-400"
+                >
+                  Ücretsiz Dene
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </header>

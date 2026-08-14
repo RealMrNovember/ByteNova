@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { GoogleGiris } from "@/components/GoogleGiris";
 
 function GirisFormu() {
   const router = useRouter();
@@ -112,6 +113,18 @@ function GirisFormu() {
           {yukleniyor ? "Giriş yapılıyor…" : "Giriş Yap"}
         </button>
       </form>
+
+      <div className="mt-5 flex items-center gap-3">
+        <div className="h-px flex-1 bg-slate-800" />
+        <span className="text-[11px] uppercase tracking-wide text-slate-600">
+          veya
+        </span>
+        <div className="h-px flex-1 bg-slate-800" />
+      </div>
+
+      <div className="mt-5">
+        <GoogleGiris metin="Google ile giriş yap" />
+      </div>
 
       <p className="mt-5 text-center text-xs text-slate-500">
         Hesabınız yok mu?{" "}

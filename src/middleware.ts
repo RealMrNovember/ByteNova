@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  if (!user && path.startsWith("/panel")) {
+  if (!user && (path.startsWith("/panel") || path === "/kurulum")) {
     const url = request.nextUrl.clone();
     url.pathname = "/giris";
     return NextResponse.redirect(url);
@@ -47,5 +47,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/panel/:path*", "/giris", "/kayit", "/sifre-yenile"],
+  matcher: ["/panel/:path*", "/kurulum", "/giris", "/kayit", "/sifre-yenile"],
 };
