@@ -235,7 +235,7 @@ export function CihazFormu({
         <label className="mb-1.5 block text-xs font-medium text-slate-300">
           Sahibi (müşteri)
         </label>
-        <MusteriSec secili={musteri} onSec={setMusteri} />
+        <MusteriSec tenantId={tenantId} secili={musteri} onSec={setMusteri} />
       </div>
 
       <div>

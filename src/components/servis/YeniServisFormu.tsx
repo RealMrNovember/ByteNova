@@ -114,7 +114,7 @@ export function YeniServisFormu({ tenantId }: { tenantId: string }) {
         <label className="mb-1.5 block text-xs font-medium text-slate-300">
           Müşteri *
         </label>
-        <MusteriSec secili={musteri} onSec={musteriSec} />
+        <MusteriSec tenantId={tenantId} secili={musteri} onSec={musteriSec} />
       </div>
 
       <div>

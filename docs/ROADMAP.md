@@ -131,6 +131,15 @@
 
 **Sprint sonu:** 🎯 **Dükkânda kullanılabilir ilk sürüm** — S1 senaryosunun servis tarafı (kabul→teşhis→onarım→teslim→belge) uçtan uca dönüyor.
 
+### Ek — Hızlı müşteri kaydı UX düzeltmesi ✅ (kullanıcı geri bildirimiyle)
+Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/musteriler/yeni`'ye yönlendirme, akışı bölüyordu (müşteri tezgahta beklerken dakikalarca kayıp). `MusteriSec` (paylaşılan bileşen — hem Servis hem Cihaz formunda kullanılıyor) artık `CihazSecVeyaOlustur` ile aynı deseni izliyor:
+- Arama kutusunun yanında her zaman görünen **"+ Yeni"** butonu — aramayı beklemeden direkt hızlı kayda geçilebilir
+- Aranan metin otomatik ayrıştırılıyor (rakam ağırlıklıysa telefon, değilse ad alanına ön dolduruluyor)
+- Yalnız **Ad Soyad + Telefon** (zorunlu minimum) — adres/vergi/notlar sonra müşteri kartından eklenir
+- Kayıt sayfa değişmeden oluşuyor ve anında seçili hale geliyor, form kaldığı yerden (Cihaz adımına) devam ediyor
+- Audit'e `kaynak: hizli_kayit` ile düşüyor
+- E2E: telefon ön-doldurma, sayfa değişmeden kayıt+seçim, DB/audit doğrulaması, Cihaz formunda da aynı bileşenin çalıştığı doğrulandı
+
 ---
 
 ## SPRINT 3 — ÜRÜN, STOK, DÖVİZ (Gün 11-15)
