@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { IletisimGecmisi } from "@/components/musteri/IletisimGecmisi";
+import { cihazIkon } from "@/lib/cihaz";
 
 export default async function MusteriDetayPage({
   params,
@@ -26,12 +27,19 @@ export default async function MusteriDetayPage({
     .order("created_at", { ascending: false })
     .limit(30);
 
-  // 360° özet — servis/satış/cihaz modülleri geldikçe gerçek sayılara bağlanacak
+  const { data: cihazlar } = await supabase
+    .from("devices")
+    .select("id, device_type, brand, model, serial_no")
+    .eq("customer_id", id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  // 360° özet — servis/satış modülleri geldikçe gerçek sayılara bağlanacak
   const ozet = [
-    { etiket: "Satış", deger: "—", not: "yakında" },
-    { etiket: "Servis", deger: "—", not: "yakında" },
-    { etiket: "Cihaz", deger: "—", not: "yakında" },
-    { etiket: "Bakiye", deger: "—", not: "yakında" },
+    { etiket: "Satış", deger: "—" },
+    { etiket: "Servis", deger: "—" },
+    { etiket: "Cihaz", deger: String(cihazlar?.length ?? 0) },
+    { etiket: "Bakiye", deger: "—" },
   ];
 
   return (
@@ -85,13 +93,56 @@ export default async function MusteriDetayPage({
               key={o.etiket}
               className="rounded-lg border border-slate-800 bg-surface px-3 py-2.5 text-center"
             >
-              <p className="text-lg font-bold text-slate-600">{o.deger}</p>
+              <p
+                className={`text-lg font-bold ${
+                  o.deger === "—" ? "text-slate-600" : "text-nova-300"
+                }`}
+              >
+                {o.deger}
+              </p>
               <p className="text-[10px] uppercase tracking-wide text-slate-500">
                 {o.etiket}
               </p>
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Cihazlar */}
+      <div className="glass mt-4 rounded-xl p-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-white">Cihazları</h2>
+          <Link
+            href={`/panel/cihazlar/yeni?musteri=${m.id}`}
+            className="rounded-lg border border-slate-700 px-3 py-1.5 text-[11px] font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+          >
+            + Cihaz Ekle
+          </Link>
+        </div>
+        {!cihazlar?.length ? (
+          <p className="mt-4 text-center text-xs text-slate-600">
+            Bu müşteriye bağlı cihaz yok.
+          </p>
+        ) : (
+          <div className="mt-3 divide-y divide-slate-800/60">
+            {cihazlar.map((c) => (
+              <Link
+                key={c.id}
+                href={`/panel/cihazlar/${c.id}`}
+                className="flex items-center gap-3 py-2.5 transition-colors hover:bg-slate-800/20"
+              >
+                <span className="text-base">{cihazIkon(c.device_type)}</span>
+                <span className="flex-1 text-sm text-slate-200">
+                  {[c.brand, c.model].filter(Boolean).join(" ") ||
+                    "İsimsiz cihaz"}
+                </span>
+                <span className="font-mono text-xs text-slate-500">
+                  {c.serial_no ?? "—"}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Bilgiler */}

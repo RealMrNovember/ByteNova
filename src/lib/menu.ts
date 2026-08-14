@@ -64,7 +64,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "cihazlar",
     ad: "Cihazlar",
     ikon: "💻",
-    durum: "yakinda",
+    durum: "aktif",
     aciklama:
       "Seri numarası bazlı cihaz envanteri: bu laptop hangi alıştan geldi, kime satıldı, kaç kez servise girdi — saniyede cevap.",
   },

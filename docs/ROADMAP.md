@@ -93,10 +93,14 @@
 - [x] E2E: CRUD + arama + olay + **tenant izolasyonu negatif testleri** geçti
 - [x] Menüde Müşteriler AKTİF
 
-### Gün 7 — Cihaz
-- [ ] Cihaz varlığı: tür, marka/model, seri no (tenant içi benzersiz), IMEI/MAC
-- [ ] Cihaz-müşteri ilişkisi + cihaz zaman çizelgesi iskeleti
-- [ ] Global arama: telefon/seri no ile anında bulma
+### Gün 7 — Cihaz ✅
+- [x] Cihaz varlığı: tür (8 kategori), marka/model, seri no (tenant içi benzersiz — DB kısıtı), IMEI/MAC
+- [x] `0006_cihazlar.sql`: devices + device_events, RLS, seri no unique index (uygulandı)
+- [x] Cihaz-müşteri ilişkisi (arama kutulu seçici) + cihaz zaman çizelgesi (created/ownership olayları)
+- [x] Müşteri 360°'a cihaz listesi bağlandı (gerçek sayı + "Cihaz Ekle" kısayolu)
+- [x] **Ctrl+K paleti artık gerçek arama:** müşteri (ad/telefon) + cihaz (seri no/IMEI/marka/model), 250ms debounce
+- [x] E2E: CRUD + mükerrer seri no reddi (409) + arama + sahiplik ilişkisi geçti
+- [x] Menüde Cihazlar AKTİF
 
 ### Gün 8 — Servis kabul
 - [ ] Kabul akışı: müşteri → cihaz → beyan → aksesuarlar → dinamik checklist → beyan metni onayı
