@@ -77,7 +77,7 @@
 - [x] **Ayarlar sayfası aktif:** işletme bilgileri, kullanıcı listesi, rol değiştirme (yalnız sahip), davet yönetimi
 - [x] Audit servisi (`audit_ekle` fonksiyonu): işletme güncelleme, rol değişimi, davet olayları kayıt altında
 - [x] E2E: davet → kabul → tenant taşınma → rol değişimi + izinsiz erişim negatif testleri geçti
-- [ ] Resend SMTP geçişi (DNS doğrulaması bekleniyor — `docs/RESEND_DNS.md`)
+- [x] Resend SMTP geçişi tamamlandı (`no-reply@cicibyte.com` — saatlik e-posta limiti sorunu çözüldü)
 
 **Sprint sonu:** ✅ Panel, ürünün tüm vizyonunu menüde gösteriyor; rol sistemi, davet ve audit çalışıyor.
 
