@@ -1099,7 +1099,7 @@ Bu deneyim ürünün başarı kriteridir.
 | **Enterprise** | Çok şube + API + özel entegrasyon + SLA |
 
 - 14 gün tam özellikli deneme; demo veri seçeneği. Ücretsiz sürümü kısırlaştırmak yerine güçlü trial deneyimi.
-- Eklenti/marketplace geliri (P2): e-Fatura Paketi, WhatsApp Paketi, Pazaryeri Paketi, AI Asistan, Mobil Teknisyen, Barkod/POS Paketi, Muhasebe Entegrasyonları. Core ürün sade kalır.
+- **Eklenti/marketplace geliri:** Plan katmanından bağımsız, tek switch ile aktive edilen ücretli modüller (WhatsApp/SMS, e-Belge, CRM Plus, Stok Plus, Finans Plus, Kurumsal Satış, PC Toplama, Pazaryeri). Çekirdek/eklenti ayrımı, veri modeli (`addon_packages`, `tenant_addon_subscriptions`), menüde `kilitli` durumu ve uygulama fazlaması için bkz. **[docs/EKLENTI_MIMARISI.md](EKLENTI_MIMARISI.md)** — bu, mevcut Bölüm 9 (Feature Flag) ve Bölüm 63-68 (Yönetim Konsolu) altyapısının üzerine inşa edilir; Core ürün sade kalır.
 
 ## 59. BAŞARI METRİKLERİ
 

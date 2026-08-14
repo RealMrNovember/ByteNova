@@ -123,6 +123,7 @@ Adım adım inşa planı için: **[docs/ROADMAP.md](docs/ROADMAP.md)**
 |---|---|
 | [`docs/ByteNova_PROJE_DOSYASI_v2.md`](docs/ByteNova_PROJE_DOSYASI_v2.md) | Güncel ürün ve proje dosyası (v2.0) — ana referans |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Adım adım inşa yol haritası |
+| [`docs/EKLENTI_MIMARISI.md`](docs/EKLENTI_MIMARISI.md) | Ücretli eklenti (add-on) mimarisi — WhatsApp, CRM Plus, Stok Plus vb. |
 | [`docs/ByteNova_PROJE_DOSYASI.md`](docs/ByteNova_PROJE_DOSYASI.md) | İlk taslak (v1.0) — arşiv |
 | [`LICENSE`](LICENSE) | Lisans |
 

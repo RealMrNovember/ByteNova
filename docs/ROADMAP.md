@@ -221,6 +221,7 @@
 
 ### Gün 30 — Sertleştirme
 - [ ] Admin davet/rol yönetimi + `platform_audit_logs` + feature flag yönetim ekranı
+- [ ] **Eklenti mimarisi temeli** (bkz. `docs/EKLENTI_MIMARISI.md`): `addon_packages` + `tenant_addon_subscriptions` tabloları, `efektifMenu()`'ye `kilitli` durumu, Konsol'da paket toggle ekranı
 - [ ] RLS güvenlik taraması + E2E test paketi (S1, S2, S3) + performans geçişi
 
 **Sprint sonu:** 🎯 **MVP çekirdeği canlıda** — işletmeler kayıt olup çalışabilir, sen konsoldan yönetebilirsin.
@@ -247,6 +248,7 @@ Sıra pilot geri bildirimiyle revize edilir:
 2. **e-Belge** — entegratör soyutlaması + ilk entegratör, gider pusulası, portal modu
 3. **Çek/Senet + POS mutabakat** — portföy, vade takvimi, nakit akış uyarıları
 4. **Otomatik abonelik tahsilatı** — `BillingProvider` (iyzico/PayTR), dunning, impersonation
+   - **Eklenti self-servis switch'i** aynı işte: tenant panelinde Ayarlar → Eklentiler, otomatik ödeme + kullanım bazlı faturalama (`docs/EKLENTI_MIMARISI.md`). İlk paketler: WhatsApp/SMS ve e-Belge.
 5. **PC Toplama (BOM)** — reçete, toplama emri, demontaj
 6. **Toptancı XML** — ilk 2-3 distribütör adaptörü
 7. **Müşteri servis takip sayfası** (QR) + bakım sözleşmeleri + prim + uyumluluk matrisi + ÖKC entegrasyonu
