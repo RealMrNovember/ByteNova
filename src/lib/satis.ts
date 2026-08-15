@@ -22,3 +22,23 @@ export function kalemEtiket(tip: string): string {
 export function kalemIkon(tip: string): string {
   return KALEM_TIPLERI[tip]?.ikon ?? "•";
 }
+
+export const BELGE_TIPLERI: Record<string, string> = {
+  okc_fisi: "ÖKC Fişi",
+  sonra_kesilecek: "Sonra Kesilecek",
+};
+
+export const IADE_SONUCLARI: Record<string, { etiket: string; ikon: string }> = {
+  satilabilir: { etiket: "Satılabilir", ikon: "✅" },
+  arizali: { etiket: "Arızalı", ikon: "⚠️" },
+  hurda: { etiket: "Hurda", ikon: "🗑️" },
+  servise: { etiket: "Servise Yönlendirildi", ikon: "🔧" },
+};
+
+export function iadeSonucEtiket(sonuc: string): string {
+  return IADE_SONUCLARI[sonuc]?.etiket ?? sonuc;
+}
+
+export function iadeSonucIkon(sonuc: string): string {
+  return IADE_SONUCLARI[sonuc]?.ikon ?? "•";
+}

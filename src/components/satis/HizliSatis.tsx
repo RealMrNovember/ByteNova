@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { MusteriSec } from "@/components/cihaz/MusteriSec";
+import Link from "next/link";
 import { kalemEtiket, kalemIkon, ODEME_YONTEMLERI } from "@/lib/satis";
 import { YoneticiOnayModal } from "./YoneticiOnayModal";
 
@@ -71,6 +72,9 @@ export function HizliSatis({ tenantId, maxTaksit, kasaHesaplari }: Props) {
   const [genelIskonto, setGenelIskonto] = useState("");
   const [yuvarlamaAktif, setYuvarlamaAktif] = useState(false);
 
+  const [belgeTipi, setBelgeTipi] = useState<"okc_fisi" | "sonra_kesilecek">("sonra_kesilecek");
+  const [fisNo, setFisNo] = useState("");
+
   const [odemeMod, setOdemeMod] = useState<"tek" | "karma">("tek");
   const [tekYontem, setTekYontem] = useState<OdemeYontemi>("nakit");
   const [tekTaksit, setTekTaksit] = useState(1);
@@ -87,7 +91,7 @@ export function HizliSatis({ tenantId, maxTaksit, kasaHesaplari }: Props) {
 
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
-  const [basari, setBasari] = useState<{ saleNo: string; toplam: number } | null>(null);
+  const [basari, setBasari] = useState<{ saleId: string; saleNo: string; toplam: number } | null>(null);
   const [iskontoOnayBekleniyor, setIskontoOnayBekleniyor] = useState<{ negatifOnay: boolean } | null>(null);
 
   useEffect(() => {
@@ -292,6 +296,8 @@ export function HizliSatis({ tenantId, maxTaksit, kasaHesaplari }: Props) {
       p_yuvarlama: yuvarlamaTutari,
       p_iskonto_onaylayan_id: iskontoOnaylayanId,
       p_negatif_onay: negatifOnay,
+      p_belge_tipi: belgeTipi,
+      p_fis_no: belgeTipi === "okc_fisi" ? fisNo : null,
     });
 
     if (error) {
@@ -318,6 +324,10 @@ export function HizliSatis({ tenantId, maxTaksit, kasaHesaplari }: Props) {
         setHata("Her ödeme satırı için bir kasa hesabı seçin.");
         return;
       }
+      if (error.message.includes("fiş numarası zorunlu")) {
+        setHata("ÖKC fişi için fiş numarası girin.");
+        return;
+      }
       setHata("Satış tamamlanamadı.");
       return;
     }
@@ -325,11 +335,13 @@ export function HizliSatis({ tenantId, maxTaksit, kasaHesaplari }: Props) {
     const { data: satis } = await supabase.from("sales").select("sale_no").eq("id", data).single();
 
     setGonderiliyor(false);
-    setBasari({ saleNo: satis?.sale_no ?? "—", toplam });
+    setBasari({ saleId: data as string, saleNo: satis?.sale_no ?? "—", toplam });
     setKalemler([]);
     setMusteri(null);
     setGenelIskonto("");
     setYuvarlamaAktif(false);
+    setBelgeTipi("sonra_kesilecek");
+    setFisNo("");
     setOdemeMod("tek");
     setTekYontem("nakit");
     setTekTaksit(1);
@@ -337,6 +349,8 @@ export function HizliSatis({ tenantId, maxTaksit, kasaHesaplari }: Props) {
     router.refresh();
     aramaRef.current?.focus();
   }
+
+  const belgeGecersiz = belgeTipi === "okc_fisi" && !fisNo.trim();
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
@@ -679,6 +693,43 @@ export function HizliSatis({ tenantId, maxTaksit, kasaHesaplari }: Props) {
           </div>
         )}
 
+        <div className="mt-4">
+          <p className="text-xs font-medium text-slate-400">Belge</p>
+          <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+            <button
+              type="button"
+              onClick={() => setBelgeTipi("sonra_kesilecek")}
+              className={`rounded-lg border px-2 py-2 text-xs font-medium transition-colors ${
+                belgeTipi === "sonra_kesilecek"
+                  ? "border-nova-500/60 bg-nova-500/10 text-nova-200"
+                  : "border-slate-700 text-slate-400 hover:border-slate-500"
+              }`}
+            >
+              🕐 Sonra Kesilecek
+            </button>
+            <button
+              type="button"
+              onClick={() => setBelgeTipi("okc_fisi")}
+              className={`rounded-lg border px-2 py-2 text-xs font-medium transition-colors ${
+                belgeTipi === "okc_fisi"
+                  ? "border-nova-500/60 bg-nova-500/10 text-nova-200"
+                  : "border-slate-700 text-slate-400 hover:border-slate-500"
+              }`}
+            >
+              🧾 ÖKC Fişi Kesildi
+            </button>
+          </div>
+          {belgeTipi === "okc_fisi" && (
+            <input
+              type="text"
+              value={fisNo}
+              onChange={(e) => setFisNo(e.target.value)}
+              placeholder="Fiş no"
+              className="mt-2 w-full rounded-lg border border-slate-700 bg-surface px-3 py-2 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-nova-500"
+            />
+          )}
+        </div>
+
         <div className="mt-5 space-y-1 border-t border-slate-800 pt-4 text-xs text-slate-500">
           {satirIskontolari > 0 && (
             <div className="flex justify-between">
@@ -707,7 +758,11 @@ export function HizliSatis({ tenantId, maxTaksit, kasaHesaplari }: Props) {
         {hata && <p className="mt-3 text-xs text-red-300">{hata}</p>}
         {basari && (
           <p className="mt-3 rounded-lg bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
-            ✓ {basari.saleNo} tamamlandı — {paraFmt(basari.toplam)} TL
+            ✓{" "}
+            <Link href={`/panel/satis/${basari.saleId}`} className="underline hover:text-emerald-100">
+              {basari.saleNo}
+            </Link>{" "}
+            tamamlandı — {paraFmt(basari.toplam)} TL
           </p>
         )}
 
@@ -719,7 +774,8 @@ export function HizliSatis({ tenantId, maxTaksit, kasaHesaplari }: Props) {
             gonderiliyor ||
             (odemeMod === "karma" && (Math.abs(karmaKalan) > 0.01 || karmaSatirlar.length === 0)) ||
             (acikHesapSeciliMi && !musteri) ||
-            hesapEksikMi
+            hesapEksikMi ||
+            belgeGecersiz
           }
           className="mt-4 w-full rounded-lg bg-nova-500 py-3 text-sm font-bold text-slate-950 transition hover:bg-nova-400 disabled:cursor-not-allowed disabled:opacity-50"
         >

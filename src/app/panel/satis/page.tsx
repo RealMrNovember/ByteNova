@@ -24,15 +24,22 @@ export default async function SatisPage() {
 
   const yetkili = yetkiVar(profil?.role, "satis_yap");
 
-  const [{ data: sonSatislar }, { data: tenant }, { data: kasaHesaplari }] = await Promise.all([
-    supabase
-      .from("sales")
-      .select("id, sale_no, total_amount, payment_method, created_at, customers(name)")
-      .order("created_at", { ascending: false })
-      .limit(8),
-    supabase.from("tenants").select("max_installments").eq("id", profil?.tenant_id ?? "").single(),
-    supabase.from("cash_accounts").select("id, name, type").eq("is_active", true).order("created_at"),
-  ]);
+  const [{ data: sonSatislar }, { data: tenant }, { data: kasaHesaplari }, { count: belgeBekleyen }, { count: iadeBekleyen }] =
+    await Promise.all([
+      supabase
+        .from("sales")
+        .select("id, sale_no, total_amount, payment_method, document_type, created_at, customers(name)")
+        .order("created_at", { ascending: false })
+        .limit(8),
+      supabase.from("tenants").select("max_installments").eq("id", profil?.tenant_id ?? "").single(),
+      supabase.from("cash_accounts").select("id, name, type").eq("is_active", true).order("created_at"),
+      supabase
+        .from("sales")
+        .select("id", { count: "exact", head: true })
+        .eq("document_type", "sonra_kesilecek")
+        .is("document_issued_at", null),
+      supabase.from("returns").select("id", { count: "exact", head: true }).eq("status", "alindi"),
+    ]);
 
   if (!yetkili) {
     return (
@@ -48,11 +55,37 @@ export default async function SatisPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <div>
-        <h1 className="text-xl font-bold text-white">Hızlı Satış</h1>
-        <p className="mt-0.5 text-sm text-slate-400">
-          F2 → ara/barkod → miktar → ödeme
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-white">Hızlı Satış</h1>
+          <p className="mt-0.5 text-sm text-slate-400">
+            F2 → ara/barkod → miktar → ödeme
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <Link
+            href="/panel/satis/belgeler"
+            className="relative rounded-lg border border-slate-700 px-3.5 py-2 text-center text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+          >
+            🧾 Belge Kuyruğu
+            {!!belgeBekleyen && (
+              <span className="ml-1.5 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">
+                {belgeBekleyen}
+              </span>
+            )}
+          </Link>
+          <Link
+            href="/panel/satis/iadeler"
+            className="relative rounded-lg border border-slate-700 px-3.5 py-2 text-center text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+          >
+            ↩️ İadeler
+            {!!iadeBekleyen && (
+              <span className="ml-1.5 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">
+                {iadeBekleyen}
+              </span>
+            )}
+          </Link>
+        </div>
       </div>
 
       {!kasaHesaplari?.length && (
@@ -82,9 +115,20 @@ export default async function SatisPage() {
             {sonSatislar.map((s) => {
               const musteri = s.customers as unknown as { name: string } | null;
               return (
-                <div key={s.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                <Link
+                  key={s.id}
+                  href={`/panel/satis/${s.id}`}
+                  className="flex items-center justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-slate-800/30"
+                >
                   <div className="min-w-0">
-                    <p className="font-mono text-sm text-slate-200">{s.sale_no}</p>
+                    <p className="font-mono text-sm text-slate-200">
+                      {s.sale_no}
+                      {s.document_type === "sonra_kesilecek" && (
+                        <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                          🕐 Belge bekliyor
+                        </span>
+                      )}
+                    </p>
                     <p className="text-[11px] text-slate-500">
                       {musteri?.name ?? "Misafir"} · {ODEME_YONTEMLERI_KARMA[s.payment_method] ?? s.payment_method} ·{" "}
                       {new Date(s.created_at).toLocaleString("tr-TR", {
@@ -98,7 +142,7 @@ export default async function SatisPage() {
                   <span className="shrink-0 text-sm font-semibold text-slate-200">
                     {Number(s.total_amount).toLocaleString("tr-TR")} TL
                   </span>
-                </div>
+                </Link>
               );
             })}
           </div>

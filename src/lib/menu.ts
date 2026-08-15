@@ -34,9 +34,9 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "satis",
     ad: "Satış",
     ikon: "🧾",
-    durum: "insa",
+    durum: "aktif",
     aciklama:
-      "Klavye öncelikli hızlı satış: barkod okut, iskonto uygula, karma ödeme al, fiş/fatura seç. Gün 16-20'de tamamlanacak.",
+      "Klavye öncelikli hızlı satış: barkod okut, iskonto uygula, karma ödeme al, fiş/fatura seç.",
   },
   {
     slug: "alis",
@@ -109,9 +109,9 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "finans",
     ad: "Finans",
     ikon: "💰",
-    durum: "insa",
+    durum: "aktif",
     aciklama:
-      "Kasa, tahsilat, giderler, çek/senet portföyü, POS mutabakatı ve kur yönetimi tek çatı altında.",
+      "Kasa, tahsilat, giderler ve kasa kapanışı tek çatıda. Çek/senet portföyü ve POS mutabakatı ilerleyen bir sprintte eklenecek.",
   },
   {
     slug: "belgeler",
