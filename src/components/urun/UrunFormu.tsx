@@ -24,6 +24,7 @@ type Mevcut = {
   critical_stock: number;
   requires_serial: boolean;
   warranty_months: number | null;
+  is_shelf_display: boolean;
 };
 
 type ParaBirimi = { code: string; symbol: string };
@@ -74,6 +75,9 @@ export function UrunFormu({ tenantId, paraBirimleri, kurlar, mevcut }: Props) {
   const [garantiAy, setGarantiAy] = useState(
     mevcut?.warranty_months?.toString() ?? ""
   );
+  const [rafSergileniyor, setRafSergileniyor] = useState(
+    mevcut?.is_shelf_display ?? false
+  );
   const [hata, setHata] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
 
@@ -114,6 +118,7 @@ export function UrunFormu({ tenantId, paraBirimleri, kurlar, mevcut }: Props) {
       critical_stock: Number(kritikStok) || 0,
       requires_serial: seriZorunlu,
       warranty_months: garantiAy ? Number(garantiAy) : null,
+      is_shelf_display: rafSergileniyor,
     };
 
     if (mevcut) {
@@ -398,6 +403,17 @@ export function UrunFormu({ tenantId, paraBirimleri, kurlar, mevcut }: Props) {
           />
         </div>
       </div>
+
+      <label className="flex items-center gap-2.5 rounded-lg border border-slate-700 bg-surface px-3.5 py-2.5 text-sm text-slate-300">
+        <input
+          type="checkbox"
+          checked={rafSergileniyor}
+          onChange={(e) => setRafSergileniyor(e.target.checked)}
+          className="h-3.5 w-3.5 rounded border-slate-600 bg-surface text-nova-500 focus:ring-0 focus:ring-offset-0"
+        />
+        🛒 Rafta sergileniyor (mağaza/vitrin ürünü — sarf malzemesi veya iç
+        kullanım parçası değil)
+      </label>
 
       {hata && (
         <div className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-3 text-xs text-red-300">

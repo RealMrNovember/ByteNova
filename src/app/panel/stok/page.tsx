@@ -8,20 +8,23 @@ export const metadata: Metadata = { title: "Stok — ByteNova" };
 export default async function StokPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; kritik?: string; gorunum?: string }>;
+  searchParams: Promise<{ q?: string; kritik?: string; gorunum?: string; kapsam?: string }>;
 }) {
-  const { q, kritik, gorunum } = await searchParams;
+  const { q, kritik, gorunum, kapsam } = await searchParams;
   const toptanGorunum = gorunum === "toptan";
+  const rafGorunumu = kapsam === "raf";
   const supabase = await createClient();
 
   let sorgu = supabase
     .from("products")
     .select(
-      "id, name, sku, barcode, brand, sale_price, vat_rate, stock_quantity, critical_stock, product_categories(name)"
+      "id, name, sku, barcode, brand, sale_price, vat_rate, stock_quantity, critical_stock, is_shelf_display, product_categories(name)"
     )
     .eq("is_active", true)
     .order("created_at", { ascending: false })
     .limit(50);
+
+  if (rafGorunumu) sorgu = sorgu.eq("is_shelf_display", true);
 
   if (q?.trim()) {
     const aranan = q.trim();
@@ -72,6 +75,7 @@ export default async function StokPage({
         <form method="get" className="flex-1">
           {toptanGorunum && <input type="hidden" name="gorunum" value="toptan" />}
           {kritik && <input type="hidden" name="kritik" value="1" />}
+          {rafGorunumu && <input type="hidden" name="kapsam" value="raf" />}
           <input
             type="search"
             name="q"
@@ -82,7 +86,7 @@ export default async function StokPage({
         </form>
         <div className="flex overflow-hidden rounded-lg border border-slate-700 text-xs font-medium">
           <Link
-            href={{ pathname: "/panel/stok", query: { q, kritik } }}
+            href={{ pathname: "/panel/stok", query: { q, kritik, kapsam } }}
             className={`px-3 py-2 transition-colors ${
               !toptanGorunum
                 ? "bg-nova-500 text-slate-950"
@@ -92,7 +96,7 @@ export default async function StokPage({
             Perakende
           </Link>
           <Link
-            href={{ pathname: "/panel/stok", query: { q, kritik, gorunum: "toptan" } }}
+            href={{ pathname: "/panel/stok", query: { q, kritik, kapsam, gorunum: "toptan" } }}
             className={`px-3 py-2 transition-colors ${
               toptanGorunum
                 ? "bg-nova-500 text-slate-950"
@@ -102,10 +106,32 @@ export default async function StokPage({
             Toptan
           </Link>
         </div>
+        <div className="flex overflow-hidden rounded-lg border border-slate-700 text-xs font-medium">
+          <Link
+            href={{ pathname: "/panel/stok", query: { q, kritik, gorunum } }}
+            className={`px-3 py-2 transition-colors ${
+              !rafGorunumu
+                ? "bg-nova-500 text-slate-950"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            Tüm Stok
+          </Link>
+          <Link
+            href={{ pathname: "/panel/stok", query: { q, kritik, gorunum, kapsam: "raf" } }}
+            className={`px-3 py-2 transition-colors ${
+              rafGorunumu
+                ? "bg-nova-500 text-slate-950"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            🛒 Raf Ürünleri
+          </Link>
+        </div>
         <Link
           href={{
             pathname: "/panel/stok",
-            query: { q, gorunum, kritik: kritik ? undefined : "1" },
+            query: { q, gorunum, kapsam, kritik: kritik ? undefined : "1" },
           }}
           className={`rounded-lg border px-3.5 py-2.5 text-xs font-medium transition-colors ${
             kritik
@@ -165,6 +191,11 @@ export default async function StokPage({
                   >
                     <td className="px-4 py-2.5">
                       <Link href={`/panel/stok/${u.id}`}>
+                        {u.is_shelf_display && (
+                          <span className="mr-1" title="Rafta sergileniyor">
+                            🛒
+                          </span>
+                        )}
                         <span className="font-medium text-slate-200">
                           {u.name}
                         </span>
