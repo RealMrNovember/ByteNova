@@ -89,7 +89,7 @@ export default async function UrunDetayPage({
               {u.sku ? ` • SKU: ${u.sku}` : ""}
             </p>
           </div>
-          <div className="relative flex shrink-0 gap-2">
+          <div className="flex shrink-0 gap-2">
             <StokDuzeltme
               productId={u.id}
               mevcutStok={u.stock_quantity}

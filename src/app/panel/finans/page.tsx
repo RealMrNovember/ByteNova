@@ -59,11 +59,7 @@ export default async function FinansPage() {
           >
             💸 Giderler
           </Link>
-          {ayarYonetebilir && (
-            <div className="relative">
-              <YeniKasaHesabi tenantId={profil?.tenant_id ?? ""} />
-            </div>
-          )}
+          {ayarYonetebilir && <YeniKasaHesabi tenantId={profil?.tenant_id ?? ""} />}
         </div>
       </div>
 

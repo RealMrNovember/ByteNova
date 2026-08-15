@@ -162,30 +162,32 @@ export function PanelKabuk({
       {/* ===== Sağ taraf ===== */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Üst bar */}
-        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-slate-800/60 bg-surface/90 px-4 backdrop-blur relative">
-          {/* Sol bölge: mobil logo */}
-          <Link href="/panel" className="text-lg md:hidden">
-            ⚡
-          </Link>
-
-          {/* Orta bölge: arama / komut paleti — header'a göre tam ortalanmış,
-              sol/sağ içerik genişliğinden bağımsız (absolute + inset-x-0) */}
-          <div className="pointer-events-none absolute inset-x-0 hidden justify-center sm:flex">
-            <button
-              onClick={() => setPaletAcik(true)}
-              className="pointer-events-auto flex w-full max-w-md items-center gap-2 rounded-lg border border-slate-800 bg-surface-2 px-3 py-1.5 text-left text-[13px] text-slate-500 transition-colors hover:border-slate-600"
-              title="Komut paleti (Ctrl+K)"
-            >
-              <span>🔍</span>
-              <span className="flex-1">Ara: müşteri, servis no, seri no…</span>
-              <kbd className="rounded border border-slate-700 px-1.5 py-0.5 text-[10px] text-slate-600">
-                Ctrl K
-              </kbd>
-            </button>
+        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-slate-800/60 bg-surface/90 px-4 backdrop-blur">
+          {/* Sol bölge: mobil logo. Sağ bölgeyle eşit flex-1 paylaşımı sayesinde
+              arama ortadaki payına tam ortalanır, sağ içerik genişse (kur +
+              deneme rozeti + profil) üzerine binmez — masaüstünde sol boş
+              kalsa bile pay hep eşit hesaplanır. */}
+          <div className="flex flex-1 items-center">
+            <Link href="/panel" className="text-lg md:hidden">
+              ⚡
+            </Link>
           </div>
 
+          {/* Orta bölge: arama / komut paleti */}
+          <button
+            onClick={() => setPaletAcik(true)}
+            className="hidden min-w-0 max-w-md flex-1 items-center gap-2 rounded-lg border border-slate-800 bg-surface-2 px-3 py-1.5 text-left text-[13px] text-slate-500 transition-colors hover:border-slate-600 sm:flex"
+            title="Komut paleti (Ctrl+K)"
+          >
+            <span>🔍</span>
+            <span className="flex-1 truncate">Ara: müşteri, servis no, seri no…</span>
+            <kbd className="shrink-0 rounded border border-slate-700 px-1.5 py-0.5 text-[10px] text-slate-600">
+              Ctrl K
+            </kbd>
+          </button>
+
           {/* Sağ bölge: kur, deneme, bildirim, profil — sağa yaslı */}
-          <div className="ml-auto flex items-center gap-3">
+          <div className="flex flex-1 items-center justify-end gap-3">
             {/* Kur göstergesi — TCMB günlük / dükkân override */}
             <Link
               href="/panel/ayarlar#doviz"
