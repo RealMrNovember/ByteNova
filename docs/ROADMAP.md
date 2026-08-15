@@ -221,9 +221,13 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] **Canlı testte bulunan hata**: `kasa_kapat()` "bugün"ü Postgres sunucusunun (UTC) `current_date`'i ile hesaplıyordu; gece yarısına yakın saatlerde (00:00-03:00 Türkiye saati) kapanış bir önceki güne kaydediliyordu. `Europe/Istanbul` saat dilimi açıkça kullanılacak şekilde düzeltildi (0022) — hem RPC hem sayfadaki "bugün" karşılaştırması
 - [x] E2E: geçen aya ait tekrarlayan bir gider hatırlatma bandında doğru göründü; yeni gider eklenince kasa hesabı doğru düştü; fark olmayan ve fark olan (açıklama zorunlu) kasa kapanışı senaryoları test edildi, düzeltme hareketi ve bakiye eşitlemesi DB'de doğrulandı, saat dilimi düzeltmesi sonrası doğru güne kaydedildiği doğrulandı; yeni RPC'lerde çapraz-tenant erişim reddi doğrulandı
 
-### Gün 20 — Belge ve iade
-- [ ] Belge tipi seçimi: manuel ÖKC modu ("fiş no: ___") / "sonra kesilecek" kuyruk
-- [ ] İade akışı (`İade Alındı → Kontrol → Satılabilir/Arızalı/Hurda/Servise`)
+### Gün 20 — Belge ve iade ✅
+- [x] Belge tipi seçimi: `sales.document_type` (`'okc_fisi'|'sonra_kesilecek'`) + `receipt_no` + `document_issued_at`. `HizliSatis`'te satış kapanışında seçim (varsayılan sonra kesilecek — akışı yavaşlatmaz). `/panel/satis/belgeler`: belgesi kesilmemiş satışlar kuyruğu, `satis_belgesini_kes()` ile geriye dönük fiş no girilip belge kapatılıyor
+- [x] İlk kez satış detay sayfası (`/panel/satis/[id]`) — bu güne kadar yoktu, belge/iade akışları için ön koşuldu: kalemler, ödeme dökümü, belge durumu, her ürün kalemi için "İade Al"
+- [x] İade akışı: `returns` tablosu (`İA-YYYY-NNNNNN` sayaç) + `iade_baslat()` (orijinal satış kalemi zorunlu, kümülatif iade miktarı satılan miktarı aşamaz) + `iade_kontrol_et()` (Satılabilir → stoğa geri alınır / Arızalı, Hurda → dönmez / Servise → yeni bir `service_orders` kaydı açılır, müşteri şart). Nakit iade seçilirse `kasa_hareketi_ekle()` ile ilgili hesaptan düşülür. `/panel/satis/iadeler`: kontrol bekleyen iadeler kuyruğu
+- [x] "Açık hesap mahsup" iade yöntemi olarak bilinçli dahil edilmedi — cari/borç-alacak altyapısı henüz yok (Gün 22), üzerine inşa edilecek yarım bir mekanizma yerine yalnız nakit iade / iade yok desteklendi
+- [x] Sprint 4 tamamlandığı için menüde Satış ve Finans "insa" → "aktif"
+- [x] E2E: bir satış "sonra kesilecek" ile tamamlandı, belge kuyruğunda göründü, geriye dönük fiş no ile kesildi; kısmi iade (2 satılan, 1 iade) başlatıldı, kontrol öncesi stoğun değişmediği doğrulandı, "satılabilir" sonucuyla stok ve kasa (nakit iade) doğru güncellendi; ikinci bir iade "servise" sonucuyla doğru `declared_issue`/`customer_id` ile yeni servis kaydı oluşturdu; müşterisiz (misafir) satıştan "servise" denemesi reddedildi; ilgili RPC'lerde çapraz-tenant erişim reddi doğrulandı
 
 **Sprint sonu:** 🎯 Sabah satış → akşam kasa kapanışı döngüsü gerçek dükkân temposunda tamam.
 
