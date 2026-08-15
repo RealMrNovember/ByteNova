@@ -163,17 +163,17 @@ export function PanelKabuk({
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Üst bar */}
         <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-slate-800/60 bg-surface/90 px-4 backdrop-blur">
-          {/* Sol bölge: mobil logo. Sağ bölgeyle eşit flex-1 paylaşımı sayesinde
-              arama ortadaki payına tam ortalanır, sağ içerik genişse (kur +
-              deneme rozeti + profil) üzerine binmez — masaüstünde sol boş
-              kalsa bile pay hep eşit hesaplanır. */}
-          <div className="flex flex-1 items-center">
+          {/* Sol bölge: mobil logo. min-w-0 sayesinde içeriği olmadığı
+              masaüstünde 0'a kadar küçülebilir — sağ bölgenin doğal
+              genişliğini asla sıkıştırmaz. */}
+          <div className="flex min-w-0 flex-1 items-center">
             <Link href="/panel" className="text-lg md:hidden">
               ⚡
             </Link>
           </div>
 
-          {/* Orta bölge: arama / komut paleti */}
+          {/* Orta bölge: arama / komut paleti. min-w-0 ile gerektiğinde
+              küçülür, asla sağ bölgenin üzerine taşmaz. */}
           <button
             onClick={() => setPaletAcik(true)}
             className="hidden min-w-0 max-w-md flex-1 items-center gap-2 rounded-lg border border-slate-800 bg-surface-2 px-3 py-1.5 text-left text-[13px] text-slate-500 transition-colors hover:border-slate-600 sm:flex"
@@ -186,8 +186,10 @@ export function PanelKabuk({
             </kbd>
           </button>
 
-          {/* Sağ bölge: kur, deneme, bildirim, profil — sağa yaslı */}
-          <div className="flex flex-1 items-center justify-end gap-3">
+          {/* Sağ bölge: kur, deneme, bildirim, profil — sağa yaslı. shrink-0
+              ile her zaman kendi doğal genişliğini alır; esneyen sol/orta
+              bölgeler bu genişliğe göre küçülür, asla üzerine binmez. */}
+          <div className="flex shrink-0 items-center justify-end gap-3">
             {/* Kur göstergesi — TCMB günlük / dükkân override */}
             <Link
               href="/panel/ayarlar#doviz"
