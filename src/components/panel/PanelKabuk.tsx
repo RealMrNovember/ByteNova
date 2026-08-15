@@ -210,6 +210,15 @@ export function PanelKabuk({
               </span>
             )}
 
+            {/* Kullanım kılavuzu */}
+            <Link
+              href="/panel/kilavuz"
+              className="shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:text-slate-200"
+              title="Kullanım Kılavuzu"
+            >
+              ❓
+            </Link>
+
             {/* Bildirim */}
             <button
               className="relative shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:text-slate-200"
