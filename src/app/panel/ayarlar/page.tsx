@@ -190,6 +190,21 @@ export default async function AyarlarPage() {
           </p>
         </div>
 
+        {/* Kullanım kılavuzu */}
+        <div className="glass rounded-xl p-5">
+          <h2 className="text-sm font-semibold text-white">Kullanım Kılavuzu</h2>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Takıldığınız veya anlamadığınız bir işlem mi var? Adım adım anlatımlar
+            ve sık sorulan sorular için kılavuza göz atın.
+          </p>
+          <Link
+            href="/panel/kilavuz"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+          >
+            📖 Kılavuza Git
+          </Link>
+        </div>
+
         {/* Destek */}
         <div className="glass rounded-xl p-5">
           <h2 className="text-sm font-semibold text-white">Destek</h2>
