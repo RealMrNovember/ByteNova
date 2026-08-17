@@ -9,6 +9,7 @@ import { FotografYukle } from "@/components/servis/FotografYukle";
 import { TeslimPaneli } from "@/components/servis/TeslimPaneli";
 import { BelgeIslemleri } from "@/components/servis/BelgeIslemleri";
 import { ServisParcalari } from "@/components/servis/ServisParcalari";
+import { ServisParcaTalebi } from "@/components/servis/ServisParcaTalebi";
 import { ServisTahsilat } from "@/components/servis/ServisTahsilat";
 
 type Aksesuar = { name: string; delivered: boolean };
@@ -98,6 +99,12 @@ export default async function ServisDetayPage({
     supabase.from("cash_accounts").select("id, name, type").eq("is_active", true).order("created_at"),
   ]);
 
+  const { data: parcaTalepleriHam } = await supabase
+    .from("purchase_requests")
+    .select("id, quantity, status, note, requested_at, products(name)")
+    .eq("service_order_id", id)
+    .order("requested_at", { ascending: false });
+
   const adSozlugu = new Map(
     (kullanicilar ?? []).map((k) => [k.id, k.full_name ?? "İsimsiz"])
   );
@@ -129,6 +136,15 @@ export default async function ServisDetayPage({
       urunAdi: urun?.name ?? "Silinmiş ürün",
     };
   });
+
+  const parcaTalepleri = (parcaTalepleriHam ?? []).map((t) => ({
+    id: t.id,
+    quantity: t.quantity,
+    status: t.status,
+    note: t.note,
+    requested_at: t.requested_at,
+    products: t.products as unknown as { name: string } | null,
+  }));
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -293,6 +309,11 @@ export default async function ServisDetayPage({
           yetkili={yetkili}
           parcalar={parcalar}
         />
+      </div>
+
+      {/* Parça talebi */}
+      <div className="mt-4">
+        <ServisParcaTalebi servisId={s.id} yetkili={yetkili} talepler={parcaTalepleri} />
       </div>
 
       {/* Kapora / avans */}

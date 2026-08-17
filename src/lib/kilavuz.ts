@@ -263,6 +263,17 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         metin:
           "İşletmenizin negatif stok politikası \"Yasak\" ise ve seçtiğiniz parça stokta yoksa onay işlemi engellenir; \"Onaylı\" ise stok eksiye düşmeden önce ekstra bir onay istenir. Bu politikayı Ayarlar'dan değiştirebilirsiniz.",
       },
+      { tur: "altbaslik", metin: "Parça Talebi" },
+      {
+        tur: "paragraf",
+        metin:
+          "Elinizde olmayan bir parçaya ihtiyacınız varsa \"Parça Talebi\" kartından ürünü arayıp miktar girerek talep oluşturursunuz. Satın alma ekibi Alış modülünden o ürünü içeren bir fatura girdiğinde, talebiniz otomatik \"Karşılandı\" olarak işaretlenir ve servisin Teknik Notlar'ına \"📦 Talep edilen parça geldi\" notu otomatik düşer — parçanın gelip gelmediğini kontrol etmek için satın alma ekibine sormanıza gerek kalmaz.",
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "Bir ürün kritik stok seviyesinin altına düştüğünde de sistem otomatik olarak bir satın alma talebi oluşturur (kaynağı \"Kritik Stok\" olarak işaretlenir) — tüm açık talepleri Alış > Talepler sayfasından tek yerden görebilirsiniz.",
+      },
       { tur: "altbaslik", metin: "Kapora / Avans Alma" },
       {
         tur: "paragraf",
@@ -481,8 +492,14 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         metin:
           "Bir alış numarası otomatik üretilir (örnek biçim: AL-2026-000123). Alış detayında her kalemi ve tedarikçi/kur bilgisini görebilirsiniz.",
       },
+      { tur: "altbaslik", metin: "Satın Alma Talepleri" },
+      {
+        tur: "paragraf",
+        metin:
+          "Alış > \"📋 Talepler\" sayfası, henüz karşılanmamış tüm satın alma ihtiyaçlarını tek yerde toplar: teknisyenlerin servislerden oluşturduğu parça talepleri, kritik stoğa düşen ürünler için sistemin otomatik açtığı talepler ve buradan elle oluşturabileceğiniz talepler. Bir talebin yanındaki \"+ Alış Oluştur\" bağlantısı, o ürünü ve miktarını önceden doldurulmuş şekilde Yeni Alış formuna götürür — siz tedarikçiyi ve fiyatı girip kaydettiğinizde talep otomatik \"Karşılandı\" olarak işaretlenir.",
+      },
     ],
-    ilgili: ["tedarikciler", "stok"],
+    ilgili: ["tedarikciler", "stok", "servisler"],
   },
   {
     slug: "cihazlar",
@@ -730,7 +747,6 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         tur: "tablo",
         basliklar: ["Modül", "Ne İşe Yarayacak"],
         satirlar: [
-          ["📋 Satın Alma Talepleri", "Serviste \"parça bekleniyor\" işaretlenince veya bir ürün kritik stoğa düşünce otomatik talep oluşturma — Alış modülüne ek olarak gelecek."],
           ["🖥️ PC Toplama", "Reçeteyle (BOM) parçalardan sistem toplama — parçalar stoktan düşer, toplanan PC kendi seri numarasıyla satışa hazır olur. (Eklenti)"],
           ["📄 Teklifler", "Kurumsal müşterilere PDF teklif hazırlama, QR ile onay, kabul edilince tek tıkla satışa dönüştürme. (Eklenti)"],
           ["📋 Sözleşmeler", "Periyodik bakım sözleşmeleri, SLA takibi, otomatik ziyaret planları. (Eklenti)"],

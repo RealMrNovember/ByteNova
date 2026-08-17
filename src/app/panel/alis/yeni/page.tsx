@@ -9,9 +9,9 @@ export const metadata: Metadata = { title: "Yeni Alış — ByteNova" };
 export default async function YeniAlisPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tedarikci?: string }>;
+  searchParams: Promise<{ tedarikci?: string; urun?: string; miktar?: string }>;
 }) {
-  const { tedarikci: tedarikciId } = await searchParams;
+  const { tedarikci: tedarikciId, urun: urunId, miktar } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -36,6 +36,18 @@ export default async function YeniAlisPage({
     baslangicTedarikci = data;
   }
 
+  let baslangicKalem = null;
+  if (urunId) {
+    const { data } = await supabase
+      .from("products")
+      .select("id, name")
+      .eq("id", urunId)
+      .maybeSingle();
+    if (data) {
+      baslangicKalem = { product_id: data.id, name: data.name, quantity: Number(miktar) || 1 };
+    }
+  }
+
   return (
     <div className="mx-auto max-w-4xl">
       <h1 className="text-xl font-bold text-white">Yeni Alış</h1>
@@ -48,6 +60,7 @@ export default async function YeniAlisPage({
           tenantId={profil?.tenant_id ?? ""}
           kurlar={kurlar}
           baslangicTedarikci={baslangicTedarikci}
+          baslangicKalem={baslangicKalem}
         />
       </div>
     </div>

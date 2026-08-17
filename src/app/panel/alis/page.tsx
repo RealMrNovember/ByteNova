@@ -35,14 +35,22 @@ export default async function AlisListesiPage() {
             Tedarikçi faturaları — stok girişi ve maliyet güncellemesi otomatik
           </p>
         </div>
-        {yetkili && (
+        <div className="flex shrink-0 gap-2">
           <Link
-            href="/panel/alis/yeni"
-            className="rounded-lg bg-nova-500 px-4 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-nova-400"
+            href="/panel/alis/talepler"
+            className="rounded-lg border border-slate-700 px-3.5 py-2 text-center text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
           >
-            + Yeni Alış
+            📋 Talepler
           </Link>
-        )}
+          {yetkili && (
+            <Link
+              href="/panel/alis/yeni"
+              className="rounded-lg bg-nova-500 px-4 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-nova-400"
+            >
+              + Yeni Alış
+            </Link>
+          )}
+        </div>
       </div>
 
       {!alislar?.length ? (

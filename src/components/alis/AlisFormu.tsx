@@ -21,6 +21,7 @@ type Props = {
   tenantId: string;
   kurlar: Record<string, number>; // code -> 1 birimin TL karşılığı
   baslangicTedarikci?: Tedarikci | null;
+  baslangicKalem?: { product_id: string; name: string; quantity: number } | null;
 };
 
 let sayac = 0;
@@ -35,7 +36,7 @@ const alanSinifi =
 // "sv-SE" biçimi YYYY-MM-DD üretir; input[type=date] ile birebir uyumlu.
 const bugun = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Istanbul" });
 
-export function AlisFormu({ tenantId, kurlar, baslangicTedarikci }: Props) {
+export function AlisFormu({ tenantId, kurlar, baslangicTedarikci, baslangicKalem }: Props) {
   const router = useRouter();
   const [tedarikci, setTedarikci] = useState<Tedarikci | null>(baslangicTedarikci ?? null);
   const [faturaNo, setFaturaNo] = useState("");
@@ -55,7 +56,11 @@ export function AlisFormu({ tenantId, kurlar, baslangicTedarikci }: Props) {
   const aramaRef = useRef<HTMLInputElement>(null);
   const kutuRef = useRef<HTMLDivElement>(null);
 
-  const [kalemler, setKalemler] = useState<Kalem[]>([]);
+  const [kalemler, setKalemler] = useState<Kalem[]>(() =>
+    baslangicKalem
+      ? [{ localId: yeniLocalId(), product_id: baslangicKalem.product_id, name: baslangicKalem.name, quantity: baslangicKalem.quantity, unit_price: 0 }]
+      : []
+  );
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const [basari, setBasari] = useState<{ id: string; no: string } | null>(null);

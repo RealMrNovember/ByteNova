@@ -252,9 +252,15 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] Kılavuza Tedarikçiler ve Alış konuları eklendi (artık aktif modüller), Müşteriler konusu cari bölümüyle güncellendi
 - [x] E2E: gerçek kullanıcı oturumuyla (service-role değil) uçtan uca doğrulandı — açık hesap satış (1000 TL) → müşteri borcu 1000, kısmi tahsilat (400) → borç 600, UI'dan tam tahsilat → borç 0 ve buton kayboldu; dövizli alış (50 USD, kur 40) → tedarikçi borcu 50 USD/ort. kur 40; kısmi ödeme (20 USD, kur 42) → kalan 30 USD, ort. kur **değişmedi** (40'ta sabit kaldı — doğru ağırlıklı ortalama davranışı), kur farkı 40 TL gider olarak ayrı kayda düştü; UI'dan ikinci ödeme (10 USD, kur 39) → bakiye 0, kur farkı 10 TL gelir olarak doğru işlendi. **Canlı testte bulunan hata:** `tedarikci_borc_ekle()` ödemeleri de `'alis_borc'` etiketiyle kaydediyordu (entry_type parametresi yoktu) — Cari Hareketler listesinde bir ödeme "Alış borcu: -20 USD" gibi yanıltıcı görünüyordu; `p_entry_type` parametresi eklenip (`tedarikci_odeme_yap()` artık `'odeme'` geçiyor) düzeltildi ve doğrulandı
 
-### Gün 23 — Satın alma talepleri
-- [ ] Talep ekranı (servisten "parça bekleniyor" + kritik stoktan otomatik)
-- [ ] Parça geldi → alış → stok → servise otomatik bağlanma (S3 senaryosu)
+### Gün 23 — Satın alma talepleri ✅
+- [x] `0029_satin_alma_talepleri.sql`: `purchase_requests` (kaynak: servis/kritik_stok/manuel; durum: bekliyor/sipariş edildi/karşılandı/iptal) + `satin_alma_talebi_olustur()`/`satin_alma_talebi_iptal()` RPC'leri
+- [x] Kritik stoktan **tamamen otomatik** talep: `products` üzerinde `stock_quantity` değiştiğinde çalışan bir trigger, ürün kritik seviyeye YENİ düşüyorsa (önceden kritik değildi) ve zaten açık talebi yoksa otomatik talep açar — cron/manuel kontrol gerekmez, ve zaten kritikken gelen küçük hareketlerde tekrar tekrar talep açılmaz
+- [x] Servisten talep: `ServisParcaTalebi` bileşeni (servis detayında, `ServisParcalari`'nin hemen altında) — ürün ara/seç, miktar, not
+- [x] `alis_olustur()` genişletildi: her kalem işlenirken o ürüne ait en eski açık talebi otomatik "karşılandı" işaretler (`fulfilled_purchase_id` ile alışa bağlanır); talep bir servise bağlıysa o servisin Teknik Notlar'ına "📦 Talep edilen parça geldi" sistem notu otomatik düşer (S3 senaryosu — servise otomatik bağlanma)
+- [x] `/panel/alis/talepler`: tüm açık/geçmiş talepleri kaynak rozetiyle (🔧 Servis / ⚠️ Kritik Stok / ✍️ Manuel) listeleyen, elle talep oluşturma ve iptal destekleyen sayfa; her talepten tek tıkla ürün+miktar önceden dolu "Yeni Alış" formuna geçiş
+- [x] Kılavuza "Parça Talebi" (Servisler) ve "Satın Alma Talepleri" (Alış) bölümleri eklendi
+- [x] Bilinçli kapsam dışı: bir alıştaki tek bir kalem yalnızca o ürüne ait EN ESKİ açık talebi karşılar (miktar bölüştürme/kısmi karşılama yok) — birden çok açık talep varsa fazlası için ayrı alış girilir; bu, gerçek bir sipariş/tedarik zinciri motoru kurmadan makul ve öngörülebilir bir sınır
+- [x] E2E: gerçek kullanıcı oturumuyla uçtan uca doğrulandı — stok kritiğin altına düşünce otomatik talep açıldı, tekrar düşüşte yeni talep AÇILMADI (yinelenme engeli çalıştı), servisten manuel talep oluşturuldu, art arda iki alışla önce kritik stok talebi sonra servis talebi otomatik karşılandı ve servis notu doğru içerikle düştü; `/panel/alis/talepler` ve servis detayındaki "Parça Talebi" kartı tarayıcıda görsel olarak doğrulandı
 
 ### Gün 24 — Cari çıktılar
 - [ ] Cari ekstre PDF + yaşlandırma (30/60/90)
