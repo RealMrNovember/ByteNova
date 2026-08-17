@@ -432,7 +432,7 @@ gerçek dış kullanıcı gerektirdiği için inşa edilemez — atlandı.
   sayacı — tümü tamamlandı, ayrıntılar aşağıda
 - [x] **Teklif modülü + PDF** ✅ (`0040_teklif_modulu.sql`) — ayrıntılar aşağıda
 - [x] **Dijital ürün (lisans key)** ✅ + demo veri seti (Showroom canlı demo ile birleştirildi) — ayrıntılar aşağıda
-- [ ] Kurulum sihirbazı tam sürüm + onboarding dokümanları
+- [x] **Kurulum sihirbazı tam sürüm** ✅ + onboarding dokümanları — ayrıntılar aşağıda
 - [x] ~~2-3 gerçek bilgisayarcıyla pilot başlangıcı~~ → **kapsam dışı** (gerçek dış kullanıcı gerektirir)
 
 ### Servis Derinliği — ayrıntılar ✅
@@ -508,6 +508,37 @@ gerçek dış kullanıcı gerektirdiği için inşa edilemez — atlandı.
   oluştu, ürün stoğu 50→49 düştü, müşteri açık hesap bakiyesi ₺1.000 arttı; ikinci teklif
   personel tarafından panelden manuel "Müşteri Reddetti" ile (gerekçe notuyla) reddedildi;
   Teklifler liste sayfasında her iki kayıt da doğru durum/tutarla göründü
+
+### Kurulum Sihirbazı Tam Sürüm — ayrıntılar ✅
+- [x] **6 adımlı sihirbaz** (`KurulumSihirbazi.tsx`, `/kurulum`): İşletme Bilgileri (ad/telefon/
+  adres/logo, eski v0 formunun aynısı) → Şube (varsayılan "Merkez" şubesini yeniden adlandırma)
+  → Kasa Hesabı (ilk nakit/banka/POS hesabı — zaten varsa adım otomatik "zaten var" mesajıyla
+  atlanır) → Ürün Kategorileri (isteğe bağlı, birkaç başlangıç kategorisi) → İlk Ürünler
+  (Excel içe aktarma sihirbazına veya elle ekleme formuna yönlendiren iki kart) → Tamamlandı
+  (özet + Yeni Müşteri/Yeni Satış/Kullanıcı Davet/Kılavuz kısayolları). Her adım "Devam Et"e
+  basılınca hemen kaydedilir (aşamalı kayıt — `ImportSihirbazi`/`UrunFormu` ile aynı disiplin),
+  `onboarding_completed` yalnız son adımda `true` olur. Her adımda "Şimdilik atla, panele git"
+  kaçış kapısı vardır — kimse sihirbazda hapsolmaz
+- [x] **Bölüm 62 spesifikasyonuyla bilinçli fark:** orijinal 10 adımlı taslak (İşletme, Şube,
+  Vergi/e-belge tercihleri, Kullanıcılar, **Servis kategorileri**, Ürün kategorileri, Ödeme
+  yöntemleri, **Yazıcı/barkod ayarları**, İlk stok, Tamamlandı) erken/vizyoner bir belgeden
+  geliyor — bugünkü şemada "servis kategorileri" diye bir kavram yok (servisler durum/öncelik
+  ile sınıflanıyor, ayrı bir kategori tablosu hiç kurulmadı) ve "yazıcı/barkod ayarları" diye
+  bir modül de yok (barkod okuyucular klavye girişi gibi çalışıyor, sıfır kurulum gerektiriyor;
+  yazdırma tarayıcının kendi yazdır işlevi). Sahte bir ayar ekranı icat etmek yerine bu iki
+  adım bilinçli olarak atlandı; "Vergi/e-belge tercihleri" ve "Kullanıcılar" ayrı birer adım
+  olmak yerine sırasıyla ürün formundaki KDV alanına (zaten var) ve son adımdaki "Ekip
+  arkadaşlarınızı davet edin" kısayoluna birleştirildi — mevcut Ayarlar > Kullanıcılar akışını
+  tekrar yazmak yerine ona yönlendiriyor
+- [x] **Onboarding dokümanları:** panel içi Kılavuz'daki mevcut "Hızlı Başlangıç" konusu
+  (`src/lib/kilavuz.ts`), eski tek adımlı kurulumu anlatan bir bölüm içeriyordu — yeni 6 adımlı
+  sihirbazı adım adım anlatacak şekilde güncellendi
+- [x] E2E: throwaway kullanıcı ile — kayıttan hemen sonra `/kurulum`'a otomatik yönlendirildiği
+  doğrulandı; altı adımın tamamı sırayla dolduruldu (işletme adı, şube adı, ilk kasa hesabı,
+  bir kategori, "İlk Ürünler" bilgi ekranı) ve "Panele Git"e basılınca panelin boş ama çalışır
+  durumda açıldığı, üst çubukta doğru işletme adının göründüğü doğrulandı; veritabanında
+  `tenants.onboarding_completed=true`, şube adı, tam olarak 1 kasa hesabı ve 1 ürün kategorisi
+  oluştuğu doğrulandı; test verileri (tenant + kullanıcı, cascade ile) temizlendi
 
 ### Showroom Tam Sürüm — ayrıntılar ✅
 - [x] **Ortak header/footer** (`ShowroomHeader.tsx`/`ShowroomFooter.tsx`) — ana sayfa dahil tüm
@@ -637,6 +668,11 @@ gerçek dış kullanıcı gerektirdiği için inşa edilemez — atlandı.
   geçici olarak konup tarayıcı içinden `fetch()`+`FormData` ile yüklendi, test sonunda
   dosyalar ve throwaway tenant/kullanıcı silindi. "urun" ve "servis" türleri aynı kod
   desenini birebir izlediği için yalnız kod incelemesiyle doğrulandı (tam E2E yapılmadı)
+
+**Sprint sonu:** 🎯 **Sprint 7-8 tamamlandı** — Showroom gerçek fiyat/modül verisiyle canlı,
+kayıt olmadan denenebilen bir demo hesabı var; işletmeler artık kendi eski sistemlerinden veri
+taşıyabiliyor (Excel import), dijital lisans satabiliyor ve 6 adımlı bir sihirbazla kuruluma
+başlıyor. Pilot başlangıcı hariç (gerçek dış kullanıcı gerektirir) sprintin tüm maddeleri bitti.
 
 ## SPRINT 9-12 — P1 MODÜLLERİ (Hafta 7-12)
 

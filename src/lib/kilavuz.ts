@@ -39,27 +39,39 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     kategori: "baslarken",
     ozet:
       "ByteNova'ya ilk giriş: işletme bilgilerinizi tamamlayın, ekibinizi davet edin, ilk kaydınızı oluşturun.",
-    anahtarKelimeler: ["kurulum", "ilk giriş", "deneme", "başlangıç"],
+    anahtarKelimeler: ["kurulum", "kurulum sihirbazı", "ilk giriş", "deneme", "başlangıç", "onboarding", "şube", "kasa hesabı"],
     icerik: [
       {
         tur: "paragraf",
         metin:
           "ByteNova, teknik servis ve bilgisayar işletmeleri için tasarlanmış bir işletim sistemidir — servis kabulünden satışa, stoktan kasaya kadar günlük işlerinizi tek yerden yönetirsiniz.",
       },
-      { tur: "altbaslik", metin: "İlk 10 Dakika" },
+      { tur: "altbaslik", metin: "Kurulum Sihirbazı" },
+      {
+        tur: "paragraf",
+        metin:
+          "Kayıt olduktan sonra panele girmeden önce 6 adımlık bir kurulum sihirbazıyla karşılaşırsınız: İşletme Bilgileri, Şube, Kasa Hesabı, Ürün Kategorileri, İlk Ürünler ve Tamamlandı. Her adımı doldurup \"Devam Et\"e bastığınızda o adım hemen kaydedilir — yarıda bırakıp sonra devam etseniz de veri kaybolmaz. Acele ediyorsanız sağ üstteki \"Şimdilik atla, panele git\" bağlantısıyla sihirbazı herhangi bir adımda atlayıp doğrudan panele geçebilirsiniz; atladığınız adımları (kasa hesabı, kategoriler vb.) daha sonra ilgili modüllerden tamamlarsınız.",
+      },
       {
         tur: "adimlar",
         adimlar: [
-          "Sağ üstteki profil menüsünden \"🏪 İşletme bilgileri\" bağlantısına tıklayıp işletme adınızı, telefon/adresinizi ve logonuzu girin.",
-          "Ayarlar sayfasındaki \"Personel Davet Et\" bölümünden ekibinizi (yönetici, kasiyer, teknisyen, depo, muhasebe) e-posta ile davet edin.",
-          "Finans modülünden en az bir kasa hesabı oluşturun (örn. \"Ana Kasa\") — satış tahsilatı ve servis kaporası bu hesaba işlenecek.",
-          "Stok modülünden ilk ürünlerinizi ekleyin ya da doğrudan Servisler'den ilk kaydınızı oluşturun.",
+          "İşletme Bilgileri: işletme adınızı, telefon/adresinizi ve logonuzu girin — bu bilgiler servis formlarınızda ve belgelerinizde görünür.",
+          "Şube: varsayılan \"Merkez\" şubenizin adını dilerseniz değiştirin (çok şubeli işletme desteği yol haritasında).",
+          "Kasa Hesabı: en az bir kasa hesabı (nakit/banka/POS) oluşturun — Satış modülünü kullanabilmek için zorunludur; zaten bir hesabınız varsa bu adım otomatik atlanır.",
+          "Ürün Kategorileri: isteğe bağlı olarak birkaç başlangıç kategorisi ekleyin.",
+          "İlk Ürünler: Excel'den toplu içe aktarın veya elle eklemeye başlayın.",
+          "Tamamlandı: panele geçmeden önce ilk müşteri ekleme, ilk satış, ekip daveti ve kılavuz gibi hızlı bağlantılar sizi bekler.",
         ],
       },
       {
         tur: "ipucu",
         metin:
           "Sol menüde her modülün yanında küçük bir rozet görebilirsiniz: \"İnşada\" o özelliğin şu sıralar yapıldığını, \"Yakında\" yol haritasında olduğunu, \"🔒 Eklenti\" ise ücretli bir pakete bağlı olduğunu gösterir.",
+      },
+      {
+        tur: "paragraf",
+        metin:
+          "Kurulum sihirbazını tamamladıktan sonra da işletme bilgilerini, şube adını, kasa hesaplarını ve kategorileri değiştirmek isterseniz sırasıyla profil menüsündeki \"🏪 İşletme bilgileri\" (aynı sihirbazı tekrar açar), Finans ve Stok modüllerinden devam edebilirsiniz. Ekibinizi Ayarlar sayfasındaki \"Personel Davet Et\" bölümünden e-posta ile davet edersiniz.",
       },
       { tur: "altbaslik", metin: "Deneme Süreniz" },
       {
