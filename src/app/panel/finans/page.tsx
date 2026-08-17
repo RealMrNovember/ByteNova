@@ -65,6 +65,18 @@ export default async function FinansPage() {
           >
             💸 Giderler
           </Link>
+          <Link
+            href="/panel/finans/cek-senet"
+            className="rounded-lg border border-slate-700 px-3.5 py-2 text-center text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+          >
+            📑 Çek/Senet
+          </Link>
+          <Link
+            href="/panel/finans/pos-mutabakat"
+            className="rounded-lg border border-slate-700 px-3.5 py-2 text-center text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+          >
+            💳 POS Mutabakat
+          </Link>
           {ayarYonetebilir && <YeniKasaHesabi tenantId={profil?.tenant_id ?? ""} />}
         </div>
       </div>

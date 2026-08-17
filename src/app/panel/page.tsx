@@ -84,6 +84,19 @@ export default async function GenelBakisPage() {
     etkinKurlar(supabase),
   ]);
 
+  const yediGunSonra = new Date(`${bugunIstanbul}T00:00:00+03:00`);
+  yediGunSonra.setDate(yediGunSonra.getDate() + 7);
+  const { data: yaklasanCekler } = kasaGorebilir
+    ? await supabase
+        .from("cheques")
+        .select("amount")
+        .eq("direction", "alinan")
+        .in("status", ["portfoyde", "bankaya_verildi"])
+        .lte("due_date", yediGunSonra.toISOString().slice(0, 10))
+    : { data: null };
+  const cekSayisi = yaklasanCekler?.length ?? 0;
+  const cekToplam = (yaklasanCekler ?? []).reduce((t, c) => t + c.amount, 0);
+
   const kritikSayisi = (kritikUrunler ?? []).filter(
     (u) => u.stock_quantity <= u.critical_stock
   ).length;
@@ -122,6 +135,11 @@ export default async function GenelBakisPage() {
   }
   if (stokGorebilir && kritikSayisi > 0) {
     ozetCumleleri.push(`${kritikSayisi} üründe stok kritik seviyenin altında.`);
+  }
+  if (kasaGorebilir && cekSayisi > 0) {
+    ozetCumleleri.push(
+      `Önümüzdeki 7 gün içinde (veya vadesi geçmiş) ${paraFormatla(cekToplam)} tutarında ${cekSayisi} çek/senet tahsil edilecek.`
+    );
   }
   if (kurEtkisiGosterilsin) {
     ozetCumleleri.push(
@@ -193,6 +211,16 @@ export default async function GenelBakisPage() {
       ikon: "📮",
       href: "/panel/servisler?durum=teslim_alinmadi",
       vurgu: (teslimAlinmayanSayisi ?? 0) > 0,
+    });
+  }
+  if (kasaGorebilir) {
+    kartlar.push({
+      baslik: "Yaklaşan Çek/Senet",
+      deger: String(cekSayisi),
+      alt: cekSayisi > 0 ? paraFormatla(cekToplam) : "7 gün içinde vadesi gelen yok",
+      ikon: "📑",
+      href: "/panel/finans/cek-senet",
+      vurgu: cekSayisi > 0,
     });
   }
   if (kurEtkisiGosterilsin) {

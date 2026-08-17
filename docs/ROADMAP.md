@@ -680,7 +680,7 @@ başlıyor. Pilot başlangıcı hariç (gerçek dış kullanıcı gerektirir) sp
 
 - [x] **WhatsApp/SMS + İYS** ✅ — sağlayıcı soyutlaması, servis bildirimleri, İYS onayı — ayrıntılar aşağıda
 - [x] **e-Belge** ✅ — entegratör soyutlaması, gider pusulası, portal modu — ayrıntılar aşağıda
-- [ ] **Çek/Senet + POS mutabakat** — portföy, vade takvimi, nakit akış uyarıları
+- [x] **Çek/Senet + POS mutabakat** ✅ — portföy, vade takvimi, nakit akış uyarıları — ayrıntılar aşağıda
 - [ ] **Otomatik abonelik tahsilatı** — `BillingProvider` (iyzico/PayTR), dunning, impersonation
   - **Eklenti self-servis switch'i** aynı işte: tenant panelinde Ayarlar → Eklentiler, otomatik ödeme + kullanım bazlı faturalama (`docs/EKLENTI_MIMARISI.md`). İlk paketler: WhatsApp/SMS ve e-Belge.
 - [ ] **PC Toplama (BOM)** — reçete, toplama emri, demontaj
@@ -762,6 +762,46 @@ başlıyor. Pilot başlangıcı hariç (gerçek dış kullanıcı gerektirir) sp
   doğrulandı; "e-Fatura Kes" tıklanınca satışın durumunun "e-Fatura — EFT-2026-XXXXXX" olarak
   güncellendiği hem satış detayında hem Belgeler arşiv sayfasında (gider pusulasıyla yan yana)
   doğru göründüğü doğrulandı
+
+### Çek/Senet + POS Mutabakat — ayrıntılar ✅
+- [x] **Şema** (`0046_cek_senet_pos.sql`): tek bir `cheques` tablosu hem çek hem senet için
+  (`instrument_type`), hem alınan hem verilen yön için (`direction`) — spesifikasyonun
+  "senet aynı modelde desteklenir" talimatına birebir uyuyor. `cheque_events` durum geçmişi
+  (`service_status_history` ile aynı desen). `customers.risk_notu` (karşılıksız çek işareti).
+  `pos_settlements` + genişletilmiş `expenses`/`cash_movements` entegrasyonu (yeni tablo
+  gerekmedi, mevcut `gider_ekle()`/`kasa_hareketi_ekle()` yeniden kullanıldı)
+- [x] **Bilinçli kapsam kararı — kasa/cari entegrasyonu yalnız tartışmasız iki noktada:**
+  çek alındığında otomatik olarak müşteri borcu azaltılmaz (bu "çek alınca mı tahsil edilince
+  mi borç kapanır" işletmenin kendi politikasıdır, dayatılmadı); yalnız **tahsil edilince**
+  (`kasa_hareketi_ekle`, gerçek kasa girişi) ve **tedarikçiye ciro edilince**
+  (`tedarikci_borc_ekle`, gerçek borç azalması) iki tartışmasız nokta gerçek mali hareket
+  üretir. Karşılıksız durumu müşteri kartına bir risk notu düşer, ledger'a dokunmaz — kesinti
+  kararı kullanıcının. Dövizli çek/senet (kur takibi) bu turda kurulmadı, TL ile sınırlı
+  tutuldu — spesifikasyon bunu zorunlu kılmıyor ve kapsamı ciddi büyütürdü
+- [x] **`cek_senet_durum_guncelle()` RPC'si** tek bir durum makinesi: `tahsil_edildi`
+  (yalnız alınan, kasa hesabı zorunlu), `odendi` (yalnız verilen, kasa hesabı zorunlu),
+  `ciro_edildi` (yalnız alınan, hedef tedarikçi zorunlu), `karsiliksiz` (müşteri risk notu),
+  `bankaya_verildi`/`portfoyde` (yan etkisiz). Her geçiş `cheque_events`'e ve audit'e yazılır
+- [x] **POS mutabakatı sahte veri kabul etmez:** `pos_mutabakat_yap()` RPC'si "beklenen tutarı"
+  istemciden almaz — o günkü gerçek `cash_movements` "tahsilat" toplamını kendi hesaplar;
+  kullanıcı yalnızca bankadan gerçekte geçen tutarı girer. Fark varsa `gider_ekle('pos_komisyonu', ...)`
+  otomatik çağrılır — hem gider kaydı hem POS hesabının kasa bakiyesinden gerçek düşüş tek
+  işlemde olur, banka ekstresiyle sistem her zaman eşleşir
+- [x] **Genel Bakış'a "Yaklaşan Çek/Senet" kartı** eklendi — vadesi 7 gün içinde olan veya
+  geçmiş, henüz tahsil/ciro edilmemiş alınan çek/senetlerin sayısı ve toplamı (spesifikasyondaki
+  "nakit akış uyarısı" ihtiyacının ilk sürümü — tam nakit akış projeksiyon raporu değil,
+  bilinçli olarak küçük tutuldu)
+- [x] E2E: Showroom demo tenant'ında gerçek panelde uçtan uca doğrulandı — alınan bir çek
+  (₺15.000, serbest metin keşideci) oluşturuldu, Genel Bakış'ta ve portföy sayfasında "yaklaşan"
+  uyarısının doğru göründüğü doğrulandı; "Tahsil Edildi" olarak işaretlenip Nakit Kasa seçilince
+  gerçek bir `cash_movements` satırının (₺15.000, `tahsilat`, `reference_type=cheque`) ve tam
+  `cheque_events` geçmişinin (`null→portfoyde→tahsil_edildi`) oluştuğu veritabanından doğrulandı;
+  ardından gerçek bir POS hesabı ("Garanti POS") oluşturulup ₺180'lik gerçek bir kart satışı
+  yapıldı, POS Mutabakat sayfasında "Beklenen ₺180" rakamının satıştan **bağımsız sunucu
+  hesaplamasıyla** doğru geldiği (istemciden gelen sahte bir "beklenen" değeri kabul etmediği,
+  ilk denemede kasıtsız boş bir sepetle test edilince doğru şekilde ₺0 döndüğü de ayrıca
+  doğrulandı), ₺175 girilince ₺5 komisyonun otomatik gider kaydına dönüştüğü ve POS hesabı
+  bakiyesinin gerçekten 180→175'e düştüğü veritabanından doğrulandı
 
 ## SPRINT 13+ — MASAÜSTÜ (OFFLINE) VE P2 (Hafta 13+)
 

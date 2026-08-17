@@ -729,6 +729,32 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         metin:
           "Finans > \"📊 Cari Yaşlandırma\" sayfası, açık bakiyesi olan tüm müşteri ve tedarikçilerinizi tek ekranda listeler; her satırda borcun 0-30, 31-60, 61-90 ve 90+ gün sütunlarına dağılımını görürsünüz — en eski borcun önce kapandığı varsayılarak hesaplanır. 90 günü aşan tutarlar kırmızı vurgulanır, riskli/eskimiş bakiyeleri hızlıca fark etmenizi sağlar.",
       },
+      { tur: "altbaslik", metin: "Çek/Senet Portföyü" },
+      {
+        tur: "paragraf",
+        metin:
+          "Finans > \"📑 Çek/Senet\" sayfasından müşteriden aldığınız (\"Alınan\") veya toptancıya yazdığınız (\"Verilen\") çek/senetleri kaydedersiniz — keşideci/lehtar adını elle yazabilir ya da doğrudan bir müşteri/tedarikçi kartına bağlayabilirsiniz. Vadesi 7 gün içinde olan veya geçmiş alınan çek/senetler için Genel Bakış'ta ve bu sayfada uyarı rozeti belirir.",
+      },
+      {
+        tur: "liste",
+        ogeler: [
+          "Alınan çek \"Tahsil Edildi\" olarak işaretlenirse seçtiğiniz kasa hesabına gerçek bir tahsilat hareketi işlenir.",
+          "Alınan çek bir tedarikçiye \"Ciro Edildi\" olarak işaretlenirse o tedarikçiye olan borcunuz gerçekten azalır (kasaya dokunmaz).",
+          "Verilen çek \"Ödendi\" olarak işaretlenirse seçtiğiniz kasa hesabından gerçek bir ödeme hareketi çıkar.",
+          "\"Karşılıksız\" işaretlenen bir alınan çek, bağlı olduğu müşterinin kartına otomatik bir risk notu düşer — borç durumuna dokunmaz, bunu ayrıca siz yönetirsiniz.",
+        ],
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "Çek/senet portföyü kasadan bağımsız kendi başına bir takip sistemidir — bir çek aldığınızda müşteri borcunuzu otomatik azaltmaz (çünkü \"çek alınca mı yoksa tahsil edilince mi borç kapanır\" kararı işletmenizin kendi politikasıdır). İsterseniz tahsilatı ayrıca müşteri kartından da işleyebilirsiniz.",
+      },
+      { tur: "altbaslik", metin: "POS Mutabakat" },
+      {
+        tur: "paragraf",
+        metin:
+          "Finans > \"💳 POS Mutabakat\" sayfası, bir günde o POS hesabına giren kart tahsilatlarının toplamını (sistemden) otomatik hesaplar. Siz yalnızca bankadan gerçekte geçen tutarı girersiniz; aradaki fark POS komisyonu olarak otomatik bir gider kaydına ve o POS hesabının bakiyesinden gerçek bir düşüşe dönüşür — banka ekstresiyle sisteminiz her zaman eşleşir.",
+      },
     ],
     ilgili: ["satis", "servisler", "ayarlar", "musteriler", "tedarikciler"],
   },
