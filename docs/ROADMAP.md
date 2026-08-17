@@ -292,9 +292,13 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] **Canlı testte bulunan hata:** "Toplam İskonto" ve personel iskonto oranı yalnızca `sales.discount_amount` (genel iskonto) alanını sayıyordu, HizliSatis'te asıl sık kullanılan SATIR iskontosunu (`sale_items.discount_amount`) hiç hesaba katmıyordu — gerçek bir satır-iskontolu satışla test edilirken fark edildi (₺20 iskonto ₺0 gösteriyordu), `sale_items` sorgusuna `discount_amount` eklenip satış başına toplanacak şekilde düzeltildi ve doğrulandı (₺20 / %1.8 doğru çıktı)
 - [x] E2E: gerçek kullanıcı oturumuyla, karma iskonto/ödeme yöntemli 3 satış ve tekrar eden cihazlı 2 servis senaryosuyla tüm rakamlar (toplam, seri, ürün, personel, süre, teknisyen, tekrar) doğrulandı
 
-### Gün 27 — Raporlar II
-- [ ] Kârlılık (maliyet yöntemi seçilebilir) + stok raporları
-- [ ] Muhasebeci paketi v1 (ay sonu Excel export)
+### Gün 27 — Raporlar II ✅
+- [x] `0031_karlilik_maliyet_snapshot.sql`: `sale_items.unit_cost` eklendi — `satis_olustur()` her ürün kalemi için satış anındaki maliyeti (`products.purchase_price`, dövizliyse tenant override → global TCMB kuruyla TL'ye çevrilerek) donmuş halde kaydediyor; imza değişmedi, düz `create or replace` yeterliydi
+- [x] Kârlılık raporu iki yöntem arasında seçilebilir: "Satış Anındaki Maliyet" (`unit_cost`, bu migration'dan önceki satışlarda null — o kalemler ayrı sayılıp toplam kâra karıştırılmıyor) vs "Güncel Maliyet" (`products.purchase_price` bugünkü kurla yeniden hesaplanır); yalnızca Satış (POS) modülünü kapsıyor, servis geliri (`final_cost`) dahil değil — kod içinde açıkça not düşüldü. Tutarlar KDV dahil (satır bazlı KDV anlık görüntüsü yok — bilinçli sınırlama)
+- [x] Stok değeri raporu: aktif ürünlerin güncel maliyet/satış değeri toplamı + kategori bazlı kırılım (`Kategorisiz` dahil); tarih aralığından bağımsız anlık görüntü, aralık seçici bu sekmede gizleniyor
+- [x] Muhasebeci paketi: `exceljs` ile tek tıkla ay bazlı Excel (Özet / Satışlar / Giderler / Kasa Hareketleri sayfaları, başlık satırı donmuş) — `/api/raporlar/muhasebeci-paketi?ay=YYYY-MM`; Raporlar sayfası başlığında ay seçici (JS gerektirmeyen native `<form method="GET">`) ile indiriliyor. `xlsx` paketi önce denendi, `npm audit`'te "fix yok" HIGH bulgu (yalnız güvenilmeyen dosya *okurken* tetiklenen, benim kullanımımda erişilemeyen bir kod yolu) çıkınca proaktif olarak `exceljs`'e geçildi
+- [x] Kılavuza Raporlar konusu genişletildi: Kârlılık, Stok, Muhasebeci Paketi
+- [x] E2E: gerçek kullanıcı oturumuyla — 100 USD maliyetli ürün (güncel kur 47,8066), 2 adet satıldı + 500₺ işçilik kalemi; kârlılık raporu her iki yöntemde de ₺12.500 ciro / ₺9.561,32 maliyet / ₺2.938,68 kâr / %23,5 marjı doğru hesapladı; stok raporu satıştan sonra azalan stok miktarını doğru yansıttı (₺325.084,88 toplam maliyet değeri, kategori kırılımı doğru); Excel export gerçek `fetch` ile indirildi — HTTP 200, doğru `Content-Type`/`Content-Disposition`, dosya `PK\x03\x04` (geçerli xlsx/zip) imzasıyla başlıyor
 
 ### Gün 28 — Yönetim Konsolu v1a
 - [x] ~~Konsol yüzeyi + `platform_admins` + Master Admin seed~~ → **öne alındı, kullanıcı talebiyle bugün (Gün 9-10 arası) inşa edildi** (bkz. altta). MFA + tam ayrı kimlik alanı (Bölüm 63) hâlâ bu güne planlı.

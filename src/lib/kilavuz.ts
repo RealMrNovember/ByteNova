@@ -653,13 +653,13 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     baslik: "Raporlar",
     ikon: "📊",
     kategori: "modul",
-    ozet: "Satış ve servis performans raporları — gün/ay bazlı, ürün/personel/teknisyen kırılımlı.",
-    anahtarKelimeler: ["rapor", "istatistik", "performans", "en çok satan", "tekrar eden"],
+    ozet: "Satış, servis, kârlılık ve stok performans raporları + tek tık muhasebeci Excel paketi.",
+    anahtarKelimeler: ["rapor", "istatistik", "performans", "en çok satan", "tekrar eden", "kârlılık", "kar", "stok değeri", "muhasebeci", "excel"],
     icerik: [
       {
         tur: "paragraf",
         metin:
-          "Raporlar sayfası Satış ve Servis olmak üzere iki sekmeden oluşur; üstten bir tarih aralığı (son 7/30/90 gün veya son 1 yıl) seçersiniz, tüm rapor o aralığa göre hesaplanır. Görüntüleme yetkisi Sahip, Yönetici ve Muhasebe rollerine tanımlıdır.",
+          "Raporlar sayfası Satış, Servis, Kârlılık ve Stok olmak üzere dört sekmeden oluşur; Satış/Servis/Kârlılık sekmelerinde üstten bir tarih aralığı (son 7/30/90 gün veya son 1 yıl) seçersiniz, o sekmedeki rapor bu aralığa göre hesaplanır (Stok anlık bir görüntü olduğu için aralık seçimi orada gizlidir). Görüntüleme yetkisi Sahip, Yönetici ve Muhasebe rollerine tanımlıdır.",
       },
       { tur: "altbaslik", metin: "Satış Sekmesi" },
       {
@@ -685,13 +685,39 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         metin:
           "\"Bugünkü Tahsilat\" ile \"Toplam Satış\" arasındaki mantık Genel Bakış'takiyle aynıdır: açık hesap satışlar satış tutarına girer ama kasaya para girmediği için tahsilat rakamına girmez.",
       },
+      { tur: "altbaslik", metin: "Kârlılık Sekmesi" },
+      {
+        tur: "paragraf",
+        metin:
+          "Bu sekme yalnızca Satış (POS) modülünü kapsar — servis gelirleri dahil değildir. İki maliyet yöntemi arasında seçim yapabilirsiniz: \"Satış Anındaki Maliyet\", her satış kaleminin o an geçerli olan ürün maliyetini (döviz cinsindense günün kuruyla TL'ye çevrilmiş hâliyle) donmuş olarak saklar — tarihsel olarak en doğru rakamdır. \"Güncel Maliyet\" ise geçmiş satışları da bugünkü ürün maliyetiyle yeniden hesaplar — \"bugünün maliyetiyle satsaydım kârım ne olurdu\" sorusuna cevap verir.",
+      },
+      {
+        tur: "liste",
+        ogeler: [
+          "Özet kartlar: toplam ciro, toplam maliyet, toplam kâr ve kâr marjı (%).",
+          "Ürün Bazlı Kârlılık — her ürünün adedi, cirosu, kâr marjı ve kâr tutarı, en kârlıdan başlayarak.",
+          "İşçilik/hizmet kalemlerinin malzeme maliyeti yoktur, tamamı kâr olarak sayılır.",
+        ],
+      },
       {
         tur: "uyari",
         metin:
-          "Kârlılık (maliyet yöntemi seçilebilir), stok değeri raporu ve tek tık muhasebeci paketi (Excel export) henüz yol haritasında — bu ekrana ileride eklenecek.",
+          "Tutarlar KDV dahildir (her satırın KDV oranı ayrıca saklanmadığı için net kâr hesabı için kendi KDV oranınızı düşünmeniz gerekir). \"Satış Anındaki Maliyet\" verisi 17 Ağustos 2026'dan önceki satışlarda yoktur — bu kalemler kâr toplamına dahil edilmez, sayfada kaç kalemin etkilendiği ayrıca gösterilir.",
+      },
+      { tur: "altbaslik", metin: "Stok Sekmesi" },
+      {
+        tur: "paragraf",
+        metin:
+          "Aktif tüm ürünlerin güncel maliyet (alış fiyatı × güncel kur × stok adedi) ve güncel satış değerini toplar, kategori bazında kırılım gösterir. Tarih aralığından bağımsız, o anki stok durumunun bir fotoğrafıdır.",
+      },
+      { tur: "altbaslik", metin: "Muhasebeci Paketi (Excel)" },
+      {
+        tur: "paragraf",
+        metin:
+          "Sayfanın üstündeki ay seçiciden bir ay seçip \"📥 Muhasebeci Paketi (Excel)\" düğmesine bastığınızda, seçilen aya ait Özet, Satışlar, Giderler ve Kasa Hareketleri sayfalarını içeren tek bir .xlsx dosyası indirilir — ay sonu muhasebe teslimatı için ek bir işlem gerektirmez.",
       },
     ],
-    ilgili: ["satis", "servisler", "genel-bakis"],
+    ilgili: ["satis", "servisler", "genel-bakis", "stok"],
   },
   {
     slug: "ayarlar",

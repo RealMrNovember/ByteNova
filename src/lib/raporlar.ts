@@ -174,3 +174,142 @@ export function servisRaporuHesapla(
     tekrarEdenler,
   };
 }
+
+// ---------- KÂRLILIK ----------
+// Yalnızca Satış (POS) modülünden gelen ürün kalemlerini kapsar — servis
+// gelirleri (final_cost) ayrı bir konudur, bu rapora dahil değildir.
+//
+// İki maliyet yöntemi seçilebilir:
+//  - "satis_anindaki": sale_items.unit_cost (Gün 27'de eklenen anlık
+//    görüntü) — tarihsel olarak doğru, ama bu alan eklenmeden ÖNCEki
+//    satışlarda null'dur (o kalemler kâr hesabına katılmaz, ayrıca sayılır).
+//  - "guncel": products.purchase_price bugünkü kurla — "bugünün
+//    maliyetiyle satsaydım" senaryosu, geçmişi bugüne göre yeniden fiyatlar.
+// Tutarlar KDV DAHİL tutulur (satış fiyatları zaten KDV dahil saklanıyor;
+// gerçek net kâr için KDV oranınızı ayrıca düşünmeniz gerekir).
+
+export type KarlilikYontemi = "satis_anindaki" | "guncel";
+
+export type KarlilikKalemi = {
+  product_id: string | null;
+  name: string;
+  quantity: number;
+  line_total: number;
+  unit_cost: number | null; // satış anındaki TL maliyeti (Gün 27 öncesi satışlarda null)
+};
+
+export type KarlilikRaporu = {
+  toplamCiro: number;
+  toplamMaliyet: number;
+  toplamKar: number;
+  karMarji: number; // %
+  veriEksikKalemSayisi: number;
+  urunBazli: { ad: string; adet: number; ciro: number; maliyet: number; kar: number; karMarji: number }[];
+};
+
+export function karlilikRaporuHesapla(
+  kalemler: KarlilikKalemi[],
+  guncelMaliyetTLHaritasi: Map<string, number>,
+  yontem: KarlilikYontemi
+): KarlilikRaporu {
+  let toplamCiro = 0;
+  let toplamMaliyet = 0;
+  let veriEksikKalemSayisi = 0;
+  const urunMap = new Map<string, { adet: number; ciro: number; maliyet: number }>();
+
+  for (const k of kalemler) {
+    toplamCiro += k.line_total;
+
+    let birimMaliyet: number | null = null;
+    if (k.product_id) {
+      if (yontem === "guncel") {
+        birimMaliyet = guncelMaliyetTLHaritasi.get(k.product_id) ?? k.unit_cost;
+      } else {
+        birimMaliyet = k.unit_cost ?? guncelMaliyetTLHaritasi.get(k.product_id) ?? null;
+      }
+    } else {
+      birimMaliyet = 0; // işçilik/hizmet — malzeme maliyeti yok, tamamı kâr
+    }
+
+    if (birimMaliyet == null) {
+      veriEksikKalemSayisi += 1;
+      continue; // maliyeti bilinmeyen kalem toplam kâra karıştırılmaz
+    }
+
+    const maliyet = birimMaliyet * k.quantity;
+    toplamMaliyet += maliyet;
+
+    const kayit = urunMap.get(k.name) ?? { adet: 0, ciro: 0, maliyet: 0 };
+    kayit.adet += k.quantity;
+    kayit.ciro += k.line_total;
+    kayit.maliyet += maliyet;
+    urunMap.set(k.name, kayit);
+  }
+
+  const toplamKar = toplamCiro - toplamMaliyet;
+
+  return {
+    toplamCiro,
+    toplamMaliyet,
+    toplamKar,
+    karMarji: toplamCiro > 0 ? (toplamKar / toplamCiro) * 100 : 0,
+    veriEksikKalemSayisi,
+    urunBazli: Array.from(urunMap.entries())
+      .map(([ad, v]) => ({
+        ad,
+        adet: v.adet,
+        ciro: v.ciro,
+        maliyet: v.maliyet,
+        kar: v.ciro - v.maliyet,
+        karMarji: v.ciro > 0 ? ((v.ciro - v.maliyet) / v.ciro) * 100 : 0,
+      }))
+      .sort((a, b) => b.kar - a.kar),
+  };
+}
+
+// ---------- STOK DEĞERİ ----------
+
+export type StokUrunu = {
+  id: string;
+  name: string;
+  stock_quantity: number;
+  purchase_price: number | null;
+  purchase_currency: string;
+  sale_price: number | null;
+  category_name: string | null;
+};
+
+export type StokRaporu = {
+  toplamMaliyetDegeri: number;
+  toplamSatisDegeri: number;
+  kategoriBazli: { ad: string; deger: number }[];
+};
+
+export function stokRaporuHesapla(
+  urunler: StokUrunu[],
+  kurHaritasi: Map<string, number>
+): StokRaporu {
+  let toplamMaliyetDegeri = 0;
+  let toplamSatisDegeri = 0;
+  const kategoriMap = new Map<string, number>();
+
+  for (const u of urunler) {
+    const kurTL = u.purchase_currency === "TRY" ? 1 : (kurHaritasi.get(u.purchase_currency) ?? 0);
+    const maliyetTL = (u.purchase_price ?? 0) * kurTL;
+    const deger = maliyetTL * u.stock_quantity;
+
+    toplamMaliyetDegeri += deger;
+    toplamSatisDegeri += (u.sale_price ?? 0) * u.stock_quantity;
+
+    const kategori = u.category_name ?? "Kategorisiz";
+    kategoriMap.set(kategori, (kategoriMap.get(kategori) ?? 0) + deger);
+  }
+
+  return {
+    toplamMaliyetDegeri,
+    toplamSatisDegeri,
+    kategoriBazli: Array.from(kategoriMap.entries())
+      .map(([ad, deger]) => ({ ad, deger }))
+      .sort((a, b) => b.deger - a.deger),
+  };
+}
