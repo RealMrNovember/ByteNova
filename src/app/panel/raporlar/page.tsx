@@ -9,11 +9,15 @@ import {
   servisRaporuHesapla,
   karlilikRaporuHesapla,
   stokRaporuHesapla,
+  satisKarBazliPersonelHesapla,
+  satisPrimRaporuHesapla,
+  servisPrimRaporuHesapla,
   tarihAraligiBaslangic,
   type TarihAraligi,
   type KarlilikKalemi,
   type KarlilikYontemi,
   type StokUrunu,
+  type PrimKurali,
 } from "@/lib/raporlar";
 
 export const metadata: Metadata = { title: "Raporlar — ByteNova" };
@@ -42,7 +46,7 @@ function sekmeUrl(sekme: string, aralik: string) {
   return `/panel/raporlar?sekme=${sekme}&aralik=${aralik}`;
 }
 
-const SEKMELER = ["satis", "servis", "karlilik", "stok"] as const;
+const SEKMELER = ["satis", "servis", "karlilik", "stok", "prim"] as const;
 type Sekme = (typeof SEKMELER)[number];
 
 export default async function RaporlarPage({
@@ -92,6 +96,7 @@ export default async function RaporlarPage({
   let servisIcerik: React.ReactNode = null;
   let karlilikIcerik: React.ReactNode = null;
   let stokIcerik: React.ReactNode = null;
+  let primIcerik: React.ReactNode = null;
 
   if (sekme === "satis") {
     const { data: satislar } = await supabase
@@ -452,6 +457,157 @@ export default async function RaporlarPage({
         </div>
       </>
     );
+  } else if (sekme === "prim") {
+    const { data: kurallarHam } = await supabase
+      .from("commission_rules")
+      .select("role, basis, rate_percent, fixed_amount, is_active")
+      .eq("is_active", true);
+    const satisKurali: PrimKurali | null =
+      (kurallarHam ?? []).find((k) => k.role === "satis") ?? null;
+    const servisKurali: PrimKurali | null =
+      (kurallarHam ?? []).find((k) => k.role === "servis") ?? null;
+
+    const { data: satislar } = await supabase
+      .from("sales")
+      .select("id, created_at, total_amount, discount_amount, subtotal, created_by")
+      .gte("created_at", baslangic);
+
+    const satisIdleri = (satislar ?? []).map((s) => s.id);
+    const { data: kalemlerHam } = satisIdleri.length
+      ? await supabase
+          .from("sale_items")
+          .select("sale_id, product_id, name, quantity, line_total, unit_cost, discount_amount")
+          .in("sale_id", satisIdleri)
+      : { data: [] };
+    const kalemler = kalemlerHam ?? [];
+
+    const urunIdleri = Array.from(new Set(kalemler.map((k) => k.product_id).filter((id): id is string => !!id)));
+    const { data: urunMaliyetleri } = urunIdleri.length
+      ? await supabase.from("products").select("id, purchase_price, purchase_currency").in("id", urunIdleri)
+      : { data: [] };
+    const kurHaritasiPrim = await etkinKurlar(supabase);
+    const guncelMaliyetTLHaritasiPrim = new Map<string, number>();
+    for (const u of urunMaliyetleri ?? []) {
+      if (u.purchase_price == null) continue;
+      const kur = u.purchase_currency === "TRY" ? 1 : kurHaritasiPrim.get(u.purchase_currency)?.rate_to_try;
+      if (kur == null) continue;
+      guncelMaliyetTLHaritasiPrim.set(u.id, u.purchase_price * kur);
+    }
+
+    const satisRapor = satisRaporuHesapla(satislar ?? [], kalemler, isimBul, "gun");
+    const saleIdKisiHaritasi = new Map((satislar ?? []).map((s) => [s.id, isimBul(s.created_by)]));
+    const karBazli = satisKarBazliPersonelHesapla(kalemler, saleIdKisiHaritasi, guncelMaliyetTLHaritasiPrim, "satis_anindaki");
+    const satisPrimSatirlari = satisPrimRaporuHesapla(satisRapor.personelBazli, karBazli, satisKurali);
+
+    // Teknisyen primi: yalnızca dönemde TESLİM EDİLEN servisler (kabul tarihi değil) —
+    // işçilik cirosu = final_cost - kullanılan parçaların satış bedeli.
+    const { data: teslimEdilenServisler } = await supabase
+      .from("service_orders")
+      .select("id, technician_id, final_cost")
+      .eq("status", "teslim_edildi")
+      .gte("delivered_at", baslangic);
+
+    const servisIdleri = (teslimEdilenServisler ?? []).map((s) => s.id);
+    const { data: kullanilanParcalar } = servisIdleri.length
+      ? await supabase
+          .from("service_parts")
+          .select("service_order_id, quantity, unit_price")
+          .in("service_order_id", servisIdleri)
+          .eq("status", "consumed")
+      : { data: [] };
+    const parcaTutariHaritasi = new Map<string, number>();
+    for (const p of kullanilanParcalar ?? []) {
+      parcaTutariHaritasi.set(
+        p.service_order_id,
+        (parcaTutariHaritasi.get(p.service_order_id) ?? 0) + p.quantity * p.unit_price
+      );
+    }
+
+    const teknisyenMap = new Map<string, { adet: number; iscilikCirosu: number }>();
+    for (const s of teslimEdilenServisler ?? []) {
+      const kisi = isimBul(s.technician_id);
+      const parcaTutari = parcaTutariHaritasi.get(s.id) ?? 0;
+      const iscilik = Math.max(0, (s.final_cost ?? 0) - parcaTutari);
+      const kayit = teknisyenMap.get(kisi) ?? { adet: 0, iscilikCirosu: 0 };
+      kayit.adet += 1;
+      kayit.iscilikCirosu += iscilik;
+      teknisyenMap.set(kisi, kayit);
+    }
+    const teknisyenBazli = Array.from(teknisyenMap.entries()).map(([ad, v]) => ({ ad, ...v }));
+    const servisPrimSatirlari = servisPrimRaporuHesapla(teknisyenBazli, servisKurali);
+
+    const toplamSatisPrimi = satisPrimSatirlari.reduce((t, s) => t + s.primTutari, 0);
+    const toplamServisPrimi = servisPrimSatirlari.reduce((t, s) => t + s.primTutari, 0);
+
+    primIcerik = (
+      <>
+        <div className="grid grid-cols-2 gap-3">
+          {ozetKart("Toplam Satış Primi", paraFormatla(toplamSatisPrimi), "🧾", ARALIK_ETIKET[aralik])}
+          {ozetKart("Toplam Teknisyen Primi", paraFormatla(toplamServisPrimi), "🔧", ARALIK_ETIKET[aralik])}
+        </div>
+
+        {!satisKurali && !servisKurali && (
+          <div className="glass mt-4 rounded-xl p-5 text-center">
+            <p className="text-sm text-slate-400">Henüz bir prim kuralı tanımlanmadı.</p>
+            <Link href="/panel/ayarlar#prim" className="mt-2 inline-block text-xs font-medium text-nova-300 hover:text-nova-100">
+              Ayarlar'dan Prim Kuralı Tanımla →
+            </Link>
+          </div>
+        )}
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <div className="glass overflow-hidden rounded-xl">
+            <div className="border-b border-slate-800 px-4 py-3">
+              <h2 className="text-sm font-semibold text-white">Satışçı Primleri</h2>
+              <p className="mt-0.5 text-[11px] text-slate-500">
+                {satisKurali ? (satisKurali.basis === "karlilik" ? "Kârlılık bazlı" : "Ciro bazlı") : "Kural tanımlanmadı"}
+              </p>
+            </div>
+            {!satisPrimSatirlari.length ? (
+              <p className="px-4 py-8 text-center text-xs text-slate-600">Veri yok.</p>
+            ) : (
+              <div className="divide-y divide-slate-800/60">
+                {satisPrimSatirlari.map((s) => (
+                  <div key={s.ad} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+                    <span className="min-w-0 flex-1 truncate text-slate-200">{s.ad}</span>
+                    <span className="shrink-0 text-xs text-slate-500">{paraFormatla(s.taban)} taban</span>
+                    <span className="shrink-0 font-semibold text-emerald-300">{paraFormatla(s.primTutari)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="glass overflow-hidden rounded-xl">
+            <div className="border-b border-slate-800 px-4 py-3">
+              <h2 className="text-sm font-semibold text-white">Teknisyen Primleri</h2>
+              <p className="mt-0.5 text-[11px] text-slate-500">
+                {servisKurali
+                  ? servisKurali.basis === "servis_adedi"
+                    ? "Kapanan servis başına sabit tutar"
+                    : "İşçilik cirosu bazlı"
+                  : "Kural tanımlanmadı"}
+              </p>
+            </div>
+            {!servisPrimSatirlari.length ? (
+              <p className="px-4 py-8 text-center text-xs text-slate-600">Veri yok.</p>
+            ) : (
+              <div className="divide-y divide-slate-800/60">
+                {servisPrimSatirlari.map((s) => (
+                  <div key={s.ad} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+                    <span className="min-w-0 flex-1 truncate text-slate-200">{s.ad}</span>
+                    <span className="shrink-0 text-xs text-slate-500">
+                      {servisKurali?.basis === "servis_adedi" ? `${s.taban} servis` : `${paraFormatla(s.taban)} taban`}
+                    </span>
+                    <span className="shrink-0 font-semibold text-emerald-300">{paraFormatla(s.primTutari)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </>
+    );
   }
 
   const buAy = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Istanbul" }).slice(0, 7);
@@ -536,6 +692,14 @@ export default async function RaporlarPage({
         >
           📦 Stok
         </Link>
+        <Link
+          href={sekmeUrl("prim", aralik)}
+          className={`border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+            sekme === "prim" ? "border-nova-400 text-nova-300" : "border-transparent text-slate-500 hover:text-slate-300"
+          }`}
+        >
+          👥 Personel/Prim
+        </Link>
       </div>
 
       <div className="mt-5">
@@ -543,6 +707,7 @@ export default async function RaporlarPage({
         {sekme === "servis" && servisIcerik}
         {sekme === "karlilik" && karlilikIcerik}
         {sekme === "stok" && stokIcerik}
+        {sekme === "prim" && primIcerik}
       </div>
     </div>
   );

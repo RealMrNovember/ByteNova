@@ -6,6 +6,7 @@ import { KullaniciYonetimi } from "@/components/panel/KullaniciYonetimi";
 import { EklentilerListesi } from "@/components/panel/EklentilerListesi";
 import { DovizKurlari } from "@/components/panel/DovizKurlari";
 import { StokPolitikasi } from "@/components/panel/StokPolitikasi";
+import { PrimKurallari } from "@/components/panel/PrimKurallari";
 import { TaksitAyari } from "@/components/panel/TaksitAyari";
 import { ServisAyarlari } from "@/components/panel/ServisAyarlari";
 import { AbonelikBolumu } from "@/components/panel/AbonelikBolumu";
@@ -98,6 +99,12 @@ export default async function AyarlarPage() {
     .maybeSingle();
 
   const ayarYonetebilir = yetkiVar(profil?.role, "ayar_yonet");
+
+  const { data: primKurallari } = await supabase
+    .from("commission_rules")
+    .select("role, basis, rate_percent, fixed_amount, is_active");
+  const satisKurali = (primKurallari ?? []).find((k) => k.role === "satis") ?? null;
+  const servisKurali = (primKurallari ?? []).find((k) => k.role === "servis") ?? null;
 
   // Abonelik olay geçmişi — konsoldan yapılan uzatma/askıya alma/plan
   // değişikliği gibi işlemler işletme sahibi/yöneticisi için de görünür
@@ -204,6 +211,14 @@ export default async function AyarlarPage() {
           tenantId={profil?.tenant_id ?? ""}
           yetkili={ayarYonetebilir}
           mevcutPolitika={tenant?.negative_stock_policy ?? "uyarili"}
+        />
+
+        {/* Prim kuralları */}
+        <PrimKurallari
+          tenantId={profil?.tenant_id ?? ""}
+          yetkili={ayarYonetebilir}
+          satisKurali={satisKurali}
+          servisKurali={servisKurali}
         />
 
         {/* Taksit limiti */}

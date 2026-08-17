@@ -207,6 +207,18 @@ export type KarlilikRaporu = {
   urunBazli: { ad: string; adet: number; ciro: number; maliyet: number; kar: number; karMarji: number }[];
 };
 
+function birimMaliyetBul(
+  k: KarlilikKalemi,
+  guncelMaliyetTLHaritasi: Map<string, number>,
+  yontem: KarlilikYontemi
+): number | null {
+  if (!k.product_id) return 0; // işçilik/hizmet — malzeme maliyeti yok, tamamı kâr
+  if (yontem === "guncel") {
+    return guncelMaliyetTLHaritasi.get(k.product_id) ?? k.unit_cost;
+  }
+  return k.unit_cost ?? guncelMaliyetTLHaritasi.get(k.product_id) ?? null;
+}
+
 export function karlilikRaporuHesapla(
   kalemler: KarlilikKalemi[],
   guncelMaliyetTLHaritasi: Map<string, number>,
@@ -220,16 +232,7 @@ export function karlilikRaporuHesapla(
   for (const k of kalemler) {
     toplamCiro += k.line_total;
 
-    let birimMaliyet: number | null = null;
-    if (k.product_id) {
-      if (yontem === "guncel") {
-        birimMaliyet = guncelMaliyetTLHaritasi.get(k.product_id) ?? k.unit_cost;
-      } else {
-        birimMaliyet = k.unit_cost ?? guncelMaliyetTLHaritasi.get(k.product_id) ?? null;
-      }
-    } else {
-      birimMaliyet = 0; // işçilik/hizmet — malzeme maliyeti yok, tamamı kâr
-    }
+    const birimMaliyet = birimMaliyetBul(k, guncelMaliyetTLHaritasi, yontem);
 
     if (birimMaliyet == null) {
       veriEksikKalemSayisi += 1;
@@ -312,4 +315,68 @@ export function stokRaporuHesapla(
       .map(([ad, deger]) => ({ ad, deger }))
       .sort((a, b) => b.deger - a.deger),
   };
+}
+
+// ---------- PRİM ----------
+// Bölüm 29: prim bir muhasebe kaydı değil, seçilen dönem için CANLI hesaplanan
+// bir rapordur (bordroya veri sağlar, bordro tutmaz) — bkz. commission_rules.
+
+export type PrimBasis = "ciro" | "karlilik" | "servis_adedi" | "iscilik_cirosu";
+
+export type PrimKurali = {
+  role: "satis" | "servis";
+  basis: PrimBasis;
+  rate_percent: number | null;
+  fixed_amount: number | null;
+};
+
+export type PrimSatiri = { ad: string; taban: number; primTutari: number };
+
+/** Sale_items'ı satışçıya (created_by) göre gruplayıp kâr hesaplar — karlilikRaporuHesapla ile aynı maliyet çözümlemesini kullanır, ürün yerine kişi bazında toplar. */
+export function satisKarBazliPersonelHesapla(
+  kalemlerSaleIdli: (KarlilikKalemi & { sale_id: string })[],
+  saleIdKisiHaritasi: Map<string, string>,
+  guncelMaliyetTLHaritasi: Map<string, number>,
+  yontem: KarlilikYontemi
+): Map<string, number> {
+  const karMap = new Map<string, number>();
+  for (const k of kalemlerSaleIdli) {
+    const kisi = saleIdKisiHaritasi.get(k.sale_id) ?? "Sistem";
+    const birimMaliyet = birimMaliyetBul(k, guncelMaliyetTLHaritasi, yontem);
+    if (birimMaliyet == null) continue;
+    const kar = k.line_total - birimMaliyet * k.quantity;
+    karMap.set(kisi, (karMap.get(kisi) ?? 0) + kar);
+  }
+  return karMap;
+}
+
+export function satisPrimRaporuHesapla(
+  personelBazli: { ad: string; toplam: number }[],
+  karBazli: Map<string, number>,
+  kural: PrimKurali | null
+): PrimSatiri[] {
+  return personelBazli
+    .map((p) => {
+      const taban = kural?.basis === "karlilik" ? (karBazli.get(p.ad) ?? 0) : p.toplam;
+      const primTutari = kural ? taban * ((kural.rate_percent ?? 0) / 100) : 0;
+      return { ad: p.ad, taban, primTutari };
+    })
+    .sort((a, b) => b.primTutari - a.primTutari);
+}
+
+export function servisPrimRaporuHesapla(
+  teknisyenBazli: { ad: string; adet: number; iscilikCirosu: number }[],
+  kural: PrimKurali | null
+): PrimSatiri[] {
+  return teknisyenBazli
+    .map((t) => {
+      const taban = kural?.basis === "iscilik_cirosu" ? t.iscilikCirosu : t.adet;
+      const primTutari = !kural
+        ? 0
+        : kural.basis === "servis_adedi"
+          ? (kural.fixed_amount ?? 0) * t.adet
+          : taban * ((kural.rate_percent ?? 0) / 100);
+      return { ad: t.ad, taban, primTutari };
+    })
+    .sort((a, b) => b.primTutari - a.primTutari);
 }

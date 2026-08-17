@@ -784,13 +784,13 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     baslik: "Raporlar",
     ikon: "📊",
     kategori: "modul",
-    ozet: "Satış, servis, kârlılık ve stok performans raporları + tek tık muhasebeci Excel paketi.",
-    anahtarKelimeler: ["rapor", "istatistik", "performans", "en çok satan", "tekrar eden", "kârlılık", "kar", "stok değeri", "muhasebeci", "excel"],
+    ozet: "Satış, servis, kârlılık, stok ve personel/prim performans raporları + tek tık muhasebeci Excel paketi.",
+    anahtarKelimeler: ["rapor", "istatistik", "performans", "en çok satan", "tekrar eden", "kârlılık", "kar", "stok değeri", "muhasebeci", "excel", "prim", "personel"],
     icerik: [
       {
         tur: "paragraf",
         metin:
-          "Raporlar sayfası Satış, Servis, Kârlılık ve Stok olmak üzere dört sekmeden oluşur; Satış/Servis/Kârlılık sekmelerinde üstten bir tarih aralığı (son 7/30/90 gün veya son 1 yıl) seçersiniz, o sekmedeki rapor bu aralığa göre hesaplanır (Stok anlık bir görüntü olduğu için aralık seçimi orada gizlidir). Görüntüleme yetkisi Sahip, Yönetici ve Muhasebe rollerine tanımlıdır.",
+          "Raporlar sayfası Satış, Servis, Kârlılık, Stok ve Personel/Prim olmak üzere beş sekmeden oluşur; Stok hariç her sekmede üstten bir tarih aralığı (son 7/30/90 gün veya son 1 yıl) seçersiniz, o sekmedeki rapor bu aralığa göre hesaplanır (Stok anlık bir görüntü olduğu için aralık seçimi orada gizlidir). Görüntüleme yetkisi Sahip, Yönetici ve Muhasebe rollerine tanımlıdır.",
       },
       { tur: "altbaslik", metin: "Satış Sekmesi" },
       {
@@ -840,6 +840,17 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         tur: "paragraf",
         metin:
           "Aktif tüm ürünlerin güncel maliyet (alış fiyatı × güncel kur × stok adedi) ve güncel satış değerini toplar, kategori bazında kırılım gösterir. Tarih aralığından bağımsız, o anki stok durumunun bir fotoğrafıdır.",
+      },
+      { tur: "altbaslik", metin: "Personel/Prim Sekmesi" },
+      {
+        tur: "paragraf",
+        metin:
+          "Prim, Ayarlar > Prim Kuralları'nda tanımladığınız kurala göre seçili dönem için canlı hesaplanır — ayrı bir prim kaydı/hareketi tutulmaz. Satış primi ciro veya kârlılık bazlı bir oran; teknisyen primi kapanan (teslim edilen) servis başına sabit bir tutar veya işçilik cirosu bazlı bir oran olabilir. İşçilik cirosu, bir servisin toplam tutarından kullanılan parçaların satış bedeli düşülerek yaklaşık hesaplanır.",
+      },
+      {
+        tur: "uyari",
+        metin:
+          "Bu rapor bordroya VERİ SAĞLAR, bordro tutmaz — resmi bir maaş bordrosu veya ödeme kaydı değildir, yalnızca dönem sonu hesaplama kolaylığı sunar.",
       },
       { tur: "altbaslik", metin: "Muhasebeci Paketi (Excel)" },
       {
