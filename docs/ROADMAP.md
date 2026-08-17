@@ -300,9 +300,13 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] Kılavuza Raporlar konusu genişletildi: Kârlılık, Stok, Muhasebeci Paketi
 - [x] E2E: gerçek kullanıcı oturumuyla — 100 USD maliyetli ürün (güncel kur 47,8066), 2 adet satıldı + 500₺ işçilik kalemi; kârlılık raporu her iki yöntemde de ₺12.500 ciro / ₺9.561,32 maliyet / ₺2.938,68 kâr / %23,5 marjı doğru hesapladı; stok raporu satıştan sonra azalan stok miktarını doğru yansıttı (₺325.084,88 toplam maliyet değeri, kategori kırılımı doğru); Excel export gerçek `fetch` ile indirildi — HTTP 200, doğru `Content-Type`/`Content-Disposition`, dosya `PK\x03\x04` (geçerli xlsx/zip) imzasıyla başlıyor
 
-### Gün 28 — Yönetim Konsolu v1a
-- [x] ~~Konsol yüzeyi + `platform_admins` + Master Admin seed~~ → **öne alındı, kullanıcı talebiyle bugün (Gün 9-10 arası) inşa edildi** (bkz. altta). MFA + tam ayrı kimlik alanı (Bölüm 63) hâlâ bu güne planlı.
-- [x] Tenant listesi (temel) — Tenant 360°'nin ilerisi (`tenant_events`, uzatma/askıya alma) bu güne planlı
+### Gün 28 — Yönetim Konsolu v1a ✅
+- [x] ~~Konsol yüzeyi + `platform_admins` + Master Admin seed~~ → **öne alındı, kullanıcı talebiyle bugün (Gün 9-10 arası) inşa edildi** (bkz. altta).
+- [x] **MFA zorunluluğu** (Bölüm 63): Supabase Auth'un yerleşik TOTP/AAL altyapısı üzerine kuruldu — yeni tablo gerekmedi. `/konsol/mfa-kur` (ilk kurulum: QR + gizli anahtar + 6 haneli doğrulama) ve `/konsol/mfa-dogrula` (dönen adminler için AAL1→AAL2 challenge) sayfaları; `(app)/layout.tsx` her istekte `getAuthenticatorAssuranceLevel()` ile AAL2 zorunlu kılıyor, değilse ilgili adıma yönlendiriyor
+- [x] **Ayrı kimlik alanı**: Konsol artık tenant panelinden tamamen ayrı bir çerez adı (`sb-konsol`, `src/lib/supabase/konsol-server.ts`/`konsol-client.ts`) kullanan ayrı bir Supabase istemcisiyle çalışıyor — aynı tarayıcıda iki oturum birbirinden habersiz, biri diğerini sonlandırmıyor/etkilemiyor; `/konsol/giris` ayrı giriş sayfası, `middleware.ts` iki çerez alanını ayrı ayrı yönetiyor. **Bilinçli kapsam:** tam anlamda ayrı bir Supabase Auth *projesi* (Bölüm 63'ün "iki kimlik havuzu birbirinden habersizdir" ifadesinin harfiyen karşılığı) kurulmadı — bu yeni bir Supabase projesi + ortam değişkenleri + DNS gerektiren bir altyapı kararı; bugünkü ayrı-çerez + zorunlu-MFA + opsiyonel-IP-kısıtı çözümü günlük kullanımda gerçek izolasyonu sağlıyor
+- [x] Opsiyonel IP allowlist: `platform_admins.allowed_ips` (`0032_konsol_mfa_ayri_kimlik.sql`) — doluysa yalnız listedeki IP'lerden erişime izin veriyor
+- [x] `tenant_events` temeli (`0033_tenant_events.sql`): olay zaman çizelgesi tablosu + RLS (platform admin herkesi, işletme sahibi/yöneticisi yalnız kendi tenant'ını görebilir — şeffaflık ilkesi) + `admin_tenant_detay()`'e `olaylar` eklendi + tenant detay sayfasında "Olay Zaman Çizelgesi" bölümü. Bu tabloya yazan asıl işlemler (uzatma/askıya alma/plan değişikliği) Gün 29'da eklendi
+- [x] E2E: throwaway platform admin (role='support') ile gerçek TOTP algoritmasıyla (RFC 6238, test scripti) uçtan uca doğrulandı — ilk kurulum (QR/gizli anahtar → 6 haneli kod → AAL2), dönen admin doğrulaması (mfa-dogrula), IP kısıtlaması (yanlış IP → red + doğru hata mesajı, temizlenince erişim geri geldi), çıkış, ve **oturum izolasyonu**: konsol oturumuyla `/panel`'e erişilemediği (tenant girişine yönlendirildiği) doğrulandı. **Canlı testte bulunan hata:** İlk yazımda `useEffect`'in cleanup bayrağı (`iptal`) React Strict Mode'un geliştirme modunda mount→cleanup→mount'u senkron simüle etmesiyle çakışıp `enroll()` çağrısına hiç ulaşmadan sayfayı sonsuza dek "Hazırlanıyor…" durumunda bırakıyordu — tek-seferlik yan etkiler için `useRef` bayrağına geçildi, salt-okunur `listFactors()` çağrısında ise `iptal` bayrağı tamamen kaldırıldı (idempotent olduğu için zararsız). Ayrıca `qr_code` alanının bir data-URI değil ham SVG metni döndüğü görüldü, `<img>` için `encodeURIComponent` ile sarmalandı
 
 ### Ek — Konsol v0 ✅ (kullanıcı talebiyle öne alındı)
 - [x] `0010_konsol_v0.sql`: `platform_admins`, `is_platform_admin()`, `admin_tenant_listesi()`/`admin_tenant_detay()` (SECURITY DEFINER RPC'ler — tenant RLS'i gevşetmeden çapraz-tenant erişim) — uygulandı
@@ -311,7 +315,7 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] `/konsol/[id]`: tenant detayı — bilgiler, kullanıcı listesi, müşteri/cihaz/servis sayaçları
 - [x] middleware: `/konsol/**` oturumsuz erişime kapalı; layout `is_platform_admin()` kontrolüyle yetkisiz tenant kullanıcısını `/panel`'e geri yönlendiriyor
 - [x] E2E: normal tenant kullanıcısı RPC'yi çağıramıyor (400 "yetkisiz") doğrulandı
-- [ ] MFA zorunluluğu + tam ayrı kimlik alanı, uzatma/askıya alma/plan değişikliği, `tenant_events`, feature flag yönetim ekranı — Gün 28-30 planında duruyor (bu adım o işi tekrarlamayacak şekilde kuruldu)
+- [x] ~~MFA zorunluluğu + tam ayrı kimlik alanı + `tenant_events`~~ → Gün 28'de tamamlandı (yukarıda). Uzatma/askıya alma/plan değişikliği Gün 29'a, feature flag yönetim ekranı Gün 30'a planlı
 
 ### Gün 29 — Abonelik Planları + Yönetim Konsolu v1b
 Kapsam kullanıcı talebiyle netleştirildi (17.08.2026): ByteNova'nın kendi

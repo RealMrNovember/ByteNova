@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createKonsolClient } from "@/lib/supabase/konsol-server";
 import { tenantDurum } from "@/lib/konsol";
 import { ROL_ADLARI, type Rol } from "@/lib/yetki";
 import { paraFormatla } from "@/lib/doviz";
@@ -49,6 +49,14 @@ type Detay = {
     trial_ends_at: string | null;
     cancelled_at: string | null;
   }[];
+  olaylar: {
+    id: number;
+    event_type: string;
+    description: string;
+    details: Record<string, unknown> | null;
+    admin_email: string | null;
+    created_at: string;
+  }[];
 };
 
 const EKLENTI_DURUM_ETIKET: Record<string, { ad: string; sinif: string }> = {
@@ -58,13 +66,24 @@ const EKLENTI_DURUM_ETIKET: Record<string, { ad: string; sinif: string }> = {
   cancelled: { ad: "İptal", sinif: "bg-slate-500/15 text-slate-400" },
 };
 
+const OLAY_IKON: Record<string, string> = {
+  plan_degisti: "🔄",
+  askiya_alindi: "⏸️",
+  yeniden_etkinlestirildi: "▶️",
+  uzatildi: "⏳",
+  dekont_yuklendi: "📤",
+  dekont_onaylandi: "✅",
+  dekont_reddedildi: "❌",
+  kapatildi: "🔒",
+};
+
 export default async function KonsolTenantDetayPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await createKonsolClient();
 
   const {
     data: { user },
@@ -79,7 +98,7 @@ export default async function KonsolTenantDetayPage({
 
   if (error || !data || !(data as Detay).tenant) notFound();
 
-  const { tenant, kullanicilar, musteri_sayisi, cihaz_sayisi, servis_sayisi, kasa_kapanislari, eklentiler } =
+  const { tenant, kullanicilar, musteri_sayisi, cihaz_sayisi, servis_sayisi, kasa_kapanislari, eklentiler, olaylar } =
     data as Detay;
   const durum = tenantDurum(tenant.status);
   const kapanisGeriAlabilir = ["master", "finance"].includes(platformProfil?.role ?? "");
@@ -209,6 +228,33 @@ export default async function KonsolTenantDetayPage({
                 </div>
               );
             })}
+          </div>
+        )}
+      </div>
+
+      <div className="glass mt-4 rounded-xl p-5">
+        <h2 className="text-sm font-semibold text-white">Olay Zaman Çizelgesi</h2>
+        <p className="mt-0.5 text-xs text-slate-500">
+          Bu işletme üzerinde konsoldan yapılan uzatma/askıya alma/plan
+          değişikliği gibi işlemler — işletme sahibi de kendi panelinden
+          görebilir (şeffaflık).
+        </p>
+        {olaylar.length === 0 ? (
+          <p className="mt-3 text-xs text-slate-500">Henüz bir olay kaydı yok.</p>
+        ) : (
+          <div className="mt-3 divide-y divide-slate-800/60">
+            {olaylar.map((o) => (
+              <div key={o.id} className="flex items-start gap-3 py-2.5">
+                <span className="text-base">{OLAY_IKON[o.event_type] ?? "📌"}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-slate-200">{o.description}</p>
+                  <p className="text-[11px] text-slate-500">
+                    {new Date(o.created_at).toLocaleString("tr-TR")}
+                    {o.admin_email && ` · ${o.admin_email}`}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

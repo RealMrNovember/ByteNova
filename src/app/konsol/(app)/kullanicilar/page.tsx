@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createKonsolClient } from "@/lib/supabase/konsol-server";
 import { ROL_ADLARI, type Rol } from "@/lib/yetki";
 
 export const metadata: Metadata = { title: "Kullanıcılar — Konsol — ByteNova" };
@@ -32,7 +32,7 @@ export default async function KonsolKullanicilarPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const supabase = await createClient();
+  const supabase = await createKonsolClient();
 
   const { data } = await supabase.rpc("admin_kullanici_listesi");
   const tumKullanicilar = (data as KullaniciSatiri[]) ?? [];

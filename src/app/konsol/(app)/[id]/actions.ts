@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createKonsolClient } from "@/lib/supabase/konsol-server";
 
 export async function kasaKapanisiniGeriAl(closingId: string, neden: string) {
-  const supabase = await createClient();
+  const supabase = await createKonsolClient();
 
   const gerekce = neden.trim();
   if (!gerekce) return { ok: false as const, hata: "Gerekçe zorunlu." };

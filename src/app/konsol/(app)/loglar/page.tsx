@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createKonsolClient } from "@/lib/supabase/konsol-server";
 
 export const metadata: Metadata = { title: "Sistem Logları — Konsol — ByteNova" };
 
@@ -29,7 +29,7 @@ export default async function KonsolLoglarPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const supabase = await createClient();
+  const supabase = await createKonsolClient();
 
   const { data, error } = await supabase.rpc("admin_sistem_loglari", {
     p_limit: 200,

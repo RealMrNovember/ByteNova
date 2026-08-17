@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { kasaKapanisiniGeriAl } from "@/app/konsol/[id]/actions";
+import { kasaKapanisiniGeriAl } from "@/app/konsol/(app)/[id]/actions";
 
 export function KasaKapanisiGeriAl({ closingId }: { closingId: string }) {
   const router = useRouter();

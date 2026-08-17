@@ -7,6 +7,6 @@ import { WhatsAppDestek } from "./WhatsAppDestek";
 // Ayarlar sayfasına taşındı (uygulama içi, daha az dikkat dağıtıcı).
 export function ConditionalWhatsApp() {
   const pathname = usePathname();
-  if (pathname?.startsWith("/panel")) return null;
+  if (pathname?.startsWith("/panel") || pathname?.startsWith("/konsol")) return null;
   return <WhatsAppDestek />;
 }

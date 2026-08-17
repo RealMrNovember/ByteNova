@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { cikisYap } from "@/app/panel/actions";
+import { headers } from "next/headers";
+import { createKonsolClient } from "@/lib/supabase/konsol-server";
+import { konsolCikisYap } from "../actions";
 import { KonsolSekmeler } from "@/components/konsol/KonsolSekmeler";
 
 export default async function KonsolLayout({
@@ -9,15 +10,46 @@ export default async function KonsolLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
+  const supabase = await createKonsolClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/giris");
+  if (!user) redirect("/konsol/giris");
 
   const { data: yetkiliMi } = await supabase.rpc("is_platform_admin");
-  if (!yetkiliMi) redirect("/panel");
+  if (!yetkiliMi) {
+    // Bu çerez alanında oturum var ama hesap platform admin değil (yetki
+    // sonradan kaldırılmış olabilir) — döngüye girmemek için oturumu
+    // burada kapatıp girişe gönderiyoruz.
+    await supabase.auth.signOut();
+    redirect("/konsol/giris?hata=yetkisiz");
+  }
+
+  // MFA zorunlu: doğrulanmış bir TOTP faktörü yoksa kuruluma, varsa ama bu
+  // oturumda henüz ikinci adım tamamlanmadıysa doğrulamaya yönlendir.
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal && aal.currentLevel !== "aal2") {
+    redirect(aal.nextLevel === "aal2" ? "/konsol/mfa-dogrula" : "/konsol/mfa-kur");
+  }
+
+  const { data: admin } = await supabase
+    .from("platform_admins")
+    .select("allowed_ips")
+    .eq("id", user.id)
+    .single();
+
+  if (admin?.allowed_ips && admin.allowed_ips.length > 0) {
+    const basliklar = await headers();
+    const istekIp =
+      basliklar.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      basliklar.get("x-real-ip") ??
+      "";
+    if (!admin.allowed_ips.includes(istekIp)) {
+      await supabase.auth.signOut();
+      redirect("/konsol/giris?hata=ip_kisitli");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-surface">
@@ -39,7 +71,7 @@ export default async function KonsolLayout({
             >
               ← İşletme paneline dön
             </Link>
-            <form action={cikisYap}>
+            <form action={konsolCikisYap}>
               <button
                 type="submit"
                 className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-red-500/50 hover:text-red-300"

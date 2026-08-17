@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createKonsolClient } from "@/lib/supabase/konsol-server";
 import { tenantDurum, type TenantSatiri } from "@/lib/konsol";
 
 export const metadata: Metadata = { title: "Konsol — ByteNova" };
@@ -11,7 +11,7 @@ export default async function KonsolPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const supabase = await createClient();
+  const supabase = await createKonsolClient();
 
   const { data } = await supabase.rpc("admin_tenant_listesi");
   const tumTenantlar = (data as TenantSatiri[]) ?? [];
