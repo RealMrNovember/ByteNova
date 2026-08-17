@@ -37,6 +37,8 @@ export function ServisParcalari({ servisId, tenantId, yetkili, parcalar: ilk }: 
   const [secili, setSecili] = useState<Urun | null>(null);
   const kutuRef = useRef<HTMLDivElement>(null);
 
+  const [muadiller, setMuadiller] = useState<Urun[]>([]);
+
   const [miktar, setMiktar] = useState("1");
   const [sokulenVar, setSokulenVar] = useState(false);
   const [akibet, setAkibet] = useState("customer");
@@ -72,6 +74,34 @@ export function ServisParcalari({ servisId, tenantId, yetkili, parcalar: ilk }: 
     }, 250);
     return () => clearTimeout(t);
   }, [arama]);
+
+  // Seçilen parça stokta yoksa, tanımlıysa muadil parçaları öner (Stok Plus).
+  useEffect(() => {
+    if (!secili || secili.stock_quantity > 0) {
+      setMuadiller([]);
+      return;
+    }
+    (async () => {
+      const supabase = createClient();
+      const { data: iliskiler } = await supabase
+        .from("product_compatibilities")
+        .select("product_id, compatible_product_id")
+        .or(`product_id.eq.${secili.id},compatible_product_id.eq.${secili.id}`);
+      const digerIdler = (iliskiler ?? []).map((r) =>
+        r.product_id === secili.id ? r.compatible_product_id : r.product_id
+      );
+      if (!digerIdler.length) {
+        setMuadiller([]);
+        return;
+      }
+      const { data: urunler } = await supabase
+        .from("products")
+        .select("id, name, stock_quantity, sale_price")
+        .in("id", digerIdler)
+        .eq("is_active", true);
+      setMuadiller(urunler ?? []);
+    })();
+  }, [secili]);
 
   async function parcaEkle() {
     if (!secili) return;
@@ -197,19 +227,44 @@ export function ServisParcalari({ servisId, tenantId, yetkili, parcalar: ilk }: 
         <div className="mt-4 space-y-2.5 rounded-lg border border-slate-800 bg-surface-2 p-3.5">
           <div className="relative" ref={kutuRef}>
             {secili ? (
-              <div className="flex items-center justify-between rounded-lg border border-nova-500/40 bg-nova-500/10 px-3 py-2">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-nova-200">{secili.name}</p>
-                  <p className="text-xs text-slate-500">Stokta: {secili.stock_quantity}</p>
+              <>
+                <div className="flex items-center justify-between rounded-lg border border-nova-500/40 bg-nova-500/10 px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-nova-200">{secili.name}</p>
+                    <p className="text-xs text-slate-500">Stokta: {secili.stock_quantity}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSecili(null)}
+                    className="ml-2 shrink-0 text-xs text-slate-400 hover:text-red-300"
+                  >
+                    ✕
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setSecili(null)}
-                  className="ml-2 shrink-0 text-xs text-slate-400 hover:text-red-300"
-                >
-                  ✕
-                </button>
-              </div>
+                {!!muadiller.length && (
+                  <div className="mt-2 rounded-lg border border-amber-500/25 bg-amber-500/5 p-2.5">
+                    <p className="text-[11px] font-medium text-amber-300">
+                      🔄 Stokta yok — muadil parçalar:
+                    </p>
+                    <div className="mt-1.5 space-y-1">
+                      {muadiller.map((m) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => setSecili(m)}
+                          disabled={m.stock_quantity <= 0}
+                          className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs text-slate-300 transition-colors hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <span>{m.name}</span>
+                          <span className={m.stock_quantity > 0 ? "text-emerald-300" : "text-slate-600"}>
+                            Stok: {m.stock_quantity}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <>
                 <input

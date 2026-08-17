@@ -5,6 +5,7 @@ import { etkinKurlar, kdvHaricFiyat, paraFormatla } from "@/lib/doviz";
 import { hareketEtiket, hareketIkon } from "@/lib/stok";
 import { yetkiVar } from "@/lib/yetki";
 import { StokDuzeltme } from "@/components/urun/StokDuzeltme";
+import { UyumluParcalar } from "@/components/urun/UyumluParcalar";
 
 export default async function UrunDetayPage({
   params,
@@ -21,7 +22,7 @@ export default async function UrunDetayPage({
 
   const { data: profil } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, tenant_id")
     .eq("id", user.id)
     .single();
 
@@ -76,6 +77,35 @@ export default async function UrunDetayPage({
     alisTLKarsiligi != null && u.sale_price
       ? (((u.sale_price - alisTLKarsiligi) / u.sale_price) * 100).toFixed(1)
       : null;
+
+  const { data: stokPlus } = await supabase
+    .from("tenant_addon_subscriptions")
+    .select("status")
+    .eq("addon_key", "stok_plus")
+    .maybeSingle();
+  const stokPlusEtkin = stokPlus?.status === "active" || stokPlus?.status === "trial";
+
+  let uyumlular: { linkId: string; id: string; name: string; stock_quantity: number; sale_price: number | null }[] = [];
+  if (stokPlusEtkin) {
+    const { data: uyumlulukHam } = await supabase
+      .from("product_compatibilities")
+      .select("id, product_id, compatible_product_id")
+      .or(`product_id.eq.${id},compatible_product_id.eq.${id}`);
+
+    const digerIdler = (uyumlulukHam ?? []).map((r) => (r.product_id === id ? r.compatible_product_id : r.product_id));
+    const { data: digerUrunler } = digerIdler.length
+      ? await supabase.from("products").select("id, name, stock_quantity, sale_price").in("id", digerIdler)
+      : { data: [] };
+    const urunSozlugu = new Map((digerUrunler ?? []).map((u) => [u.id, u]));
+
+    uyumlular = (uyumlulukHam ?? [])
+      .map((r) => {
+        const digerId = r.product_id === id ? r.compatible_product_id : r.product_id;
+        const urun = urunSozlugu.get(digerId);
+        return urun ? { linkId: r.id, ...urun } : null;
+      })
+      .filter((x): x is NonNullable<typeof x> => x != null);
+  }
 
   const { data: toptanciFiyatlariHam } = await supabase
     .from("supplier_feed_items")
@@ -253,6 +283,31 @@ export default async function UrunDetayPage({
             ))}
           </div>
         </div>
+      )}
+
+      {stokPlusEtkin ? (
+        !u.is_digital && (
+          <UyumluParcalar
+            tenantId={profil?.tenant_id ?? ""}
+            productId={u.id}
+            yetkili={yetkili}
+            uyumlular={uyumlular}
+          />
+        )
+      ) : (
+        !u.is_digital && (
+          <Link
+            href="/panel/ayarlar#eklentiler"
+            className="glass mt-4 flex items-center gap-3 rounded-xl border border-purple-500/20 px-4 py-3 text-left transition-colors hover:border-purple-500/40"
+          >
+            <span className="text-lg">🔄</span>
+            <span className="flex-1 text-xs text-slate-300">
+              <span className="font-medium text-purple-300">Stok Plus</span> ile bu ürüne muadil
+              parçalar tanımlayıp servis ekranında otomatik alternatif önerileri alın.
+            </span>
+            <span className="shrink-0 text-xs font-medium text-purple-300">İncele →</span>
+          </Link>
+        )
       )}
 
       {u.is_digital ? (

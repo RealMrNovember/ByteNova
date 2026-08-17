@@ -512,6 +512,17 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         metin:
           "Anahtar havuzu tükenirse ilgili satış \"yeterli müsait lisans anahtarı yok\" hatasıyla engellenir — önce anahtar havuzuna yeni anahtar eklemeniz gerekir. Yanlışlıkla girilen bir anahtarı, henüz satılmadıysa anahtar listesindeki \"İptal et\" ile geçersiz kılabilirsiniz.",
       },
+      { tur: "altbaslik", metin: "Uyumlu Parçalar / Muadil Önerisi (Stok Plus)" },
+      {
+        tur: "paragraf",
+        metin:
+          "Stok Plus eklentisi aktifse, ürün detayındaki \"🔄 Uyumlu Parçalar\" bölümünden bu ürünün yerine kullanılabilecek muadil ürünleri tanımlayabilirsiniz (örn. \"bu RAM şu anakartlarla çalışır\" değil ama \"bu SSD'nin yerine şu SSD de kullanılabilir\" gibi birebir ikame parçalar). İlişki çift yönlüdür — A'yı B'nin muadili olarak eklerseniz B'nin sayfasında da A otomatik görünür.",
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "Bu tanım servis ekranında işe yarar: Servis detayında \"Kullanılan Parçalar\"a stokta olmayan bir parça seçtiğinizde, tanımlıysa stoktaki muadilleri hemen altında önerilir — tek tıkla seçiminizi değiştirebilirsiniz. Bu, servis hızını doğrudan etkiler.",
+      },
     ],
     ilgili: ["satis", "servisler", "ayarlar"],
   },
