@@ -102,19 +102,30 @@ export async function demoTenantiSifirlaVeDoldur() {
     .select("id")
     .single();
 
-  const { data: urunler } = await admin
+  const { data: urunler, error: urunlerErr } = await admin
     .from("products")
     .insert([
-      { tenant_id: tenantId, name: "Kingston 16GB DDR4 RAM", brand: "Kingston", sku: "RAM-16GB-DDR4", sale_price: 1450, purchase_price: 1100, stock_quantity: 24, critical_stock: 5, vat_rate: 20 },
-      { tenant_id: tenantId, name: "Samsung 970 EVO 1TB NVMe SSD", brand: "Samsung", sku: "SSD-1TB-NVME", sale_price: 2650, purchase_price: 2100, stock_quantity: 15, critical_stock: 5, vat_rate: 20 },
-      { tenant_id: tenantId, name: "Logitech MX Master 3 Kablosuz Mouse", brand: "Logitech", sku: "MOUSE-MXM3", sale_price: 3200, purchase_price: 2500, stock_quantity: 8, critical_stock: 3, vat_rate: 20 },
-      { tenant_id: tenantId, name: "Dell 24\" FHD Monitör", brand: "Dell", sku: "MON-24-FHD", sale_price: 5400, purchase_price: 4300, stock_quantity: 6, critical_stock: 2, vat_rate: 20 },
-      { tenant_id: tenantId, name: "Laptop Adaptörü 65W Type-C", brand: "Genel", sku: "ADP-65W-TC", sale_price: 650, purchase_price: 420, stock_quantity: 30, critical_stock: 10, vat_rate: 20 },
-      { tenant_id: tenantId, name: "HDMI Kablo 2m", brand: "Genel", sku: "HDMI-2M", sale_price: 180, purchase_price: 90, stock_quantity: 40, critical_stock: 10, vat_rate: 20 },
-      { tenant_id: tenantId, name: "Termal Macun MX-4", brand: "Arctic", sku: "TERMAL-MX4", sale_price: 350, purchase_price: 220, stock_quantity: 18, critical_stock: 5, vat_rate: 20 },
-      { tenant_id: tenantId, name: "Mekanik Klavye TKL", brand: "Redragon", sku: "KLV-TKL-MEK", sale_price: 2100, purchase_price: 1550, stock_quantity: 3, critical_stock: 4, vat_rate: 20 },
+      { tenant_id: tenantId, name: "Kingston 16GB DDR4 RAM", brand: "Kingston", sku: "RAM-16GB-DDR4", sale_price: 1450, purchase_price: 1100, stock_quantity: 24, critical_stock: 5, vat_rate: 20, is_digital: false },
+      { tenant_id: tenantId, name: "Samsung 970 EVO 1TB NVMe SSD", brand: "Samsung", sku: "SSD-1TB-NVME", sale_price: 2650, purchase_price: 2100, stock_quantity: 15, critical_stock: 5, vat_rate: 20, is_digital: false },
+      { tenant_id: tenantId, name: "Logitech MX Master 3 Kablosuz Mouse", brand: "Logitech", sku: "MOUSE-MXM3", sale_price: 3200, purchase_price: 2500, stock_quantity: 8, critical_stock: 3, vat_rate: 20, is_digital: false },
+      { tenant_id: tenantId, name: "Dell 24\" FHD Monitör", brand: "Dell", sku: "MON-24-FHD", sale_price: 5400, purchase_price: 4300, stock_quantity: 6, critical_stock: 2, vat_rate: 20, is_digital: false },
+      { tenant_id: tenantId, name: "Laptop Adaptörü 65W Type-C", brand: "Genel", sku: "ADP-65W-TC", sale_price: 650, purchase_price: 420, stock_quantity: 30, critical_stock: 10, vat_rate: 20, is_digital: false },
+      { tenant_id: tenantId, name: "HDMI Kablo 2m", brand: "Genel", sku: "HDMI-2M", sale_price: 180, purchase_price: 90, stock_quantity: 40, critical_stock: 10, vat_rate: 20, is_digital: false },
+      { tenant_id: tenantId, name: "Termal Macun MX-4", brand: "Arctic", sku: "TERMAL-MX4", sale_price: 350, purchase_price: 220, stock_quantity: 18, critical_stock: 5, vat_rate: 20, is_digital: false },
+      { tenant_id: tenantId, name: "Mekanik Klavye TKL", brand: "Redragon", sku: "KLV-TKL-MEK", sale_price: 2100, purchase_price: 1550, stock_quantity: 3, critical_stock: 4, vat_rate: 20, is_digital: false },
+      { tenant_id: tenantId, name: "Windows 11 Pro Dijital Lisans", brand: "Microsoft", sku: "LIC-WIN11PRO", sale_price: 2900, purchase_price: 2200, is_digital: true, critical_stock: 3, vat_rate: 20, stock_quantity: 0 },
     ])
     .select("id, name");
+  if (urunlerErr) throw new Error("Demo ürünleri eklenemedi: " + urunlerErr.message);
+
+  const win11Id = urunler?.find((u) => u.name === "Windows 11 Pro Dijital Lisans")?.id;
+  if (win11Id) {
+    await admin.from("product_license_keys").insert([
+      { tenant_id: tenantId, product_id: win11Id, key_value: "DEMO1-WIN11-AAAAA-BBBBB-CCCCC" },
+      { tenant_id: tenantId, product_id: win11Id, key_value: "DEMO2-WIN11-DDDDD-EEEEE-FFFFF" },
+      { tenant_id: tenantId, product_id: win11Id, key_value: "DEMO3-WIN11-GGGGG-HHHHH-IIIII" },
+    ]);
+  }
 
   const { data: musteriler } = await admin
     .from("customers")

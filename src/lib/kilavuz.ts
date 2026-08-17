@@ -402,6 +402,7 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
       "Ürün ekleme, stok hareketleri, kritik stok, sayım, toplu fiyat güncelleme ve raf/mağaza görünümü.",
     anahtarKelimeler: [
       "stok", "ürün", "sayım", "kritik stok", "fiyat güncelle", "raf", "mağaza", "barkod",
+      "dijital ürün", "lisans", "lisans anahtarı", "key", "windows", "office",
     ],
     icerik: [
       { tur: "altbaslik", metin: "Ürün Ekleme — Barkod Okutarak" },
@@ -463,6 +464,31 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         tur: "paragraf",
         metin:
           "Aktif olarak vitrinde/rafta satılan ürünleri (sarf malzemesi, aksesuar vb.) diğer stoktan ayırt etmek için ürün formunda \"🛒 Rafta sergileniyor\" kutucuğunu işaretleyebilirsiniz. Stok listesinin üstündeki \"Tüm Stok / 🛒 Raf Ürünleri\" anahtarıyla yalnızca bu ürünleri filtreleyebilir, ayrıca fiyat görünümünü Perakende (KDV dahil) / Toptan (KDV hariç) olarak da değiştirebilirsiniz.",
+      },
+      { tur: "altbaslik", metin: "Dijital Ürün (Lisans Anahtarı)" },
+      {
+        tur: "paragraf",
+        metin:
+          "Windows/Office lisansı, antivirüs anahtarı gibi fiziksel karşılığı olmayan ürünler için ürün formunda \"🔑 Dijital Ürün\" seçeneğini işaretleyin — bu ürünün \"stoğu\" bir sayı değil, anahtar havuzudur ve bu seçim oluşturduktan sonra değiştirilemez.",
+      },
+      {
+        tur: "adimlar",
+        adimlar: [
+          "Ürünü \"🔑 Dijital Ürün\" işaretli olarak kaydedin.",
+          "Ürün detayındaki \"🔑 Lisans Anahtarları\" düğmesiyle anahtar havuzu sayfasına gidin.",
+          "Elinizdeki anahtarları kutuya her satıra bir tane gelecek şekilde yapıştırıp \"Anahtarları Ekle\"ye basın — aynı anahtarı iki kez eklerseniz sistem yinelenenleri otomatik atlar.",
+          "Hızlı Satış'ta bu ürünü sepete eklediğinizde satış tamamlanır tamamlanmaz sistem müsait bir anahtarı otomatik seçip satışa bağlar; hangi anahtarın verildiğini satış detay sayfasında görürsünüz.",
+        ],
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "Stok listesinde ve ürün detayında \"kritik stok\" yerine \"kritik anahtar sayısı\" gösterilir — müsait anahtar sayınız bu değerin altına inince uyarı rozeti belirir, tıpkı normal kritik stok gibi.",
+      },
+      {
+        tur: "uyari",
+        metin:
+          "Anahtar havuzu tükenirse ilgili satış \"yeterli müsait lisans anahtarı yok\" hatasıyla engellenir — önce anahtar havuzuna yeni anahtar eklemeniz gerekir. Yanlışlıkla girilen bir anahtarı, henüz satılmadıysa anahtar listesindeki \"İptal et\" ile geçersiz kılabilirsiniz.",
       },
     ],
     ilgili: ["satis", "servisler", "ayarlar"],

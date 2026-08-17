@@ -39,7 +39,7 @@ export default async function SatisDetayPage({
   const [{ data: kalemlerHam }, { data: odemeler }, { data: iadelerHam }] = await Promise.all([
     supabase
       .from("sale_items")
-      .select("id, item_type, product_id, name, quantity, unit_price, discount_amount, line_total")
+      .select("id, item_type, product_id, name, quantity, unit_price, discount_amount, line_total, assigned_license_keys")
       .eq("sale_id", id)
       .order("id"),
     supabase
@@ -182,12 +182,24 @@ export default async function SatisDetayPage({
                         <span className="text-amber-300"> · {iadeBilgisi.toplamIadeEdilen} iade edildi</span>
                       )}
                     </p>
+                    {!!k.assigned_license_keys?.length && (
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {k.assigned_license_keys.map((anahtar: string) => (
+                          <span
+                            key={anahtar}
+                            className="rounded border border-purple-500/25 bg-purple-500/10 px-2 py-0.5 font-mono text-[11px] text-purple-300"
+                          >
+                            🔑 {anahtar}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <span className="shrink-0 text-sm font-semibold text-slate-200">
                     {paraFormatla(k.line_total)}
                   </span>
                 </div>
-                {k.item_type === "urun" && (
+                {k.item_type === "urun" && !k.assigned_license_keys?.length && (
                   <div className="mt-1.5 pl-8">
                     <IadeBaslat
                       saleItemId={k.id}

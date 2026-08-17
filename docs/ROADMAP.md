@@ -431,7 +431,7 @@ gerçek dış kullanıcı gerektirdiği için inşa edilemez — atlandı.
   otomasyonu, ücretli teşhis, servis garantisi ilişkisi, kanban görünümü, azami süre
   sayacı — tümü tamamlandı, ayrıntılar aşağıda
 - [x] **Teklif modülü + PDF** ✅ (`0040_teklif_modulu.sql`) — ayrıntılar aşağıda
-- [ ] Dijital ürün (lisans key) + demo veri seti
+- [x] **Dijital ürün (lisans key)** ✅ + demo veri seti (Showroom canlı demo ile birleştirildi) — ayrıntılar aşağıda
 - [ ] Kurulum sihirbazı tam sürüm + onboarding dokümanları
 - [x] ~~2-3 gerçek bilgisayarcıyla pilot başlangıcı~~ → **kapsam dışı** (gerçek dış kullanıcı gerektirir)
 
@@ -557,6 +557,60 @@ gerçek dış kullanıcı gerektirdiği için inşa edilemez — atlandı.
   sütunlarda, Teklifler listesinde ₺28.500 tutarlı teklifin doğru göründüğü doğrulandı;
   `/fiyatlandirma` sayfasının canlı DB'den doğru üç planı ve dokuz eklentiyi anonim
   (oturumsuz) tarayıcı bağlamında çektiği doğrulandı
+
+### Dijital Ürün (Lisans Key) — ayrıntılar ✅
+- [x] **Şema** (`0043_dijital_urun_lisans.sql`): `products.is_digital`; yeni
+  `product_license_keys` tablosu (`musait`/`satildi`/`iptal` durumları, `tenant_id +
+  product_id + key_value` üzerinde unique) — spesifikasyondaki ("Stok adedi yerine key
+  havuzu"; `docs/ByteNova_PROJE_DOSYASI_v2.md`) birebir karşılığı. `sale_items` tablosuna
+  `assigned_license_keys text[]` eklendi
+- [x] **`satis_olustur()` RPC'sinin genişletilmesi:** İmza değişmedi, düz `create or replace`
+  güvenli. Dijital bir ürün satıldığında normal stok hareketi (`stok_hareketi_ekle`) YERİNE
+  miktar kadar "müsait" anahtar `FOR UPDATE SKIP LOCKED` ile kilitlenip "satıldı"ya çevrilir
+  ve satış kalemine yazılır — eşzamanlı iki kasiyer aynı anahtarı asla iki kez satamaz.
+  Yetersiz anahtar varsa `LISANS_ANAHTARI_YETERSIZ` hatasıyla işlem tamamen geri alınır
+  (`STOK_YETERSIZ` ailesiyle aynı desende, Hızlı Satış ekranında okunabilir mesaja çevrilir)
+- [x] **Toplu anahtar ekleme/iptal RPC'leri:** `lisans_anahtari_toplu_ekle()` (satır satır
+  yapıştırma, yinelenenler `on conflict do nothing` ile sessizce atlanır ve kaç tanesinin
+  atlandığı arayüzde raporlanır), `lisans_anahtari_iptal()` (yalnız "müsait" durumundaki
+  hatalı girişler için — satılmış bir anahtar iptal edilemez)
+- [x] **Arayüz:** Ürün formunda "🔑 Dijital Ürün" seçeneği (oluşturduktan sonra
+  değiştirilemez — Min. Stok/Seri No/Garanti alanları bu modda gizlenir, "Kritik Stok"
+  "Kritik Anahtar Sayısı"na dönüşür); yeni `/panel/stok/[id]/lisans-anahtarlari` yönetim
+  sayfası (havuz özeti, toplu ekleme, anahtar listesi + kime/hangi satışa gittiği, iptal);
+  Stok listesi ve ürün detayında 🔑 rozeti ve gerçek müsait-anahtar sayısı (stock_quantity
+  değil); Hızlı Satış arama sonucunda "Stok: N" yerine "🔑 Dijital" etiketi; satış
+  detayında atanan anahtar(lar) mor rozetle görünür. **Bilinçli kapsam dışı:** dijital
+  kalemler için iade akışı (kullanılmış bir anahtarın "iade"si farklı bir iş kuralı
+  gerektirir — normal `IadeBaslat` bu kalemlerde gizlendi); e-posta ile anahtar gönderimi
+  (SMTP entegrasyonu henüz yok, "belgeye yazılır" kısmı satış detay sayfası/gelecekteki
+  satış PDF'i ile karşılanıyor); Alış/Sayım/Raporlar akışları dijital ürünleri henüz özel
+  olarak ele almıyor (fiziksel ürün gibi davranıyorlar — Genel Bakış'taki kritik stok
+  kartı hariç, o düzeltildi)
+- [x] **Canlı testte bulunan hata (PostgREST'in heterojen anahtarlı toplu insert davranışı):**
+  Demo tohumlama script'inde tek bir `.insert([...])` çağrısına hem dijital hem fiziksel
+  ürünler karışık veriliyordu; PostgREST bir dizideki satırların HEPSİNİ aynı sütun
+  kümesiyle SQL'e çevirir — bir satırda eksik olan alan (`is_digital`) diğer satırlarda
+  varsa, o satır için sütun VARSAYILANI uygulanmaz, açıkça `NULL` gönderilir. `is_digital
+  not null default false` olduğundan bu, "null value in column is_digital violates not-null
+  constraint" hatasıyla TÜM satışların (ve dolayısıyla dokuz ürünün tamamının) sessizce
+  eklenmemesine yol açtı. Düzeltme: dizideki her satıra `is_digital` alanı açıkça eklendi;
+  ayrıca bu script'teki ürün ekleme çağrısına hiç hata kontrolü yoktu (`{ data }` yalnızca
+  destructure ediliyordu) — artık hata varsa fırlatılıyor, aynı sınıf sorun bir daha sessiz
+  kalmayacak
+- [x] E2E: gerçek Showroom demo hesabıyla (bkz. aşağıdaki Showroom bölümü) uçtan uca
+  doğrulandı — "Windows 11 Pro Dijital Lisans" ürünü Hızlı Satış'ta arandı, sepete
+  eklendiğinde "🔑 Dijital" etiketiyle doğru göründü, satış tamamlandığında müsait 3
+  anahtardan biri (`DEMO1-WIN11-...`) otomatik rezerve edildi ve satış detay sayfasında
+  mor rozetle doğru göründü; veritabanında o anahtarın durumu "satıldı" ve doğru `sale_id`
+  ile işaretlendiği doğrulandı, kalan 2 anahtar "müsait" kaldı; Stok listesinde ürün 🔑
+  rozetiyle ve doğru (2) müsait sayısıyla göründü; `/panel/stok/[id]/lisans-anahtarlari`
+  sayfasında toplu anahtar ekleme (2 yeni + 1 kasıtlı yinelenen, "1 tanesi zaten kayıtlıydı"
+  doğru raporlandı) ve "İptal et" (müsait bir anahtarı iptal durumuna düşürme) doğrulandı;
+  gerçek ürün formu üzerinden sıfırdan yeni bir dijital ürün oluşturuldu ("Office 365 Kişisel
+  Lisans") — formun Min. Stok/Seri No/Garanti alanlarını gizlediği, "Kritik Anahtar Sayısı"
+  etiketine döndüğü ve kaydedilince ürün detay sayfasının "0 müsait anahtar" ile doğru
+  göründüğü doğrulandı; test verileri temizlendi
 
 ### Excel Import Sihirbazı — ayrıntılar ✅
 - [x] **4 adımlı sihirbaz** (`ImportSihirbazi.tsx`, `/panel/import?tur=...`): 1) tür seçimi +

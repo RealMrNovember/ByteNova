@@ -18,7 +18,7 @@ export default async function StokPage({
   let sorgu = supabase
     .from("products")
     .select(
-      "id, name, sku, barcode, brand, sale_price, vat_rate, stock_quantity, critical_stock, is_shelf_display, product_categories(name)"
+      "id, name, sku, barcode, brand, sale_price, vat_rate, stock_quantity, critical_stock, is_shelf_display, is_digital, product_categories(name)"
     )
     .eq("is_active", true)
     .order("created_at", { ascending: false })
@@ -34,8 +34,25 @@ export default async function StokPage({
   }
 
   const { data: urunlerHam } = await sorgu;
+
+  const dijitalIdler = (urunlerHam ?? []).filter((u) => u.is_digital).map((u) => u.id);
+  const musaitSayilari = new Map<string, number>();
+  if (dijitalIdler.length > 0) {
+    const { data: anahtarlar } = await supabase
+      .from("product_license_keys")
+      .select("product_id")
+      .in("product_id", dijitalIdler)
+      .eq("status", "musait");
+    for (const a of anahtarlar ?? []) {
+      musaitSayilari.set(a.product_id, (musaitSayilari.get(a.product_id) ?? 0) + 1);
+    }
+  }
+
+  const stokDegeri = (u: { id: string; is_digital: boolean; stock_quantity: number }) =>
+    u.is_digital ? (musaitSayilari.get(u.id) ?? 0) : u.stock_quantity;
+
   const urunler = kritik
-    ? (urunlerHam ?? []).filter((u) => u.stock_quantity <= u.critical_stock)
+    ? (urunlerHam ?? []).filter((u) => stokDegeri(u) <= u.critical_stock)
     : urunlerHam;
 
   const filtreliMi = !!(q || kritik);
@@ -189,7 +206,7 @@ export default async function StokPage({
                 const kategori = u.product_categories as unknown as {
                   name: string;
                 } | null;
-                const kritikMi = u.stock_quantity <= u.critical_stock;
+                const kritikMi = stokDegeri(u) <= u.critical_stock;
                 return (
                   <tr
                     key={u.id}
@@ -200,6 +217,11 @@ export default async function StokPage({
                         {u.is_shelf_display && (
                           <span className="mr-1" title="Rafta sergileniyor">
                             🛒
+                          </span>
+                        )}
+                        {u.is_digital && (
+                          <span className="mr-1" title="Dijital ürün (lisans anahtarı)">
+                            🔑
                           </span>
                         )}
                         <span className="font-medium text-slate-200">
@@ -233,7 +255,7 @@ export default async function StokPage({
                             : "bg-slate-500/15 text-slate-300"
                         }`}
                       >
-                        {u.stock_quantity}
+                        {stokDegeri(u)}
                       </span>
                     </td>
                   </tr>

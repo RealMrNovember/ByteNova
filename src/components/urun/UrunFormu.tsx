@@ -26,6 +26,7 @@ type Mevcut = {
   requires_serial: boolean;
   warranty_months: number | null;
   is_shelf_display: boolean;
+  is_digital: boolean;
 };
 
 type ParaBirimi = { code: string; symbol: string };
@@ -79,6 +80,7 @@ export function UrunFormu({ tenantId, paraBirimleri, kurlar, mevcut }: Props) {
   const [rafSergileniyor, setRafSergileniyor] = useState(
     mevcut?.is_shelf_display ?? false
   );
+  const [dijitalUrun, setDijitalUrun] = useState(mevcut?.is_digital ?? false);
   const [hata, setHata] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
 
@@ -161,6 +163,7 @@ export function UrunFormu({ tenantId, paraBirimleri, kurlar, mevcut }: Props) {
       requires_serial: seriZorunlu,
       warranty_months: garantiAy ? Number(garantiAy) : null,
       is_shelf_display: rafSergileniyor,
+      is_digital: dijitalUrun,
     };
 
     if (mevcut) {
@@ -430,6 +433,20 @@ export function UrunFormu({ tenantId, paraBirimleri, kurlar, mevcut }: Props) {
         </div>
       </div>
 
+      <label className="flex items-center gap-2.5 rounded-lg border border-slate-700 bg-surface px-3.5 py-2.5 text-sm text-slate-300">
+        <input
+          type="checkbox"
+          checked={dijitalUrun}
+          disabled={!!mevcut}
+          onChange={(e) => setDijitalUrun(e.target.checked)}
+          className="h-3.5 w-3.5 rounded border-slate-600 bg-surface text-nova-500 focus:ring-0 focus:ring-offset-0 disabled:opacity-40"
+        />
+        🔑 Dijital ürün (lisans anahtarı) — stok yerine anahtar havuzu kullanılır
+        {mevcut && (
+          <span className="text-[11px] text-slate-500">(oluşturduktan sonra değiştirilemez)</span>
+        )}
+      </label>
+
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
           <label className="mb-1.5 block text-xs font-medium text-slate-300">
@@ -438,7 +455,8 @@ export function UrunFormu({ tenantId, paraBirimleri, kurlar, mevcut }: Props) {
           <select
             value={birim}
             onChange={(e) => setBirim(e.target.value)}
-            className={alanSinifi}
+            disabled={dijitalUrun}
+            className={`${alanSinifi} disabled:opacity-40`}
           >
             {BIRIMLER.map((b) => (
               <option key={b} value={b}>
@@ -447,22 +465,24 @@ export function UrunFormu({ tenantId, paraBirimleri, kurlar, mevcut }: Props) {
             ))}
           </select>
         </div>
+        {!dijitalUrun && (
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-slate-300">
+              Min. stok
+            </label>
+            <input
+              type="number"
+              step="1"
+              min="0"
+              value={minStok}
+              onChange={(e) => setMinStok(e.target.value)}
+              className={alanSinifi}
+            />
+          </div>
+        )}
         <div>
           <label className="mb-1.5 block text-xs font-medium text-slate-300">
-            Min. stok
-          </label>
-          <input
-            type="number"
-            step="1"
-            min="0"
-            value={minStok}
-            onChange={(e) => setMinStok(e.target.value)}
-            className={alanSinifi}
-          />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-slate-300">
-            Kritik stok
+            {dijitalUrun ? "Kritik anahtar sayısı" : "Kritik stok"}
           </label>
           <input
             type="number"
@@ -472,34 +492,41 @@ export function UrunFormu({ tenantId, paraBirimleri, kurlar, mevcut }: Props) {
             onChange={(e) => setKritikStok(e.target.value)}
             className={alanSinifi}
           />
+          {dijitalUrun && (
+            <p className="mt-1.5 text-[11px] text-slate-500">
+              Müsait anahtar sayısı bu değere düşünce Stok listesinde uyarı gösterilir.
+            </p>
+          )}
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex items-center gap-2.5 rounded-lg border border-slate-700 bg-surface px-3.5 py-2.5 text-sm text-slate-300">
-          <input
-            type="checkbox"
-            checked={seriZorunlu}
-            onChange={(e) => setSeriZorunlu(e.target.checked)}
-            className="h-3.5 w-3.5 rounded border-slate-600 bg-surface text-nova-500 focus:ring-0 focus:ring-offset-0"
-          />
-          Seri numarası zorunlu (laptop, ekran kartı vb.)
-        </label>
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-slate-300">
-            Garanti (ay)
+      {!dijitalUrun && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="flex items-center gap-2.5 rounded-lg border border-slate-700 bg-surface px-3.5 py-2.5 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={seriZorunlu}
+              onChange={(e) => setSeriZorunlu(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-slate-600 bg-surface text-nova-500 focus:ring-0 focus:ring-offset-0"
+            />
+            Seri numarası zorunlu (laptop, ekran kartı vb.)
           </label>
-          <input
-            type="number"
-            step="1"
-            min="0"
-            value={garantiAy}
-            onChange={(e) => setGarantiAy(e.target.value)}
-            placeholder="Örn: 24"
-            className={alanSinifi}
-          />
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-slate-300">
+              Garanti (ay)
+            </label>
+            <input
+              type="number"
+              step="1"
+              min="0"
+              value={garantiAy}
+              onChange={(e) => setGarantiAy(e.target.value)}
+              placeholder="Örn: 24"
+              className={alanSinifi}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       <label className="flex items-center gap-2.5 rounded-lg border border-slate-700 bg-surface px-3.5 py-2.5 text-sm text-slate-300">
         <input

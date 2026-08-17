@@ -40,10 +40,29 @@ export default async function UrunDetayPage({
     .order("created_at", { ascending: false })
     .limit(30);
 
+  let musaitAnahtarSayisi = 0;
+  let satilanAnahtarSayisi = 0;
+  if (u.is_digital) {
+    const { count: musait } = await supabase
+      .from("product_license_keys")
+      .select("id", { count: "exact", head: true })
+      .eq("product_id", id)
+      .eq("status", "musait");
+    const { count: satilan } = await supabase
+      .from("product_license_keys")
+      .select("id", { count: "exact", head: true })
+      .eq("product_id", id)
+      .eq("status", "satildi");
+    musaitAnahtarSayisi = musait ?? 0;
+    satilanAnahtarSayisi = satilan ?? 0;
+  }
+
   const yetkili = yetkiVar(profil?.role, "stok_yonet");
 
   const kategori = u.product_categories as unknown as { name: string } | null;
-  const kritikMi = u.stock_quantity <= u.critical_stock;
+  const kritikMi = u.is_digital
+    ? musaitAnahtarSayisi <= u.critical_stock
+    : u.stock_quantity <= u.critical_stock;
 
   // Dövizli alışsa kâr marjı, güncel kurla TL'ye çevrilmiş maliyet üzerinden hesaplanır
   let alisTLKarsiligi: number | null = u.purchase_price;
@@ -74,7 +93,12 @@ export default async function UrunDetayPage({
               <h1 className="text-lg font-bold text-white">{u.name}</h1>
               {kritikMi && (
                 <span className="rounded-full bg-red-500/15 px-2.5 py-1 text-[10px] font-semibold text-red-300">
-                  ⚠️ Kritik Stok
+                  ⚠️ {u.is_digital ? "Kritik Anahtar Sayısı" : "Kritik Stok"}
+                </span>
+              )}
+              {u.is_digital && (
+                <span className="rounded-full bg-purple-500/15 px-2.5 py-1 text-[10px] font-medium text-purple-300">
+                  🔑 Dijital Ürün
                 </span>
               )}
               {u.requires_serial && (
@@ -90,11 +114,20 @@ export default async function UrunDetayPage({
             </p>
           </div>
           <div className="flex shrink-0 gap-2">
-            <StokDuzeltme
-              productId={u.id}
-              mevcutStok={u.stock_quantity}
-              yetkili={yetkili}
-            />
+            {u.is_digital ? (
+              <Link
+                href={`/panel/stok/${u.id}/lisans-anahtarlari`}
+                className="rounded-lg bg-nova-500 px-3.5 py-1.5 text-xs font-semibold text-slate-950 transition hover:bg-nova-400"
+              >
+                🔑 Lisans Anahtarları
+              </Link>
+            ) : (
+              <StokDuzeltme
+                productId={u.id}
+                mevcutStok={u.stock_quantity}
+                yetkili={yetkili}
+              />
+            )}
             <Link
               href={`/panel/stok/${u.id}/duzenle`}
               className="rounded-lg border border-slate-700 px-3.5 py-1.5 text-xs font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
@@ -109,11 +142,16 @@ export default async function UrunDetayPage({
             <p
               className={`text-lg font-bold ${kritikMi ? "text-red-300" : "text-nova-300"}`}
             >
-              {u.stock_quantity}
+              {u.is_digital ? musaitAnahtarSayisi : u.stock_quantity}
             </p>
             <p className="text-[10px] uppercase tracking-wide text-slate-500">
-              Stokta ({u.unit})
+              {u.is_digital ? "Müsait Anahtar" : `Stokta (${u.unit})`}
             </p>
+            {u.is_digital && satilanAnahtarSayisi > 0 && (
+              <p className="mt-0.5 text-[10px] text-slate-600">
+                {satilanAnahtarSayisi} satıldı
+              </p>
+            )}
           </div>
           <div className="rounded-lg border border-slate-800 bg-surface px-3 py-2.5 text-center">
             <p className="text-lg font-bold text-slate-200">
@@ -170,65 +208,87 @@ export default async function UrunDetayPage({
               {u.warranty_months ? ` • ${u.warranty_months} ay garanti` : ""}
             </dd>
           </div>
-          <div className="rounded-lg border border-slate-800 bg-surface px-3.5 py-3">
-            <dt className="text-[10px] uppercase tracking-wide text-slate-500">
-              Min. Stok
-            </dt>
-            <dd className="mt-0.5 text-sm text-slate-200">{u.min_stock}</dd>
-          </div>
-          <div className="rounded-lg border border-slate-800 bg-surface px-3.5 py-3">
-            <dt className="text-[10px] uppercase tracking-wide text-slate-500">
-              Kritik Stok
-            </dt>
-            <dd className="mt-0.5 text-sm text-slate-200">{u.critical_stock}</dd>
-          </div>
+          {!u.is_digital && (
+            <>
+              <div className="rounded-lg border border-slate-800 bg-surface px-3.5 py-3">
+                <dt className="text-[10px] uppercase tracking-wide text-slate-500">
+                  Min. Stok
+                </dt>
+                <dd className="mt-0.5 text-sm text-slate-200">{u.min_stock}</dd>
+              </div>
+              <div className="rounded-lg border border-slate-800 bg-surface px-3.5 py-3">
+                <dt className="text-[10px] uppercase tracking-wide text-slate-500">
+                  Kritik Stok
+                </dt>
+                <dd className="mt-0.5 text-sm text-slate-200">{u.critical_stock}</dd>
+              </div>
+            </>
+          )}
         </dl>
       </div>
 
-      <div className="glass mt-4 rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-white">Stok Hareketleri</h2>
-        {!hareketler?.length ? (
-          <p className="mt-4 text-center text-xs text-slate-600">
-            Henüz stok hareketi yok.
-          </p>
-        ) : (
-          <div className="mt-3 divide-y divide-slate-800/60">
-            {hareketler.map((h) => (
-              <div key={h.id} className="flex items-center gap-3 py-2.5">
-                <span className="text-base">{hareketIkon(h.movement_type)}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-slate-200">
-                    {hareketEtiket(h.movement_type)}
-                    {h.reason && (
-                      <span className="text-slate-500"> — {h.reason}</span>
-                    )}
-                  </p>
-                  <p className="text-[11px] text-slate-600">
-                    {h.quantity_before} → {h.quantity_after} ·{" "}
-                    {new Date(h.created_at).toLocaleString("tr-TR", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-                    h.quantity_change > 0
-                      ? "bg-emerald-500/15 text-emerald-300"
-                      : "bg-red-500/15 text-red-300"
-                  }`}
-                >
-                  {h.quantity_change > 0 ? "+" : ""}
-                  {h.quantity_change}
-                </span>
-              </div>
-            ))}
+      {u.is_digital ? (
+        <div className="glass mt-4 rounded-xl p-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-white">Lisans Anahtarı Havuzu</h2>
+            <Link
+              href={`/panel/stok/${u.id}/lisans-anahtarlari`}
+              className="text-xs font-medium text-nova-300 hover:text-nova-200"
+            >
+              Yönet →
+            </Link>
           </div>
-        )}
-      </div>
+          <p className="mt-2 text-xs text-slate-500">
+            {musaitAnahtarSayisi} müsait, {satilanAnahtarSayisi} satılmış anahtar. Her satışta
+            bir anahtar otomatik rezerve edilir ve satış detayında görünür.
+          </p>
+        </div>
+      ) : (
+        <div className="glass mt-4 rounded-xl p-5">
+          <h2 className="text-sm font-semibold text-white">Stok Hareketleri</h2>
+          {!hareketler?.length ? (
+            <p className="mt-4 text-center text-xs text-slate-600">
+              Henüz stok hareketi yok.
+            </p>
+          ) : (
+            <div className="mt-3 divide-y divide-slate-800/60">
+              {hareketler.map((h) => (
+                <div key={h.id} className="flex items-center gap-3 py-2.5">
+                  <span className="text-base">{hareketIkon(h.movement_type)}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-slate-200">
+                      {hareketEtiket(h.movement_type)}
+                      {h.reason && (
+                        <span className="text-slate-500"> — {h.reason}</span>
+                      )}
+                    </p>
+                    <p className="text-[11px] text-slate-600">
+                      {h.quantity_before} → {h.quantity_after} ·{" "}
+                      {new Date(h.created_at).toLocaleString("tr-TR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                      h.quantity_change > 0
+                        ? "bg-emerald-500/15 text-emerald-300"
+                        : "bg-red-500/15 text-red-300"
+                    }`}
+                  >
+                    {h.quantity_change > 0 ? "+" : ""}
+                    {h.quantity_change}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -58,7 +58,10 @@ export default async function GenelBakisPage() {
     { data: tedarikciler },
     kurlar,
   ] = await Promise.all([
-    supabase.from("products").select("id, stock_quantity, critical_stock").eq("is_active", true),
+    // Dijital ürünlerin "stoğu" stock_quantity değil anahtar havuzudur (bkz.
+    // /panel/stok'taki ayrı kritik-anahtar rozeti) — bu hızlı özet kartı
+    // yalnız fiziksel ürünleri sayar.
+    supabase.from("products").select("id, stock_quantity, critical_stock").eq("is_active", true).eq("is_digital", false),
     supabase.from("sales").select("total_amount").gte("created_at", gunBaslangic),
     supabase.from("cash_movements").select("amount").gt("amount", 0).gte("created_at", gunBaslangic),
     supabase

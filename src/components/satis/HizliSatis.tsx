@@ -8,7 +8,7 @@ import Link from "next/link";
 import { kalemEtiket, kalemIkon, ODEME_YONTEMLERI } from "@/lib/satis";
 import { YoneticiOnayModal } from "./YoneticiOnayModal";
 
-type Urun = { id: string; name: string; sku: string | null; stock_quantity: number; sale_price: number | null };
+type Urun = { id: string; name: string; sku: string | null; stock_quantity: number; sale_price: number | null; is_digital: boolean };
 type Musteri = { id: string; name: string; phone: string | null };
 type OdemeYontemi = "nakit" | "kart" | "acik_hesap";
 type KasaHesabi = { id: string; name: string; type: "nakit" | "banka" | "pos" };
@@ -124,7 +124,7 @@ export function HizliSatis({ tenantId, maxTaksit, kasaHesaplari }: Props) {
       const q = arama.trim();
       const { data } = await supabase
         .from("products")
-        .select("id, name, sku, stock_quantity, sale_price")
+        .select("id, name, sku, stock_quantity, sale_price, is_digital")
         .or(`name.ilike.%${q}%,sku.ilike.%${q}%,barcode.ilike.%${q}%,barcode.eq.${q}`)
         .eq("is_active", true)
         .limit(8);
@@ -316,6 +316,10 @@ export function HizliSatis({ tenantId, maxTaksit, kasaHesaplari }: Props) {
         setHata("İşletme politikanız negatif stoğa izin vermiyor — stok yetersiz.");
         return;
       }
+      if (error.message.includes("LISANS_ANAHTARI_YETERSIZ")) {
+        setHata("Bu dijital ürün için yeterli müsait lisans anahtarı yok — anahtar havuzuna ekleyin.");
+        return;
+      }
       if (error.message.includes("TAKSIT_LIMITI_ASILDI")) {
         setHata(`Azami taksit sayısı ${maxTaksit}.`);
         return;
@@ -380,7 +384,8 @@ export function HizliSatis({ tenantId, maxTaksit, kasaHesaplari }: Props) {
                     {u.sku && <span className="ml-2 font-mono text-xs text-slate-500">{u.sku}</span>}
                   </span>
                   <span className="shrink-0 text-xs text-slate-500">
-                    {u.sale_price != null ? `${u.sale_price.toLocaleString("tr-TR")} TL` : "—"} · Stok: {u.stock_quantity}
+                    {u.sale_price != null ? `${u.sale_price.toLocaleString("tr-TR")} TL` : "—"} ·{" "}
+                    {u.is_digital ? "🔑 Dijital" : `Stok: ${u.stock_quantity}`}
                   </span>
                 </button>
               ))}
