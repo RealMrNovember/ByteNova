@@ -6,6 +6,7 @@ import { odemeDurumEtiket, odemeDurumSinifi } from "@/lib/alis";
 import { paraFormatla, etkinKurlar } from "@/lib/doviz";
 import { TedarikciOdeme } from "@/components/alis/TedarikciOdeme";
 import { GiderPusulasiOlustur } from "@/components/alis/GiderPusulasiOlustur";
+import { TedarikciFeedBaglama } from "@/components/tedarikci/TedarikciFeedBaglama";
 
 export default async function TedarikciDetayPage({
   params,
@@ -22,7 +23,7 @@ export default async function TedarikciDetayPage({
 
   const { data: profil } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, tenant_id")
     .eq("id", user.id)
     .single();
 
@@ -53,6 +54,19 @@ export default async function TedarikciDetayPage({
     .select("id, name, type")
     .eq("is_active", true)
     .order("created_at");
+
+  const { data: feed } = await supabase
+    .from("supplier_feeds")
+    .select("id, provider_key, status, last_synced_at, last_sync_item_count")
+    .eq("supplier_id", id)
+    .maybeSingle();
+
+  const { data: stokPlus } = await supabase
+    .from("tenant_addon_subscriptions")
+    .select("status")
+    .eq("addon_key", "stok_plus")
+    .maybeSingle();
+  const stokPlusEtkin = stokPlus?.status === "active" || stokPlus?.status === "trial";
 
   const { data: giderPusulalari } = tedarikci.is_taxpayer
     ? { data: null }
@@ -135,6 +149,27 @@ export default async function TedarikciDetayPage({
           </div>
         )}
       </div>
+
+      {stokPlusEtkin ? (
+        <TedarikciFeedBaglama
+          tenantId={profil?.tenant_id ?? ""}
+          supplierId={tedarikci.id}
+          feed={feed ?? null}
+          yetkili={yetkili}
+        />
+      ) : (
+        <Link
+          href="/panel/ayarlar#eklentiler"
+          className="glass mt-4 flex items-center gap-3 rounded-xl border border-purple-500/20 px-4 py-3 text-left transition-colors hover:border-purple-500/40"
+        >
+          <span className="text-lg">📡</span>
+          <span className="flex-1 text-xs text-slate-300">
+            <span className="font-medium text-purple-300">Stok Plus</span> ile bu tedarikçinin
+            distribütör XML/B2B fiyat kataloğunu bağlayın — fiyatlar otomatik eşleşsin.
+          </span>
+          <span className="shrink-0 text-xs font-medium text-purple-300">İncele →</span>
+        </Link>
+      )}
 
       {!tedarikci.is_taxpayer && yetkili && (
         <div className="mt-4">

@@ -684,7 +684,7 @@ başlıyor. Pilot başlangıcı hariç (gerçek dış kullanıcı gerektirir) sp
 - [x] **Otomatik abonelik tahsilatı** ✅ — `BillingProvider` (iyzico/PayTR sandbox), dunning, destek görünümü — ayrıntılar aşağıda
   - **Eklenti self-servis switch'i** (otomatik ödemenin addon aktivasyonuna bağlanması) bu turda **kapsam dışı bırakıldı** — mevcut "Etkinleştir" anahtarı zaten çalışıyor (ücretsiz/anında aktivasyon) ve buna dokunmak geniş, gözden geçirme riski yüksek bir davranış değişikliği olurdu; abonelik faturalaması (asıl, net biçimde tarif edilmiş kısım) tamamlandı.
 - [x] **PC Toplama (BOM)** ✅ — reçete, toplama emri, demontaj — ayrıntılar aşağıda
-- [ ] **Toptancı XML** — ilk 2-3 distribütör adaptörü
+- [x] **Toptancı XML** ✅ — ilk 2-3 distribütör adaptörü (sandbox) — ayrıntılar aşağıda
 - [ ] **Müşteri servis takip sayfası** (QR) + bakım sözleşmeleri + prim + uyumluluk matrisi + ÖKC entegrasyonu
 
 ### WhatsApp/SMS + İYS — ayrıntılar ✅
@@ -898,6 +898,46 @@ başlıyor. Pilot başlangıcı hariç (gerçek dış kullanıcı gerektirir) sp
   "Ofis PC'si #001" ürününün `stock_quantity=0`/`is_active=false` olarak pasife alındığı
   doğrulandı; tüm test verileri (iki toplama emri, demontaj kaydı, test reçetesi, test ürünü,
   ilgili stock_movements satırları) temizlendi
+
+### Toptancı XML — ayrıntılar ✅
+- [x] **Şema** (`0050_toptanci_xml.sql`): `supplier_feeds` (tedarikçi başına tek feed, sağlayıcı
+  Penta/Index-Datagate/Arena), `supplier_feed_items` (her senkronda tam yenilenen anlık görüntü —
+  external_code/barkod/ad/fiyat/döviz/stok + eşleşen `matched_product_id`)
+- [x] **`SupplierFeedProvider` soyutlaması** (`src/lib/tedarikciFeed.ts`): gerçek bir Penta/
+  Index-Datagate/Arena B2B API kimlik bilgisi yok — `sandboxKatalogCek()` sabit, 10 kalemlik
+  örnek bir PC parçası kataloğu döner (sağlayıcıya göre hafif fiyat/stok farkıyla). Bilinçli
+  tasarım: gerçek entegrasyonda yalnızca bu fonksiyonun gövdesi (XML/REST çekip parse eden kod)
+  değişir — eşleştirme/fiyat önerisi/RPC mimarisi aynı kalır
+- [x] **`toptanci_feed_kalemleri_yukle()` RPC'si:** her senkronda o feed'in tüm kalemlerini siler
+  ve yeniden yazar (distribütör kataloğunun her zaman güncel anlık görüntüsü), barkod veya
+  ürün kodu (SKU) eşleşmesiyle kendi `products` kayıtlarını otomatik bağlar. PC Toplama'nın
+  checklist hatasından çıkarılan derse uygun: `supplier_feed_items`'a TEK yazma yolu bu RPC —
+  RLS'te yalnızca SELECT politikası var
+- [x] **Fiyat önerisi:** mevcut `/panel/stok/fiyat-guncelle` ekranındaki `fiyatHesapla()`
+  fonksiyonu (maliyet × kur × (1+marj%)) aynen yeniden kullanıldı — distribütör fiyatı, ürünün
+  kendi kâr marjıyla satış fiyatı önerisine çevrilir; `TopluFiyatGuncelle.tsx`'teki seç/uygula
+  UX deseni birebir tekrarlandı (`FeedFiyatKarsilastirma.tsx`)
+- [x] **Fırsat listesi:** distribütör kataloğunda olup kendi stoğunda eşleşmeyen kalemler
+  `/panel/tedarikciler/[id]/xml-fiyatlari` sayfasında ayrı bir bölümde listelenir
+- [x] Eşleşen bir ürünün Stok detay sayfasında **"📡 Toptancı Fiyatları"** kartı — hangi
+  tedarikçide kaç TL/USD'ye kaç adet olduğunu gösterir
+- [x] **Eklenti kapısı:** özellik `stok_plus` eklentisine bağlandı (bkz.
+  `docs/EKLENTI_MIMARISI.md` — Stok Plus paketinin tanımlı kapsamı zaten "toptancı XML/B2B fiyat
+  entegrasyonu"nu içeriyordu). Aktif değilse tedarikçi detayında `musteriler` sayfasındaki
+  CRM Plus üst-satış kartıyla birebir aynı desende bir upsell kartı gösterilir; XML fiyatları
+  sayfası da eklenti aktif değilse tedarikçi detayına yönlendirir
+- [x] E2E: Showroom demo tenant'ında gerçek panelde uçtan uca doğrulandı — `stok_plus` eklentisi
+  etkinleştirildi (demo seed dizisine de eklendi); yeni bir tedarikçi ("TeknoDağıtım Bilişim
+  A.Ş.", USD) oluşturuldu, Penta (Sandbox) feed'i bağlandı, "Şimdi Senkronize Et" ile 10 kalem
+  çekildiği ve hiçbirinin eşleşmediği doğrulandı; demo tenant'taki bir ürünün barkodu
+  distribütör kataloğundaki bir kalemle eşleştirilip yeniden senkronize edilince eşleşmenin
+  (1/10) doğru kurulduğu doğrulandı; fiyat karşılaştırma sayfasında önerilen fiyatın elle
+  hesaplanan değerle (8 USD × 47,8066 kur × 1,25 marj = 478,07 → yukarı yuvarlanmış ₺479)
+  birebir eşleştiği doğrulandı; "Seçilenleri Güncelle" ile ürünün satış fiyatının veritabanında
+  1.450→479 TL olarak güncellendiği doğrulandı; fırsat listesindeki 9 eşleşmeyen kalemin doğru
+  göründüğü ve ürün detay sayfasındaki "Toptancı Fiyatları" kartının doğru tedarikçi/fiyat/stok
+  gösterdiği doğrulandı; tüm test verileri (test tedarikçisi — feed ve kalemleri kademeli
+  sildi —, ürün üzerindeki test barkodu/marj/fiyat alanları) temizlendi
 
 ## SPRINT 13+ — MASAÜSTÜ (OFFLINE) VE P2 (Hafta 13+)
 

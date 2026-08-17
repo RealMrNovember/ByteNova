@@ -77,6 +77,17 @@ export default async function UrunDetayPage({
       ? (((u.sale_price - alisTLKarsiligi) / u.sale_price) * 100).toFixed(1)
       : null;
 
+  const { data: toptanciFiyatlariHam } = await supabase
+    .from("supplier_feed_items")
+    .select("price, currency, stock_quantity, supplier_feeds(supplier_id, suppliers(name))")
+    .eq("matched_product_id", id);
+  const toptanciFiyatlari = (toptanciFiyatlariHam ?? []) as unknown as {
+    price: number;
+    currency: string;
+    stock_quantity: number;
+    supplier_feeds: { supplier_id: string; suppliers: { name: string } | null } | null;
+  }[];
+
   return (
     <div className="mx-auto max-w-3xl">
       <Link
@@ -226,6 +237,23 @@ export default async function UrunDetayPage({
           )}
         </dl>
       </div>
+
+      {!!toptanciFiyatlari.length && (
+        <div className="glass mt-4 rounded-xl p-5">
+          <h2 className="text-sm font-semibold text-white">📡 Toptancı Fiyatları</h2>
+          <div className="mt-2 space-y-1.5">
+            {toptanciFiyatlari.map((t, i) => (
+              <div key={i} className="flex items-center justify-between text-sm">
+                <span className="text-slate-400">{t.supplier_feeds?.suppliers?.name ?? "—"}</span>
+                <span className="text-slate-200">
+                  {t.price.toLocaleString("tr-TR")} {t.currency}{" "}
+                  <span className="text-slate-500">· {t.stock_quantity} adet</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {u.is_digital ? (
         <div className="glass mt-4 rounded-xl p-5">

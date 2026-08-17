@@ -516,7 +516,7 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     ikon: "🤝",
     kategori: "modul",
     ozet: "Tedarikçi kartları, dövizli cari bakiye ve ödeme takibi.",
-    anahtarKelimeler: ["tedarikçi", "cari", "iban", "ödeme", "borç", "gider pusulası", "stopaj", "vergi mükellefi"],
+    anahtarKelimeler: ["tedarikçi", "cari", "iban", "ödeme", "borç", "gider pusulası", "stopaj", "vergi mükellefi", "toptancı", "xml", "distribütör", "b2b", "penta"],
     icerik: [
       {
         tur: "paragraf",
@@ -560,6 +560,22 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         tur: "paragraf",
         metin:
           "Cari Bakiye kartındaki \"📄 Ekstre (PDF)\" bağlantısı, o tedarikçiyle olan tüm hareketleri (tarih, açıklama, borç/ödeme, bakiye) tek bir belgede indirir. Eski sisteminizden ByteNova'ya geçerken devreden bir borcunuz varsa, tedarikçide henüz hiç cari hareket yokken görünen \"📥 Açılış Bakiyesi Belirle\" ile bunu tek seferlik girebilirsiniz — bu, sahte bir alış faturası oluşturmaz.",
+      },
+      { tur: "altbaslik", metin: "Toptancı XML/B2B Fiyat Feed'i (Stok Plus)" },
+      {
+        tur: "paragraf",
+        metin:
+          "Stok Plus eklentisi aktifse, tedarikçi detay sayfasında distribütörün (Penta, Index/Datagate, Arena…) fiyat kataloğunu bağlayabilirsiniz. \"Şimdi Senkronize Et\" ile distribütörün güncel fiyat/stok listesi çekilir; barkod veya ürün koduyla eşleşen kendi ürünleriniz otomatik bulunur.",
+      },
+      {
+        tur: "paragraf",
+        metin:
+          "\"Fiyat karşılaştırması ve fırsat listesi\" sayfasında iki liste vardır: eşleşen ürünleriniz için distribütör fiyatı × güncel kur × ürünün kâr marjıyla önerilen yeni satış fiyatı (seçip toplu uygulayabilirsiniz — Stok'taki \"Fiyat Güncelle\" ekranıyla aynı mantık); ve \"Fırsat Listesi\" — distribütörde olup sizde stokta olmayan ürünler.",
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "Bir ürün en az bir tedarikçi feed'iyle eşleştiyse, o ürünün Stok detay sayfasında \"📡 Toptancı Fiyatları\" kartı görünür — hangi tedarikçide kaç TL/USD'ye, kaç adet olduğunu gösterir.",
       },
     ],
     ilgili: ["alis", "stok", "finans"],

@@ -97,6 +97,7 @@ export async function demoTenantiSifirlaVeDoldur() {
     { tenant_id: tenantId, addon_key: "whatsapp_sms", status: "active" },
     { tenant_id: tenantId, addon_key: "e_belge", status: "active" },
     { tenant_id: tenantId, addon_key: "pc_toplama", status: "active" },
+    { tenant_id: tenantId, addon_key: "stok_plus", status: "active" },
   ]);
 
   const { data: kasa } = await admin
