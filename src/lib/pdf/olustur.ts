@@ -33,7 +33,8 @@ export async function servisPdfOlustur(
     .eq("id", servis.tenant_id)
     .single();
 
-  const qrDataUrl = await QRCode.toDataURL(servis.service_no, {
+  const takipUrl = `${SITE_URL}/servis-takip/${servis.public_token}`;
+  const qrDataUrl = await QRCode.toDataURL(takipUrl, {
     margin: 1,
     width: 200,
   });

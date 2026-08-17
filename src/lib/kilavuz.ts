@@ -316,7 +316,12 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
       {
         tur: "paragraf",
         metin:
-          "\"Belgeler\" kartından Kabul Formu'nu (ve teslimden sonra Teslim Tutanağı'nı) PDF olarak indirebilirsiniz — her ikisinde de doğrulama için QR kod bulunur. WhatsApp/SMS eklentiniz aktifse aynı belgeleri doğrudan müşterinin WhatsApp'ına gönderen yeşil butonlar da burada belirir; eklenti aktif değilse bu alanda Ayarlar > Eklentiler'e giden bir bağlantı görürsünüz.",
+          "\"Belgeler\" kartından Kabul Formu'nu (ve teslimden sonra Teslim Tutanağı'nı) PDF olarak indirebilirsiniz — her ikisinde de bir QR kod bulunur. WhatsApp/SMS eklentiniz aktifse aynı belgeleri doğrudan müşterinin WhatsApp'ına gönderen yeşil butonlar da burada belirir; eklenti aktif değilse bu alanda Ayarlar > Eklentiler'e giden bir bağlantı görürsünüz.",
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "Belgelerdeki QR kodu okutan müşteri, oturum açmadan kendi servisinin canlı takip sayfasına gider: durum, süreç geçmişi ve (varsa) tutar/kapora bilgisi görünür. Aynı bağlantıyı \"🔗 Müşteri Takip Sayfası\"ndan da açabilir veya \"Bağlantıyı Kopyala\" ile alıp elle paylaşabilirsiniz.",
       },
       { tur: "altbaslik", metin: "Kanban Görünümü" },
       {

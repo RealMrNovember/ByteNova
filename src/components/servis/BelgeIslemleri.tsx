@@ -6,6 +6,7 @@ import { whatsappIcinBelgeHazirla } from "@/app/panel/servisler/[id]/actions";
 
 type Props = {
   servisId: string;
+  publicToken: string;
   teslimEdildiMi: boolean;
   whatsappEklentisiAktif: boolean;
 };
@@ -17,11 +18,23 @@ const HATA_MESAJLARI: Record<string, string> = {
 
 export function BelgeIslemleri({
   servisId,
+  publicToken,
   teslimEdildiMi,
   whatsappEklentisiAktif,
 }: Props) {
   const [gonderiliyor, setGonderiliyor] = useState<string | null>(null);
   const [hata, setHata] = useState<string | null>(null);
+  const [kopyalandi, setKopyalandi] = useState(false);
+  const takipUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/servis-takip/${publicToken}`
+      : `/servis-takip/${publicToken}`;
+
+  async function takipLinkiKopyala() {
+    await navigator.clipboard.writeText(takipUrl);
+    setKopyalandi(true);
+    setTimeout(() => setKopyalandi(false), 2000);
+  }
 
   async function whatsappIleGonder(tip: "kabul" | "teslim") {
     setHata(null);
@@ -111,6 +124,24 @@ export function BelgeIslemleri({
             🔒 WhatsApp ile gönderim — Paketi Aktifleştir
           </Link>
         )}
+      </div>
+
+      <div className="mt-3 flex items-center gap-2 border-t border-slate-800 pt-3">
+        <a
+          href={`/servis-takip/${publicToken}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs font-medium text-nova-300 hover:text-nova-100"
+        >
+          🔗 Müşteri Takip Sayfası
+        </a>
+        <button
+          type="button"
+          onClick={takipLinkiKopyala}
+          className="text-xs text-slate-500 hover:text-slate-300"
+        >
+          {kopyalandi ? "Kopyalandı ✓" : "Bağlantıyı Kopyala"}
+        </button>
       </div>
 
       {hata && <p className="mt-3 text-xs text-red-300">{hata}</p>}

@@ -416,6 +416,7 @@ export default async function ServisDetayPage({
       <div className="mt-4">
         <BelgeIslemleri
           servisId={s.id}
+          publicToken={s.public_token}
           teslimEdildiMi={teslimEdildiMi}
           whatsappEklentisiAktif={whatsappEklentisiAktif}
         />
