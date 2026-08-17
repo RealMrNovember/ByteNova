@@ -42,7 +42,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "alis",
     ad: "Alış",
     ikon: "🚚",
-    durum: "yakinda",
+    durum: "aktif",
     aciklama:
       "Dövizli alış faturaları, tedarikçi takibi ve satın alma talepleri. Toptancıdan gelen mal stoğa tek akışla girer.",
   },
@@ -83,7 +83,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "tedarikciler",
     ad: "Tedarikçiler",
     ikon: "🤝",
-    durum: "yakinda",
+    durum: "aktif",
     aciklama:
       "Tedarikçi kartları, dövizli cari bakiyeler, fiyat değişim geçmişi ve performans raporları.",
   },

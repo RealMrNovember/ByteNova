@@ -235,9 +235,13 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 
 ## SPRINT 5 — ALIŞ, TEDARİKÇİ, CARİ (Gün 21-24)
 
-### Gün 21 — Tedarikçi + alış
-- [ ] Tedarikçi kartı (para birimi, IBAN) + dövizli alış faturası girişi (geriye dönük tarih destekli)
-- [ ] Alış → stok girişi → maliyet güncelleme → fiyat kuralı tetikleme
+### Gün 21 — Tedarikçi + alış ✅
+- [x] `0027_tedarikci_alis.sql`: `suppliers` (ad, para birimi, IBAN, telefon, adres — müşteri deseniyle aynı, hard delete yok) + `purchases`/`purchase_items` (alış no `AL-YYYY-NNNNNN`, tedarikçi fatura no, geriye dönük fatura tarihi, para birimi + o anki kur snapshot'ı) — uygulandı
+- [x] `alis_olustur()` RPC: alış + kalemler + stok girişi (`stok_hareketi_ekle()` üzerinden, `movement_type='purchase'`) + ürün maliyeti güncelleme + `auto_price` açık ürünlerde satış fiyatının anında yeniden hesaplanması tek atomik işlemde (Gün 16'daki `satis_olustur()` ile aynı desen)
+- [x] `TedarikciSec` bileşeni (Gün 10'daki `MusteriSec` deseniyle — akıştan çıkmadan hızlı tedarikçi oluşturma) + `AlisFormu` (tedarikçi seç → ürün ara/ekle → miktar/birim fiyat → kur → ödeme durumu)
+- [x] Tedarikçiler (liste/detay/düzenle, detayda alış geçmişi) ve Alış (liste/detay) sayfaları; menüde her iki modül "yakında" → "aktif"
+- [x] Bilinçli kapsam dışı (Gün 20'deki "açık hesap mahsup" kararıyla aynı gerekçe): tedarikçi cari/borç takibi henüz yok — `payment_status` yalnız bilgi amaçlı, kasaya bağlı değil; gerçek cari Gün 22'de
+- [x] E2E: dövizli alış (10 adet × 22 USD, kur 40) tarayıcıda uçtan uca doğrulandı — stok 5→15, ürün alış maliyeti 20→22 USD, `auto_price` açık ürünün satış fiyatı 1000→1100 TL otomatik yeniden hesaplandı, `stock_movements` kaydı (`movement_type='purchase'`, referans alışa bağlı) ve tedarikçi/alış detay sayfaları doğrulandı
 
 ### Gün 22 — Cari
 - [ ] Müşteri/tedarikçi bakiyeleri + açık hesap satış → borçlanma → tahsilat düşme
