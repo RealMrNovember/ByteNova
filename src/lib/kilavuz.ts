@@ -414,6 +414,77 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     ilgili: ["satis", "servisler", "ayarlar"],
   },
   {
+    slug: "tedarikciler",
+    baslik: "Tedarikçiler",
+    ikon: "🤝",
+    kategori: "modul",
+    ozet: "Tedarikçi kartları, dövizli cari bakiye ve ödeme takibi.",
+    anahtarKelimeler: ["tedarikçi", "cari", "iban", "ödeme", "borç"],
+    icerik: [
+      {
+        tur: "paragraf",
+        metin:
+          "Tedarikçiler modülü, mal aldığınız firmaların kartlarını (para birimi, IBAN, telefon, adres) ve onlara olan cari borcunuzu tutar.",
+      },
+      { tur: "altbaslik", metin: "Tedarikçi Kartı" },
+      {
+        tur: "paragraf",
+        metin:
+          "\"+ Yeni Tedarikçi\" ile ad ve para birimini girersiniz (bu tedarikçiyle hangi para biriminde çalıştığınız — genelde tüm alışlarınız bu para biriminde olur). IBAN, telefon, adres ve notları kart oluştuktan sonra da ekleyebilirsiniz.",
+      },
+      { tur: "altbaslik", metin: "Cari Bakiye ve Ödeme" },
+      {
+        tur: "paragraf",
+        metin:
+          "Her alış faturası otomatik olarak tedarikçiye olan borcunuzu artırır (Alış modülüne bakın). Tedarikçi detayındaki \"Cari Bakiye\" kartı güncel borcu tedarikçinin kendi para biriminde gösterir. Borç varsa \"+ Ödeme Yap\" ile ödediğiniz döviz tutarını, o günkü kuru ve hangi kasadan (TL) çıktığını girersiniz.",
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "Sistem, borcunuzun ağırlıklı ortalama maliyet kurunu kendiliğinden hesaplar. Ödeme yaptığınız gün kur farklıysa aradaki fark nakit hareketi yaratmadan \"Kur Farkı\" adıyla Cari Hareketler listesine otomatik işlenir — kur yükseldiyse gider, düştüyse gelir olarak.",
+      },
+      {
+        tur: "uyari",
+        metin:
+          "Ödemeler tek tek fatura ile eşleştirilmez — genel bakiyeye karşı yapılır. Bir alış faturasındaki \"Ödeme Durumu\" alanı yalnızca bilgi amaçlıdır, gerçek borç takibi Cari Bakiye'dedir.",
+      },
+    ],
+    ilgili: ["alis", "stok", "finans"],
+  },
+  {
+    slug: "alis",
+    baslik: "Alış",
+    ikon: "🚚",
+    kategori: "modul",
+    ozet: "Dövizli alış faturası girişi — stok, maliyet ve fiyat tek işlemde güncellenir.",
+    anahtarKelimeler: ["alış", "fatura", "tedarikçi", "stok girişi", "maliyet", "döviz"],
+    icerik: [
+      {
+        tur: "paragraf",
+        metin:
+          "Alış modülü, tedarikçiden gelen faturaları kaydeder. Bir alış kaydedildiğinde tek işlemde: ürünler stoğa işlenir, ürünlerin alış maliyeti güncellenir, \"satış fiyatını otomatik hesapla\" açık ürünlerin satış fiyatı yeni maliyetle yeniden hesaplanır ve tedarikçi cari borcunuz artar.",
+      },
+      { tur: "altbaslik", metin: "Yeni Alış Girme" },
+      {
+        tur: "adimlar",
+        adimlar: [
+          "Alış > \"+ Yeni Alış\" ile formu açın (ya da bir tedarikçinin kartından \"+ Yeni Alış\" ile o tedarikçi önceden seçili gelir).",
+          "Tedarikçiyi arayın veya akıştan çıkmadan yeni tedarikçi oluşturun.",
+          "İsterseniz tedarikçinin kendi fatura numarasını ve fatura tarihini girin — fatura tarihi geriye dönük seçilebilir, geçmiş bir alışı da kaydedebilirsiniz.",
+          "Para birimini ve kuru kontrol edin (tedarikçi seçilince otomatik dolar, isterseniz düzeltin).",
+          "Ürünleri arayıp ekleyin, her satıra miktar ve birim fiyatı (seçtiğiniz para biriminde) girin.",
+          "Ödeme durumunu (bilgi amaçlı) ve varsa notu girip \"Alışı Kaydet\"e basın.",
+        ],
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "Bir alış numarası otomatik üretilir (örnek biçim: AL-2026-000123). Alış detayında her kalemi ve tedarikçi/kur bilgisini görebilirsiniz.",
+      },
+    ],
+    ilgili: ["tedarikciler", "stok"],
+  },
+  {
     slug: "cihazlar",
     baslik: "Cihazlar",
     ikon: "💻",
@@ -450,8 +521,8 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     baslik: "Müşteriler",
     ikon: "👥",
     kategori: "modul",
-    ozet: "Müşteri kartları, iletişim geçmişi ve bağlı cihazlar.",
-    anahtarKelimeler: ["müşteri", "cari", "iletişim", "kurumsal"],
+    ozet: "Müşteri kartları, iletişim geçmişi, bağlı cihazlar ve cari bakiye.",
+    anahtarKelimeler: ["müşteri", "cari", "iletişim", "kurumsal", "açık hesap", "bakiye", "tahsilat"],
     icerik: [
       {
         tur: "paragraf",
@@ -469,10 +540,16 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         metin:
           "Müşteri detayında iletişim geçmişini (not, arama, WhatsApp, SMS, e-posta kaydı) ve o müşteriye bağlı tüm cihazları görürsünüz.",
       },
+      { tur: "altbaslik", metin: "Cari Bakiye ve Tahsilat" },
+      {
+        tur: "paragraf",
+        metin:
+          "Satışta \"Açık Hesap\" ödeme yöntemi seçildiğinde tutar kasaya girmez, müşterinin cari bakiyesine borç olarak işlenir. Müşteri detayındaki \"Cari Bakiye\" kartı güncel borcu ve altındaki \"Cari Hareketler\" listesi geçmiş her açık hesap satışını/tahsilatı gösterir. Borç varsa \"+ Tahsilat Al\" ile tutarı ve hangi kasa hesabına gireceğini seçip borcu kapatabilirsiniz.",
+      },
       {
         tur: "uyari",
         metin:
-          "Detay sayfasındaki Satış/Servis/Bakiye özet kutuları şu anda henüz gerçek verilere bağlanmamıştır (geliştirme aşamasında) — güncel rakamlar için ilgili müşterinin geçmiş kayıtlarını Satış veya Servisler modülünden arayarak kontrol edin.",
+          "Detay sayfasındaki Satış/Servis özet kutuları şu anda henüz gerçek verilere bağlanmamıştır (geliştirme aşamasında) — Bakiye kutusu ise gerçek cari bakiyeyi gösterir.",
       },
       {
         tur: "ipucu",
@@ -642,7 +719,7 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     ikon: "🗓️",
     kategori: "referans",
     ozet: "Yol haritasındaki modüller — sırayla açılacaklar.",
-    anahtarKelimeler: ["yakında", "yol haritası", "alış", "tedarikçi", "teklif", "rapor"],
+    anahtarKelimeler: ["yakında", "yol haritası", "teklif", "rapor", "satın alma talebi"],
     icerik: [
       {
         tur: "paragraf",
@@ -653,9 +730,8 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         tur: "tablo",
         basliklar: ["Modül", "Ne İşe Yarayacak"],
         satirlar: [
-          ["🚚 Alış", "Dövizli alış faturaları, tedarikçi takibi ve satın alma talepleri; toptancıdan gelen mal stoğa tek akışla girecek."],
+          ["📋 Satın Alma Talepleri", "Serviste \"parça bekleniyor\" işaretlenince veya bir ürün kritik stoğa düşünce otomatik talep oluşturma — Alış modülüne ek olarak gelecek."],
           ["🖥️ PC Toplama", "Reçeteyle (BOM) parçalardan sistem toplama — parçalar stoktan düşer, toplanan PC kendi seri numarasıyla satışa hazır olur. (Eklenti)"],
-          ["🤝 Tedarikçiler", "Tedarikçi kartları, dövizli cari bakiyeler, fiyat geçmişi ve performans raporları."],
           ["📄 Teklifler", "Kurumsal müşterilere PDF teklif hazırlama, QR ile onay, kabul edilince tek tıkla satışa dönüştürme. (Eklenti)"],
           ["📋 Sözleşmeler", "Periyodik bakım sözleşmeleri, SLA takibi, otomatik ziyaret planları. (Eklenti)"],
           ["🗂️ Belgeler", "e-Fatura, e-Arşiv, gider pusulası ve servis formlarının tek arşivi. (Eklenti)"],

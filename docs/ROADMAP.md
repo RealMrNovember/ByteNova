@@ -243,9 +243,14 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] Bilinçli kapsam dışı (Gün 20'deki "açık hesap mahsup" kararıyla aynı gerekçe): tedarikçi cari/borç takibi henüz yok — `payment_status` yalnız bilgi amaçlı, kasaya bağlı değil; gerçek cari Gün 22'de
 - [x] E2E: dövizli alış (10 adet × 22 USD, kur 40) tarayıcıda uçtan uca doğrulandı — stok 5→15, ürün alış maliyeti 20→22 USD, `auto_price` açık ürünün satış fiyatı 1000→1100 TL otomatik yeniden hesaplandı, `stock_movements` kaydı (`movement_type='purchase'`, referans alışa bağlı) ve tedarikçi/alış detay sayfaları doğrulandı
 
-### Gün 22 — Cari
-- [ ] Müşteri/tedarikçi bakiyeleri + açık hesap satış → borçlanma → tahsilat düşme
-- [ ] Dövizli cari (USD borç, ödeme anında kur farkı kaydı)
+### Gün 22 — Cari ✅
+- [x] `0028_cari.sql`: `customers.balance`/`suppliers.balance` (+ `suppliers.avg_exchange_rate`) + `customer_ledger`/`supplier_ledger` hareket tabloları — `stock_movements`/`cash_movements` ile aynı desen (öncesi/sonrası bakiye, referans, audit)
+- [x] Ortak primitifler `musteri_borc_ekle()`/`tedarikci_borc_ekle()` (`stok_hareketi_ekle()` ile birebir aynı mimari) — `satis_olustur()` artık açık hesap ödemesinde kasaya dokunmadan müşteri borcu yaratıyor, `alis_olustur()` her alışta tedarikçi borcu yaratıyor
+- [x] `musteri_tahsilat_al()` RPC — borcu kasaya tahsil edip düşer; müşteri detayında "Cari Bakiye" kartı + "Tahsilat Al" formu + Cari Hareketler listesi
+- [x] Dövizli tedarikçi cari: borç arttıkça **ağırlıklı ortalama maliyet kuru** (`avg_exchange_rate`) güncellenir (Gün 27'deki stok maliyet yöntemi konseptinin küçük bir öncüsü); `tedarikci_odeme_yap()` ödeme anında bu ortalama ile ödeme kuru arasındaki farkı, nakit hareketi yaratmadan ayrı bir "Kur Farkı" muhasebe kaydı olarak otomatik işler (kur yükseldiyse gider, düştüyse gelir)
+- [x] Bilinçli kapsam dışı: fatura-fatura eşleştirme yok — genel bakiye modeli; `purchases.payment_status` artık yalnız bilgi amaçlı not, gerçek borç `suppliers.balance`'da. Fatura eşleştirme/yaşlandırma Gün 24'e planlı
+- [x] Kılavuza Tedarikçiler ve Alış konuları eklendi (artık aktif modüller), Müşteriler konusu cari bölümüyle güncellendi
+- [x] E2E: gerçek kullanıcı oturumuyla (service-role değil) uçtan uca doğrulandı — açık hesap satış (1000 TL) → müşteri borcu 1000, kısmi tahsilat (400) → borç 600, UI'dan tam tahsilat → borç 0 ve buton kayboldu; dövizli alış (50 USD, kur 40) → tedarikçi borcu 50 USD/ort. kur 40; kısmi ödeme (20 USD, kur 42) → kalan 30 USD, ort. kur **değişmedi** (40'ta sabit kaldı — doğru ağırlıklı ortalama davranışı), kur farkı 40 TL gider olarak ayrı kayda düştü; UI'dan ikinci ödeme (10 USD, kur 39) → bakiye 0, kur farkı 10 TL gelir olarak doğru işlendi. **Canlı testte bulunan hata:** `tedarikci_borc_ekle()` ödemeleri de `'alis_borc'` etiketiyle kaydediyordu (entry_type parametresi yoktu) — Cari Hareketler listesinde bir ödeme "Alış borcu: -20 USD" gibi yanıltıcı görünüyordu; `p_entry_type` parametresi eklenip (`tedarikci_odeme_yap()` artık `'odeme'` geçiyor) düzeltildi ve doğrulandı
 
 ### Gün 23 — Satın alma talepleri
 - [ ] Talep ekranı (servisten "parça bekleniyor" + kritik stoktan otomatik)

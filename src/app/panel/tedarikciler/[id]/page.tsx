@@ -3,7 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { yetkiVar } from "@/lib/yetki";
 import { odemeDurumEtiket, odemeDurumSinifi } from "@/lib/alis";
-import { paraFormatla } from "@/lib/doviz";
+import { paraFormatla, etkinKurlar } from "@/lib/doviz";
+import { TedarikciOdeme } from "@/components/alis/TedarikciOdeme";
 
 export default async function TedarikciDetayPage({
   params,
@@ -39,8 +40,35 @@ export default async function TedarikciDetayPage({
     .order("invoice_date", { ascending: false })
     .limit(30);
 
+  const { data: cariHareketler } = await supabase
+    .from("supplier_ledger")
+    .select("id, entry_type, amount, amount_try, description, created_at")
+    .eq("supplier_id", id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  const { data: kasaHesaplari } = await supabase
+    .from("cash_accounts")
+    .select("id, name, type")
+    .eq("is_active", true)
+    .order("created_at");
+
   const yetkili = yetkiVar(profil?.role, "stok_yonet");
+  const kasaYetkili = yetkiVar(profil?.role, "kasa_yonet");
   const toplamAlis = (alislar ?? []).length;
+
+  let guncelKur: number | null = null;
+  if (tedarikci.currency !== "TRY") {
+    const kurlar = await etkinKurlar(supabase);
+    guncelKur = kurlar.get(tedarikci.currency)?.rate_to_try ?? null;
+  }
+
+  const ENTRY_ETIKET: Record<string, string> = {
+    alis_borc: "Alış borcu",
+    odeme: "Ödeme",
+    kur_farki: "Kur farkı",
+    duzeltme: "Düzeltme",
+  };
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -89,6 +117,61 @@ export default async function TedarikciDetayPage({
           </div>
         )}
       </div>
+
+      <div className="mt-4">
+        <TedarikciOdeme
+          supplierId={tedarikci.id}
+          bakiye={tedarikci.balance}
+          paraBirimi={tedarikci.currency}
+          guncelKur={guncelKur}
+          yetkili={kasaYetkili}
+          kasaHesaplari={kasaHesaplari ?? []}
+        />
+      </div>
+
+      {!!cariHareketler?.length && (
+        <div className="glass mt-4 overflow-hidden rounded-xl">
+          <div className="border-b border-slate-800 px-4 py-3">
+            <h2 className="text-sm font-semibold text-white">Cari Hareketler</h2>
+          </div>
+          <div className="divide-y divide-slate-800/60">
+            {cariHareketler.map((h) => (
+              <div key={h.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                <div className="min-w-0">
+                  <p className="text-sm text-slate-200">
+                    {ENTRY_ETIKET[h.entry_type] ?? h.entry_type}
+                    {h.description && <span className="text-slate-500"> — {h.description}</span>}
+                  </p>
+                  <p className="text-[11px] text-slate-600">
+                    {new Date(h.created_at).toLocaleString("tr-TR", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 text-sm font-semibold ${
+                    h.entry_type === "kur_farki"
+                      ? h.amount_try > 0
+                        ? "text-red-300"
+                        : "text-emerald-300"
+                      : (h.amount ?? 0) > 0
+                        ? "text-amber-300"
+                        : "text-emerald-300"
+                  }`}
+                >
+                  {h.amount != null
+                    ? `${h.amount > 0 ? "+" : ""}${h.amount.toLocaleString("tr-TR")} ${tedarikci.currency}`
+                    : `${h.amount_try > 0 ? "+" : ""}${h.amount_try.toLocaleString("tr-TR")} TL`}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="glass mt-4 overflow-hidden rounded-xl">
         <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">

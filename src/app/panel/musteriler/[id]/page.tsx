@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { IletisimGecmisi } from "@/components/musteri/IletisimGecmisi";
+import { MusteriTahsilat } from "@/components/musteri/MusteriTahsilat";
 import { cihazIkon } from "@/lib/cihaz";
+import { yetkiVar } from "@/lib/yetki";
 
 export default async function MusteriDetayPage({
   params,
@@ -12,6 +14,16 @@ export default async function MusteriDetayPage({
   const { id } = await params;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: profil } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user?.id ?? "")
+    .single();
+  const kasaYetkili = yetkiVar(profil?.role, "kasa_yonet");
+
   const { data: m } = await supabase
     .from("customers")
     .select("*")
@@ -19,6 +31,12 @@ export default async function MusteriDetayPage({
     .maybeSingle();
 
   if (!m) notFound();
+
+  const { data: kasaHesaplari } = await supabase
+    .from("cash_accounts")
+    .select("id, name, type")
+    .eq("is_active", true)
+    .order("created_at");
 
   const { data: olaylar } = await supabase
     .from("customer_events")
@@ -34,12 +52,22 @@ export default async function MusteriDetayPage({
     .order("created_at", { ascending: false })
     .limit(20);
 
+  const { data: cariHareketler } = await supabase
+    .from("customer_ledger")
+    .select("id, entry_type, amount, balance_after, description, created_at")
+    .eq("customer_id", id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
   // 360° özet — servis/satış modülleri geldikçe gerçek sayılara bağlanacak
   const ozet = [
     { etiket: "Satış", deger: "—" },
     { etiket: "Servis", deger: "—" },
     { etiket: "Cihaz", deger: String(cihazlar?.length ?? 0) },
-    { etiket: "Bakiye", deger: "—" },
+    {
+      etiket: "Bakiye",
+      deger: m.balance > 0 ? `${m.balance.toLocaleString("tr-TR")} ₺` : "0 ₺",
+    },
   ];
 
   return (
@@ -107,6 +135,55 @@ export default async function MusteriDetayPage({
           ))}
         </div>
       </div>
+
+      {/* Cari bakiye + tahsilat */}
+      <div className="mt-4">
+        <MusteriTahsilat
+          customerId={m.id}
+          bakiye={m.balance}
+          yetkili={kasaYetkili}
+          kasaHesaplari={kasaHesaplari ?? []}
+        />
+      </div>
+
+      {!!cariHareketler?.length && (
+        <div className="glass mt-4 overflow-hidden rounded-xl">
+          <div className="border-b border-slate-800 px-4 py-3">
+            <h2 className="text-sm font-semibold text-white">Cari Hareketler</h2>
+          </div>
+          <div className="divide-y divide-slate-800/60">
+            {cariHareketler.map((h) => (
+              <div key={h.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                <div className="min-w-0">
+                  <p className="text-sm text-slate-200">
+                    {h.entry_type === "acik_hesap_satis"
+                      ? "Açık hesap satış"
+                      : h.entry_type === "tahsilat"
+                        ? "Tahsilat"
+                        : "Düzeltme"}
+                    {h.description && <span className="text-slate-500"> — {h.description}</span>}
+                  </p>
+                  <p className="text-[11px] text-slate-600">
+                    {new Date(h.created_at).toLocaleString("tr-TR", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 text-sm font-semibold ${h.amount > 0 ? "text-amber-300" : "text-emerald-300"}`}
+                >
+                  {h.amount > 0 ? "+" : ""}
+                  {h.amount.toLocaleString("tr-TR")} ₺
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Cihazlar */}
       <div className="glass mt-4 rounded-xl p-5">
