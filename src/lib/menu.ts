@@ -100,7 +100,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "sozlesmeler",
     ad: "Sözleşmeler",
     ikon: "📋",
-    durum: "yakinda",
+    durum: "aktif",
     aciklama:
       "Periyodik bakım sözleşmeleri: SLA takibi, otomatik ziyaret planları ve yenileme hatırlatmaları.",
     addonKey: "kurumsal_satis",

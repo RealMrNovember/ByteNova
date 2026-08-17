@@ -1043,6 +1043,53 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     ilgili: ["satis", "musteriler", "ayarlar"],
   },
   {
+    slug: "sozlesmeler",
+    baslik: "Sözleşmeler",
+    ikon: "📋",
+    kategori: "modul",
+    ozet: "Periyodik bakım sözleşmeleri: kapsam, SLA süresi, otomatik ziyaret takvimi ve bitiş hatırlatmaları.",
+    anahtarKelimeler: ["sözleşme", "bakım", "sla", "ziyaret", "periyodik", "okul", "şirket"],
+    icerik: [
+      {
+        tur: "paragraf",
+        metin:
+          "Sözleşmeler, \"Kurumsal Satış Paketi\" eklentisine bağlıdır (Ayarlar > Eklentiler'den etkinleştirilir). Okul, şirket, belediye gibi müşterilere periyodik bakım hizmeti veriyorsanız — aylık sabit bedel, müdahale süresi (SLA) ve otomatik üretilen ziyaret takvimiyle bu ilişkiyi tek yerden yönetirsiniz.",
+      },
+      { tur: "altbaslik", metin: "Sözleşme Oluşturma" },
+      {
+        tur: "adimlar",
+        adimlar: [
+          "Sözleşmeler > \"+ Yeni Sözleşme\" ile formu açın.",
+          "Müşteriyi seçin, sözleşme adını ve kapsamını (hangi cihazlar/işler dahil) girin.",
+          "Ziyaret periyodunu (kaç ayda bir), aylık bedeli, SLA müdahale süresini (saat) ve başlangıç/bitiş tarihlerini girin.",
+          "\"Sözleşmeyi Oluştur\"a basın — otomatik bir sözleşme numarası (örn. SOZ-2026-000001) ve başlangıç-bitiş aralığında, girdiğiniz periyotta tam bir ziyaret takvimi üretilir.",
+        ],
+      },
+      {
+        tur: "uyari",
+        metin:
+          "Faturalama günü yalnızca bilgi amaçlı bir alandır — sözleşmeden otomatik fatura/satış ÜRETİLMEZ. Her dönem için faturayı Satış modülünden kendiniz oluşturursunuz; bu, finansal belgelerin her zaman bir onaydan geçmesini sağlar.",
+      },
+      { tur: "altbaslik", metin: "Ziyaretleri Yönetme" },
+      {
+        tur: "paragraf",
+        metin:
+          "Sözleşme detayında her planlı ziyarete bir teknisyen atayabilir, ardından ziyaret gerçekleştiğinde \"✓ Ziyareti Tamamla\" ile bir rapor girip kaydedersiniz. Ziyaret sırasında kapsam dışı bir iş çıktıysa (örn. anakart değişimi) \"Kapsam dışı iş yapıldı\" kutusunu işaretleyin — bu iş sözleşme kapsamına dahil değildir, ayrıca ücretli bir servis kaydı açmanız gerekir (Servisler > Yeni Servis Kabul).",
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "Genel Bakış'ta sözleşmesi 30 gün içinde bitecek müşteri sayısını gösteren bir uyarı kartı belirir — bu, yenileme görüşmesi için müşteriyle iletişime geçmeniz gerektiğinin hatırlatıcısıdır. Süresi dolan sözleşmeler her gece otomatik olarak \"Süresi Doldu\" durumuna geçer.",
+      },
+      {
+        tur: "paragraf",
+        metin:
+          "Sözleşmeyi erken sonlandırmanız gerekirse detay sayfasındaki \"Sözleşmeyi İptal Et\" ile kapatabilirsiniz — tamamlanmış ziyaretler geçmişte kalır, henüz gerçekleşmemiş planlı ziyaretler otomatik iptal edilir.",
+      },
+    ],
+    ilgili: ["musteriler", "servisler", "ayarlar"],
+  },
+  {
     slug: "veri-ice-aktarma",
     baslik: "Veri İçe Aktarma (Excel)",
     ikon: "📥",
@@ -1207,7 +1254,6 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         tur: "tablo",
         basliklar: ["Modül", "Ne İşe Yarayacak"],
         satirlar: [
-          ["📋 Sözleşmeler", "Periyodik bakım sözleşmeleri, SLA takibi, otomatik ziyaret planları. (Eklenti)"],
           ["🛒 Pazaryeri", "Trendyol, Hepsiburada, N11 stok senkronizasyonu. (Eklenti)"],
         ],
       },

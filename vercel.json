@@ -19,6 +19,10 @@
     {
       "path": "/api/cron/bildirim-gonder",
       "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/sozlesme-kontrolu",
+      "schedule": "0 4 * * *"
     }
   ]
 }

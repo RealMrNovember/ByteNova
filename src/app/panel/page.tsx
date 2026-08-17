@@ -42,6 +42,7 @@ export default async function GenelBakisPage() {
   const servisGorebilir = yetkiVar(rol, "servis_yonet");
   const stokGorebilir = yetkiVar(rol, "stok_yonet");
   const kurGorebilir = yetkiVar(rol, "kasa_yonet") || yetkiVar(rol, "maliyet_gor");
+  const sozlesmeGorebilir = yetkiVar(rol, "teklif_yonet");
 
   // "Bugün" Türkiye saatine göre (UTC+3, DST yok) — diğer modüllerle aynı desen.
   const bugunIstanbul = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Istanbul" });
@@ -97,6 +98,17 @@ export default async function GenelBakisPage() {
   const cekSayisi = yaklasanCekler?.length ?? 0;
   const cekToplam = (yaklasanCekler ?? []).reduce((t, c) => t + c.amount, 0);
 
+  const otuzGunSonra = new Date(`${bugunIstanbul}T00:00:00+03:00`);
+  otuzGunSonra.setDate(otuzGunSonra.getDate() + 30);
+  const { data: bitenSozlesmeler } = sozlesmeGorebilir
+    ? await supabase
+        .from("maintenance_contracts")
+        .select("id")
+        .eq("status", "aktif")
+        .lte("end_date", otuzGunSonra.toISOString().slice(0, 10))
+    : { data: null };
+  const sozlesmeSayisi = bitenSozlesmeler?.length ?? 0;
+
   const kritikSayisi = (kritikUrunler ?? []).filter(
     (u) => u.stock_quantity <= u.critical_stock
   ).length;
@@ -139,6 +151,11 @@ export default async function GenelBakisPage() {
   if (kasaGorebilir && cekSayisi > 0) {
     ozetCumleleri.push(
       `Önümüzdeki 7 gün içinde (veya vadesi geçmiş) ${paraFormatla(cekToplam)} tutarında ${cekSayisi} çek/senet tahsil edilecek.`
+    );
+  }
+  if (sozlesmeGorebilir && sozlesmeSayisi > 0) {
+    ozetCumleleri.push(
+      `${sozlesmeSayisi} bakım sözleşmesinin süresi 30 gün içinde doluyor — yenileme için müşteriyle iletişime geçin.`
     );
   }
   if (kurEtkisiGosterilsin) {
@@ -221,6 +238,16 @@ export default async function GenelBakisPage() {
       ikon: "📑",
       href: "/panel/finans/cek-senet",
       vurgu: cekSayisi > 0,
+    });
+  }
+  if (sozlesmeGorebilir && sozlesmeSayisi > 0) {
+    kartlar.push({
+      baslik: "Biten Sözleşmeler",
+      deger: String(sozlesmeSayisi),
+      alt: "30 gün içinde süresi doluyor",
+      ikon: "📋",
+      href: "/panel/sozlesmeler",
+      vurgu: true,
     });
   }
   if (kurEtkisiGosterilsin) {
