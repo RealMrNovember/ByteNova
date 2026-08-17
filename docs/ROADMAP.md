@@ -262,11 +262,13 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] Bilinçli kapsam dışı: bir alıştaki tek bir kalem yalnızca o ürüne ait EN ESKİ açık talebi karşılar (miktar bölüştürme/kısmi karşılama yok) — birden çok açık talep varsa fazlası için ayrı alış girilir; bu, gerçek bir sipariş/tedarik zinciri motoru kurmadan makul ve öngörülebilir bir sınır
 - [x] E2E: gerçek kullanıcı oturumuyla uçtan uca doğrulandı — stok kritiğin altına düşünce otomatik talep açıldı, tekrar düşüşte yeni talep AÇILMADI (yinelenme engeli çalıştı), servisten manuel talep oluşturuldu, art arda iki alışla önce kritik stok talebi sonra servis talebi otomatik karşılandı ve servis notu doğru içerikle düştü; `/panel/alis/talepler` ve servis detayındaki "Parça Talebi" kartı tarayıcıda görsel olarak doğrulandı
 
-### Gün 24 — Cari çıktılar
-- [ ] Cari ekstre PDF + yaşlandırma (30/60/90)
-- [ ] Cari açılış bakiyesi import'u (devir)
+### Gün 24 — Cari çıktılar ✅
+- [x] Cari ekstre PDF: `@react-pdf/renderer` ile Gün 10'daki servis belgesi mimarisiyle birebir aynı desen (`src/lib/pdf/olustur.ts` + yeni `MusteriEkstresi.tsx`/`TedarikciEkstresi.tsx` bileşenleri) — `/api/musteri/[id]/ekstre` ve `/api/tedarikci/[id]/ekstre` route'ları, tüm cari hareketleri tarih/açıklama/borç/alacak/bakiye tablosunda listeler; müşteri ve tedarikçi detay sayfalarındaki Cari Bakiye kartından tek tıkla indirilir
+- [x] Yaşlandırma (30/60/90): fatura-fatura eşleştirme yapmadan (Gün 22'nin genel bakiye modeliyle tutarlı), FIFO varsayımıyla salt-okunur bir RAPOR olarak hesaplanıyor (`src/lib/cari.ts` → `yaslandirmaHesapla()`) — cari modelin kendisi değişmiyor, yalnızca mevcut hareketler okunup yorumlanıyor. Yeni `/panel/finans/cari-yaslandirma` sayfası müşteri alacaklarını ve tedarikçi borçlarını ayrı tablolarda, 90+ gün kırmızı vurgulu olarak listeler
+- [x] Cari açılış bakiyesi (devir): `musteri_acilis_bakiyesi_belirle()`/`tedarikci_acilis_bakiyesi_belirle()` RPC'leri — yalnızca o müşteri/tedarikçide HİÇ cari hareket yokken kullanılabilir (sunucu tarafında zorlanır), böylece gerçek bir işlemi geriye dönük "düzeltme" amacıyla kötüye kullanma riski yok. `customer_ledger`/`supplier_ledger` check constraint'lerine yeni `acilis_bakiyesi` entry_type'ı eklendi
+- [x] E2E: gerçek kullanıcı oturumuyla doğrulandı — PDF endpoint'leri gerçek `%PDF-` başlıklı, doğru `Content-Disposition` (`inline`/`attachment=1`) ve doğru dosya adıyla 200 döndü; açılış bakiyesi RPC'si başarıyla kaydetti ve ikinci çağrıda beklendiği gibi reddedildi; yaşlandırma algoritması ayrıca izole bir senaryoyla (kısmi tahsilatların FIFO'yla en eski borcu doğru kapattığı) doğrulandı. **Canlı testte bulunan hata:** müşteri/tedarikçi detay sayfalarındaki Cari Hareketler listesi yeni `acilis_bakiyesi` tipini tanımıyor, "Düzeltme" olarak yanlış gösteriyordu — etiket haritalarına eklenip düzeltildi
 
-**Sprint sonu:** Toptancıya USD borç doğru izleniyor; S3 uçtan uca çalışıyor.
+**Sprint sonu:** 🎯 Sprint 5 tamamlandı — toptancıya USD borç doğru izleniyor, cari tamamen çalışıyor, S3 uçtan uca akıyor.
 
 ---
 

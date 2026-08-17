@@ -12,10 +12,11 @@ type Props = {
   paraBirimi: string;
   guncelKur: number | null;
   yetkili: boolean;
+  hareketYok: boolean;
   kasaHesaplari: KasaHesabi[];
 };
 
-export function TedarikciOdeme({ supplierId, bakiye, paraBirimi, guncelKur, yetkili, kasaHesaplari }: Props) {
+export function TedarikciOdeme({ supplierId, bakiye, paraBirimi, guncelKur, yetkili, hareketYok, kasaHesaplari }: Props) {
   const router = useRouter();
   const [acik, setAcik] = useState(false);
   const [tutar, setTutar] = useState(bakiye > 0 ? bakiye.toString() : "");
@@ -23,6 +24,13 @@ export function TedarikciOdeme({ supplierId, bakiye, paraBirimi, guncelKur, yetk
   const [hesapId, setHesapId] = useState(kasaHesaplari[0]?.id ?? "");
   const [kaydediliyor, setKaydediliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
+
+  const [acilisAcik, setAcilisAcik] = useState(false);
+  const [acilisTutar, setAcilisTutar] = useState("");
+  const [acilisKur, setAcilisKur] = useState(paraBirimi === "TRY" ? "1" : (guncelKur?.toString() ?? ""));
+  const [acilisAciklama, setAcilisAciklama] = useState("");
+  const [acilisKaydediliyor, setAcilisKaydediliyor] = useState(false);
+  const [acilisHata, setAcilisHata] = useState<string | null>(null);
 
   const kurSayi = Number(kur) || 0;
   const tlKarsiligi = (Number(tutar) || 0) * kurSayi;
@@ -64,9 +72,41 @@ export function TedarikciOdeme({ supplierId, bakiye, paraBirimi, guncelKur, yetk
     router.refresh();
   }
 
+  async function acilisBakiyesiKaydet() {
+    const sayi = Number(acilisTutar);
+    const kurDeger = Number(acilisKur);
+    if (!sayi) {
+      setAcilisHata("Geçerli bir tutar girin.");
+      return;
+    }
+    if (!kurDeger || kurDeger <= 0) {
+      setAcilisHata("Geçerli bir kur girin.");
+      return;
+    }
+    setAcilisKaydediliyor(true);
+    setAcilisHata(null);
+
+    const supabase = createClient();
+    const { error } = await supabase.rpc("tedarikci_acilis_bakiyesi_belirle", {
+      p_supplier_id: supplierId,
+      p_tutar: sayi,
+      p_kur: kurDeger,
+      p_aciklama: acilisAciklama.trim() || null,
+    });
+
+    setAcilisKaydediliyor(false);
+    if (error) {
+      setAcilisHata("Açılış bakiyesi kaydedilemedi.");
+      return;
+    }
+
+    setAcilisAcik(false);
+    router.refresh();
+  }
+
   return (
     <div className="glass rounded-xl p-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         <div>
           <h2 className="text-sm font-semibold text-white">Cari Bakiye</h2>
           <p className={`mt-1 text-2xl font-bold ${bakiye > 0 ? "text-amber-300" : "text-slate-200"}`}>
@@ -76,14 +116,32 @@ export function TedarikciOdeme({ supplierId, bakiye, paraBirimi, guncelKur, yetk
             {bakiye > 0 ? "Tedarikçiye olan borcumuz" : "Borç yok"}
           </p>
         </div>
-        {yetkili && bakiye > 0 && !acik && (
-          <button
-            onClick={() => setAcik(true)}
-            className="shrink-0 rounded-lg border border-slate-700 px-3.5 py-1.5 text-xs font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <a
+            href={`/api/tedarikci/${supplierId}/ekstre?indir=1`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] font-medium text-slate-400 hover:text-nova-300"
           >
-            + Ödeme Yap
-          </button>
-        )}
+            📄 Ekstre (PDF)
+          </a>
+          {yetkili && bakiye > 0 && !acik && (
+            <button
+              onClick={() => setAcik(true)}
+              className="rounded-lg border border-slate-700 px-3.5 py-1.5 text-xs font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+            >
+              + Ödeme Yap
+            </button>
+          )}
+          {yetkili && hareketYok && !acilisAcik && (
+            <button
+              onClick={() => setAcilisAcik(true)}
+              className="rounded-lg border border-dashed border-slate-700 px-3.5 py-1.5 text-[11px] font-medium text-slate-500 transition hover:border-nova-500/50 hover:text-nova-300"
+            >
+              📥 Açılış Bakiyesi Belirle
+            </button>
+          )}
+        </div>
       </div>
 
       {acik && (
@@ -154,6 +212,57 @@ export function TedarikciOdeme({ supplierId, bakiye, paraBirimi, guncelKur, yetk
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {acilisAcik && (
+        <div className="mt-4 space-y-2.5 rounded-lg border border-slate-800 bg-surface-2 p-3.5">
+          <p className="text-[11px] text-slate-500">
+            Eski sisteminizden devreden bir borcunuz varsa buradan tek seferlik girin. Bu, gerçek bir alış olarak sayılmaz.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="number"
+              step="0.01"
+              autoFocus
+              value={acilisTutar}
+              onChange={(e) => setAcilisTutar(e.target.value)}
+              placeholder={`Devreden bakiye (${paraBirimi})`}
+              className="rounded-lg border border-slate-700 bg-surface px-3 py-2 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-nova-500"
+            />
+            <input
+              type="number"
+              step="0.0001"
+              disabled={paraBirimi === "TRY"}
+              value={acilisKur}
+              onChange={(e) => setAcilisKur(e.target.value)}
+              placeholder="Kur"
+              className="rounded-lg border border-slate-700 bg-surface px-3 py-2 text-sm text-slate-200 outline-none focus:border-nova-500 disabled:opacity-40"
+            />
+          </div>
+          <input
+            type="text"
+            value={acilisAciklama}
+            onChange={(e) => setAcilisAciklama(e.target.value)}
+            placeholder="Açıklama (opsiyonel)"
+            className="w-full rounded-lg border border-slate-700 bg-surface px-3 py-2 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-nova-500"
+          />
+          {acilisHata && <p className="text-xs text-red-300">{acilisHata}</p>}
+          <div className="flex gap-2">
+            <button
+              onClick={acilisBakiyesiKaydet}
+              disabled={acilisKaydediliyor}
+              className="rounded-lg bg-nova-500 px-3.5 py-1.5 text-xs font-semibold text-slate-950 transition hover:bg-nova-400 disabled:opacity-60"
+            >
+              {acilisKaydediliyor ? "Kaydediliyor…" : "Kaydet"}
+            </button>
+            <button
+              onClick={() => setAcilisAcik(false)}
+              className="rounded-lg border border-slate-700 px-3.5 py-1.5 text-xs text-slate-300"
+            >
+              Vazgeç
+            </button>
+          </div>
         </div>
       )}
     </div>

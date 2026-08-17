@@ -459,6 +459,11 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         metin:
           "Ödemeler tek tek fatura ile eşleştirilmez — genel bakiyeye karşı yapılır. Bir alış faturasındaki \"Ödeme Durumu\" alanı yalnızca bilgi amaçlıdır, gerçek borç takibi Cari Bakiye'dedir.",
       },
+      {
+        tur: "paragraf",
+        metin:
+          "Cari Bakiye kartındaki \"📄 Ekstre (PDF)\" bağlantısı, o tedarikçiyle olan tüm hareketleri (tarih, açıklama, borç/ödeme, bakiye) tek bir belgede indirir. Eski sisteminizden ByteNova'ya geçerken devreden bir borcunuz varsa, tedarikçide henüz hiç cari hareket yokken görünen \"📥 Açılış Bakiyesi Belirle\" ile bunu tek seferlik girebilirsiniz — bu, sahte bir alış faturası oluşturmaz.",
+      },
     ],
     ilgili: ["alis", "stok", "finans"],
   },
@@ -564,6 +569,11 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
           "Satışta \"Açık Hesap\" ödeme yöntemi seçildiğinde tutar kasaya girmez, müşterinin cari bakiyesine borç olarak işlenir. Müşteri detayındaki \"Cari Bakiye\" kartı güncel borcu ve altındaki \"Cari Hareketler\" listesi geçmiş her açık hesap satışını/tahsilatı gösterir. Borç varsa \"+ Tahsilat Al\" ile tutarı ve hangi kasa hesabına gireceğini seçip borcu kapatabilirsiniz.",
       },
       {
+        tur: "paragraf",
+        metin:
+          "\"📄 Ekstre (PDF)\" bağlantısı müşterinin tüm cari hareket dökümünü indirir. Eski sisteminizden devreden bir alacağınız varsa, müşteride henüz hiç cari hareket yokken görünen \"📥 Açılış Bakiyesi Belirle\" ile bunu tek seferlik girebilirsiniz.",
+      },
+      {
         tur: "uyari",
         metin:
           "Detay sayfasındaki Satış/Servis özet kutuları şu anda henüz gerçek verilere bağlanmamıştır (geliştirme aşamasında) — Bakiye kutusu ise gerçek cari bakiyeyi gösterir.",
@@ -616,8 +626,14 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         metin:
           "Finans > Giderler sayfasından \"+ Gider Ekle\" ile kategori, açıklama, tutar, ilgili kasa hesabı ve isterseniz bir fiş fotoğrafı (en fazla 5 MB) girip gider kaydedersiniz. \"Tekrarlayan gider\" işaretlerseniz (örn. kira, elektrik) her ayın belirttiğiniz gününde bu sayfada bir hatırlatma bandı belirir.",
       },
+      { tur: "altbaslik", metin: "Cari Yaşlandırma" },
+      {
+        tur: "paragraf",
+        metin:
+          "Finans > \"📊 Cari Yaşlandırma\" sayfası, açık bakiyesi olan tüm müşteri ve tedarikçilerinizi tek ekranda listeler; her satırda borcun 0-30, 31-60, 61-90 ve 90+ gün sütunlarına dağılımını görürsünüz — en eski borcun önce kapandığı varsayılarak hesaplanır. 90 günü aşan tutarlar kırmızı vurgulanır, riskli/eskimiş bakiyeleri hızlıca fark etmenizi sağlar.",
+      },
     ],
-    ilgili: ["satis", "servisler", "ayarlar"],
+    ilgili: ["satis", "servisler", "ayarlar", "musteriler", "tedarikciler"],
   },
   {
     slug: "ayarlar",

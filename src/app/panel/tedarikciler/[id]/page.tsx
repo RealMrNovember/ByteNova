@@ -68,6 +68,7 @@ export default async function TedarikciDetayPage({
     odeme: "Ödeme",
     kur_farki: "Kur farkı",
     duzeltme: "Düzeltme",
+    acilis_bakiyesi: "Açılış bakiyesi (devir)",
   };
 
   return (
@@ -125,6 +126,7 @@ export default async function TedarikciDetayPage({
           paraBirimi={tedarikci.currency}
           guncelKur={guncelKur}
           yetkili={kasaYetkili}
+          hareketYok={!cariHareketler?.length}
           kasaHesaplari={kasaHesaplari ?? []}
         />
       </div>

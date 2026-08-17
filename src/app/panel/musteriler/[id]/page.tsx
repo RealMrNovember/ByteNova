@@ -142,6 +142,7 @@ export default async function MusteriDetayPage({
           customerId={m.id}
           bakiye={m.balance}
           yetkili={kasaYetkili}
+          hareketYok={!cariHareketler?.length}
           kasaHesaplari={kasaHesaplari ?? []}
         />
       </div>
@@ -160,7 +161,9 @@ export default async function MusteriDetayPage({
                       ? "Açık hesap satış"
                       : h.entry_type === "tahsilat"
                         ? "Tahsilat"
-                        : "Düzeltme"}
+                        : h.entry_type === "acilis_bakiyesi"
+                          ? "Açılış bakiyesi (devir)"
+                          : "Düzeltme"}
                     {h.description && <span className="text-slate-500"> — {h.description}</span>}
                   </p>
                   <p className="text-[11px] text-slate-600">

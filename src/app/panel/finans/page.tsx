@@ -54,6 +54,12 @@ export default async function FinansPage() {
         </div>
         <div className="flex shrink-0 gap-2">
           <Link
+            href="/panel/finans/cari-yaslandirma"
+            className="rounded-lg border border-slate-700 px-3.5 py-2 text-center text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+          >
+            📊 Cari Yaşlandırma
+          </Link>
+          <Link
             href="/panel/finans/giderler"
             className="rounded-lg border border-slate-700 px-3.5 py-2 text-center text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
           >
