@@ -281,10 +281,39 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] E2E: normal tenant kullanıcısı RPC'yi çağıramıyor (400 "yetkisiz") doğrulandı
 - [ ] MFA zorunluluğu + tam ayrı kimlik alanı, uzatma/askıya alma/plan değişikliği, `tenant_events`, feature flag yönetim ekranı — Gün 28-30 planında duruyor (bu adım o işi tekrarlamayacak şekilde kuruldu)
 
-### Gün 29 — Yönetim Konsolu v1b
-- [ ] Abonelik modeli: Trial → Aktif → Ödeme Bekliyor → Askıda yaşam döngüsü + trial otomasyonu
-- [ ] Uzatma / askıya alma / yeniden etkinleştirme; askıdaki tenant salt-okunur deneyimi
-- [ ] Manuel ödeme (havale/dekont onay) akışı
+### Gün 29 — Abonelik Planları + Yönetim Konsolu v1b
+Kapsam kullanıcı talebiyle netleştirildi (17.08.2026): ByteNova'nın kendi
+abonelik planları (addon'lardan ayrı — addon'lar ek modül, bu planlar
+tenant'ın temel aboneliği) tanımlanacak ve Konsol'a, master admin'in bir
+işletmenin aboneliğine doğrudan müdahale edebileceği bir ekran eklenecek
+(bugün yalnızca "Deneme: 12g" gibi salt-okunur bir rozet var, üzerinde
+işlem yapılamıyor).
+
+- [ ] **Plan kataloğu:** `subscription_plans` (örn. Başlangıç / Profesyonel /
+  Kurumsal) — her planda özellik/limit seti (kullanıcı sayısı, modül
+  erişimi vb.) + **aylık ve yıllık fiyat** (yıllık, indirimli tek kalem)
+- [ ] Tenant'a plan + faturalama döngüsü (aylık/yıllık) atanması
+  (`tenants.plan_id`, `billing_cycle`); işletme sahibi kendi planını
+  Ayarlar'da (yeni "Abonelik" bölümü) görebilir
+- [ ] Abonelik yaşam döngüsü: Trial → Aktif → Ödeme Bekliyor → Askıda +
+  trial bitince otomatik durum geçişi
+- [ ] **Konsol'dan müdahale (S63-ish, kullanıcı talebiyle öne çıkarıldı):**
+  tenant detayında master admin şunları yapabilmeli:
+  - Deneme süresini uzatma (gün ekle veya yeni bitiş tarihi seç)
+  - Plan değiştirme (yükselt/düşür) ve faturalama döngüsünü değiştirme
+  - Durumu manuel değiştirme (Aktif yap / Askıya al / Yeniden etkinleştir)
+  - Her işlem gerekçe ister, `platform_audit_logs` + tenant'ın kendi
+    `audit_logs`'una işlenir — kasa kapanışı geri almadaki şeffaflık
+    deseniyle birebir aynı (Gün 23): işletme sahibi "ByteNova destek
+    tarafından değiştirildi" kaydını her zaman görebilmeli
+- [ ] Askıdaki tenant salt-okunur deneyimi (veriye erişim var, işlem yok)
+- [ ] Manuel ödeme (havale/dekont onay) akışı — dekont yükleme + Konsol'dan
+  onaylayınca abonelik otomatik "Aktif"e döner
+
+> Not: Otomatik/online tahsilat (kart ile aylık/yıllık otomatik çekim,
+> `BillingProvider` soyutlaması) bu güne dahil değil — Sprint 9-12,
+> madde 4'te ayrı bir iş olarak planlı; Gün 29 yalnızca planların
+> tanımını ve manuel/idari yönetimini kapsar.
 
 ### Gün 30 — Sertleştirme
 - [ ] Admin davet/rol yönetimi + `platform_audit_logs` + feature flag yönetim ekranı
