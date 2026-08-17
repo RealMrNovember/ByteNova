@@ -274,9 +274,14 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 
 ## SPRINT 6 — DASHBOARD, RAPOR, KONSOL (Gün 25-30)
 
-### Gün 25 — Dashboard
-- [ ] Rol bazlı gerçek kartlar (satış, tahsilat, açık servisler, kritik stok, kur etkisi, teslim alınmayanlar)
-- [ ] Akıllı özet cümleleri
+### Gün 25 — Dashboard ✅
+- [x] Genel Bakış'taki tüm placeholder ("—") kartlar gerçek sorgulara bağlandı: Bugünkü Satış (o günkü tüm satışların toplamı, açık hesap dahil), Bugünkü Tahsilat (yalnızca kasaya gerçekten giren tutar — `cash_movements` pozitif hareketleri, açık hesap satışlar bilinçli olarak dahil değil), Açık Servisler (kapanmış durumlar hariç sayım), Bugün Teslimler, Onay Bekleyen
+- [x] **Kur Etkisi** kartı: Gün 22'deki `suppliers.avg_exchange_rate`'in yeniden kullanımıyla — açık dövizli tedarikçi borcu bugün kapatılsaydı oluşacak kur farkını (gider/gelir) gösterir; yeni bir kur geçmişi altyapısı kurulmadan, mevcut veriden türetildi
+- [x] Kartlar **rol bazlı**: her kart ilgili yetkiye (`satis_yap`/`kasa_yonet`/`servis_yonet`/`maliyet_gor`) sahip olmayan roller için hiç render edilmiyor — örn. bir teknisyen satış/kasa rakamlarını görmez
+- [x] **Akıllı özet cümleleri**: üstteki metin artık o günün gerçek verisinden üretilen, koşullu (o gün hareket yoksa görünmeyen) doğal dil cümleleri
+- [x] Servis listesine (`/panel/servisler`) `durum` query param filtresi eklendi — dashboard kartları "Onay Bekleyen"/"Bugün Teslimler" gibi durumlara doğrudan deep-link verebiliyor
+- [x] Kılavuzdaki "Genel Bakış" konusu gerçek davranışı anlatacak şekilde yeniden yazıldı (eski "henüz bağlanmadı" uyarısı kaldırıldı)
+- [x] E2e: gerçek kullanıcı oturumuyla uçtan uca doğrulandı — karma (nakit + açık hesap) iki satış, bir teslim edilmiş ve bir onay bekleyen servis, dövizli bir alış + sonradan değişen kur ile tüm kartlar ve akıllı özet cümleleri doğru rakamlarla (₺600 satış / ₺300 tahsilat / +₺250 kur etkisi vb.) render edildiği doğrulandı
 
 ### Gün 26 — Raporlar I
 - [ ] Satış raporları (gün/ay/ürün/personel/iskonto) + servis raporları (süre, teknisyen, tekrar)

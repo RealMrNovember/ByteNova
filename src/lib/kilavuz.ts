@@ -184,26 +184,39 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     baslik: "Genel Bakış",
     ikon: "🏠",
     kategori: "modul",
-    ozet: "Panelin ilk açılış ekranı — günlük özet ve kritik stok uyarısı.",
-    anahtarKelimeler: ["dashboard", "genel bakış", "ana sayfa", "özet"],
+    ozet: "Panelin ilk açılış ekranı — rol bazlı günlük özet kartları ve akıllı özet cümleleri.",
+    anahtarKelimeler: ["dashboard", "genel bakış", "ana sayfa", "özet", "kur etkisi"],
     icerik: [
       {
         tur: "paragraf",
         metin:
-          "Panele girdiğinizde karşınıza çıkan Genel Bakış, işletmenizin günlük durumunu özetlemeyi hedefleyen kartlar içerir.",
+          "Panele girdiğinizde karşınıza çıkan Genel Bakış, işletmenizin bugünkü durumunu gerçek verilerle özetler. Üstteki kısa metin bölümü (\"Akıllı Özet\") günün öne çıkan noktalarını cümle cümle anlatır — örneğin \"Bugün 3 satışla 4.500 ₺ ciro yaptınız\" veya \"2 servis müşteri onayı bekliyor\" gibi; o gün hiçbir şey yoksa ilgili cümle hiç görünmez.",
       },
+      { tur: "altbaslik", metin: "Kartlar — Herkes Aynısını Görmez" },
       {
-        tur: "uyari",
+        tur: "paragraf",
         metin:
-          "Bu ekrandaki \"Bugünkü Satış / Tahsilat / Açık Servisler\" gibi bazı kartlar şu an geliştirme aşamasındadır ve henüz gerçek zamanlı veri göstermez — güvenilir rakamlar için ilgili modüle (Satış, Finans, Servisler) girmenizi öneririz.",
+          "Genel Bakış kartları rolünüze göre değişir: Kritik Stok herkese görünür; Bugünkü Satış yalnızca satış yetkisi olanlara (Sahip/Yönetici/Kasa Personeli); Bugünkü Tahsilat, Açık Servisler, Bugün Teslimler ve Onay Bekleyen sırasıyla kasa ve servis yetkisi olanlara; Kur Etkisi ise kasa yetkisi veya maliyet görme yetkisi olanlara (Sahip/Yönetici/Kasa Personeli/Muhasebe) gösterilir. Bir teknisyen örneğin Kritik Stok ile servis kartlarını görür, satış/kasa rakamlarını görmez.",
+      },
+      { tur: "altbaslik", metin: "Bugünkü Satış vs. Bugünkü Tahsilat" },
+      {
+        tur: "paragraf",
+        metin:
+          "Bu iki kart kasıtlı olarak farklı sayılar gösterebilir: \"Bugünkü Satış\" o gün yapılan TÜM satışların toplamıdır (açık hesap dahil); \"Bugünkü Tahsilat\" ise kasaya GERÇEKTEN giren tutardır (açık hesap satışlar kasaya para sokmadığı için bu rakama girmez). Aradaki fark büyükse o gün çok sayıda veresiye satış yapıldığı anlamına gelir.",
+      },
+      { tur: "altbaslik", metin: "Kur Etkisi" },
+      {
+        tur: "paragraf",
+        metin:
+          "Dövizli tedarikçi borcunuz varsa bu kart, borcunuzu bugün kapatsaydınız ortalama alış kurunuza göre ne kadar kur farkı ödeyeceğinizi (veya kazanacağınızı) gösterir — kur yükseldiyse kırmızı/pozitif (gider riski), düştüyse kâr olarak görünür. Ayrıntılı döküm için Finans > Cari Yaşlandırma'ya bakın.",
       },
       {
         tur: "paragraf",
         metin:
-          "Şu anda tam çalışan tek bölüm kritik stok uyarısıdır: kritik seviyenin altına düşen ürününüz varsa üstte kırmızı bir uyarı şeridi belirir ve tıklayınca doğrudan Stok modülünde kritik ürünler listesine götürür.",
+          "Kritik stok uyarısı ayrıca üstte kırmızı bir şerit olarak da belirir; tıklayınca doğrudan Stok modülünde kritik ürünler listesine götürür.",
       },
     ],
-    ilgili: ["stok", "servisler"],
+    ilgili: ["stok", "servisler", "satis", "finans"],
   },
   {
     slug: "servisler",

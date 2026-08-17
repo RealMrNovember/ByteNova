@@ -10,9 +10,9 @@ export const metadata: Metadata = { title: "Servisler — ByteNova" };
 export default async function ServislerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; oncelik?: string; atanan?: string }>;
+  searchParams: Promise<{ q?: string; oncelik?: string; atanan?: string; durum?: string }>;
 }) {
-  const { q, oncelik, atanan } = await searchParams;
+  const { q, oncelik, atanan, durum } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -31,6 +31,7 @@ export default async function ServislerPage({
   if (q?.trim()) sorgu = sorgu.ilike("service_no", `%${q.trim()}%`);
   if (oncelik) sorgu = sorgu.eq("priority", oncelik);
   if (atanan === "ben") sorgu = sorgu.eq("technician_id", user.id);
+  if (durum) sorgu = sorgu.eq("status", durum);
 
   const { data: servisler } = await sorgu;
 
@@ -42,7 +43,7 @@ export default async function ServislerPage({
     (kullanicilar ?? []).map((k) => [k.id, k.full_name ?? "İsimsiz"])
   );
 
-  const filtreliMi = !!(q || oncelik || atanan);
+  const filtreliMi = !!(q || oncelik || atanan || durum);
 
   return (
     <div className="mx-auto max-w-5xl">
