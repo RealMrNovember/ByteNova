@@ -892,6 +892,11 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
           "Ödemenizi banka havalesi/EFT ile yaptıysanız \"📤 Ödeme Dekontu Yükle\" ile dekontunuzu (görsel veya PDF, azami 5 MB) buradan gönderebilirsiniz; ByteNova ekibi onayladığında aboneliğiniz otomatik olarak aktif hale gelir. Onay/red durumunu ve varsa red gerekçesini yine bu ekrandan takip edersiniz.",
       },
       {
+        tur: "paragraf",
+        metin:
+          "\"Otomatik Ödeme\" bölümünden bir kart kaydederseniz (💳 Kart Ekle) dekont yüklemenize gerek kalmaz — deneme veya ödeme döneminiz bittiğinde ücret otomatik tahsil edilir ve aboneliğiniz kesintisiz devam eder. Tahsilat başarısız olursa (örn. kartınızın süresi dolmuşsa) mevcut dekont akışına otomatik döner, panel erişiminiz aynı kurallarla (grace period) korunur. Kartınızı istediğiniz zaman \"Kaldır\" ile silebilirsiniz.",
+      },
+      {
         tur: "uyari",
         metin:
           "Ödeme süresinde tamamlanmazsa (deneme bitiminden bir süre sonra) işletme paneliniz geçici olarak durur — \"Aboneliğiniz Beklemede\" ekranı görürsünüz. Verileriniz asla silinmez; dekont onaylanır onaylanmaz erişiminiz anında geri açılır.",

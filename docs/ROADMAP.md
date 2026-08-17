@@ -681,8 +681,8 @@ başlıyor. Pilot başlangıcı hariç (gerçek dış kullanıcı gerektirir) sp
 - [x] **WhatsApp/SMS + İYS** ✅ — sağlayıcı soyutlaması, servis bildirimleri, İYS onayı — ayrıntılar aşağıda
 - [x] **e-Belge** ✅ — entegratör soyutlaması, gider pusulası, portal modu — ayrıntılar aşağıda
 - [x] **Çek/Senet + POS mutabakat** ✅ — portföy, vade takvimi, nakit akış uyarıları — ayrıntılar aşağıda
-- [ ] **Otomatik abonelik tahsilatı** — `BillingProvider` (iyzico/PayTR), dunning, impersonation
-  - **Eklenti self-servis switch'i** aynı işte: tenant panelinde Ayarlar → Eklentiler, otomatik ödeme + kullanım bazlı faturalama (`docs/EKLENTI_MIMARISI.md`). İlk paketler: WhatsApp/SMS ve e-Belge.
+- [x] **Otomatik abonelik tahsilatı** ✅ — `BillingProvider` (iyzico/PayTR sandbox), dunning, destek görünümü — ayrıntılar aşağıda
+  - **Eklenti self-servis switch'i** (otomatik ödemenin addon aktivasyonuna bağlanması) bu turda **kapsam dışı bırakıldı** — mevcut "Etkinleştir" anahtarı zaten çalışıyor (ücretsiz/anında aktivasyon) ve buna dokunmak geniş, gözden geçirme riski yüksek bir davranış değişikliği olurdu; abonelik faturalaması (asıl, net biçimde tarif edilmiş kısım) tamamlandı.
 - [ ] **PC Toplama (BOM)** — reçete, toplama emri, demontaj
 - [ ] **Toptancı XML** — ilk 2-3 distribütör adaptörü
 - [ ] **Müşteri servis takip sayfası** (QR) + bakım sözleşmeleri + prim + uyumluluk matrisi + ÖKC entegrasyonu
@@ -802,6 +802,56 @@ başlıyor. Pilot başlangıcı hariç (gerçek dış kullanıcı gerektirir) sp
   ilk denemede kasıtsız boş bir sepetle test edilince doğru şekilde ₺0 döndüğü de ayrıca
   doğrulandı), ₺175 girilince ₺5 komisyonun otomatik gider kaydına dönüştüğü ve POS hesabı
   bakiyesinin gerçekten 180→175'e düştüğü veritabanından doğrulandı
+
+### Otomatik Abonelik Tahsilatı — ayrıntılar ✅
+- [x] **Şema** (`0047_otomatik_tahsilat.sql`): `tenant_payment_methods` (yalnız token/son4hane —
+  PAN asla saklanmaz/görülmez), `subscription_charges` (tahsilat geçmişi). `tenant_events`
+  şeması yeni olay tipleriyle genişletildi (yeni tablo gerekmedi — Gün 28'in bu tabloyu
+  hem cron hem admin olayları için önceden esnek tasarlamış olması sayesinde)
+- [x] **`BillingProvider` soyutlaması** (`src/lib/billing.ts`): gerçek bir iyzico/PayTR kimlik
+  bilgisi yok — `SandboxBillingProvider` gerçek kart verisini hiç işlemez. Kart ekleme adımı
+  bile gerçek bir form değil: gerçek entegrasyonda tenant sağlayıcının barındırdığı ödeme
+  sayfasına yönlendirilir ve PAN hiçbir zaman ByteNova sunucusuna değmez — sandbox bu
+  yönlendirmeyi simüle edip yalnızca sahte bir token/son4hane üretir (`sandboxKartEkle()`).
+  Sandbox test kuralı: son4hane "0002" ile eklenen kart sonraki tüm denemelerde bilinçli
+  olarak başarısız döner — dunning akışını gerçekçi test edebilmek için
+- [x] **Cron entegrasyonu:** mevcut `/api/cron/abonelik-kontrol` (Gün 29) genişletildi — deneme
+  bitişinde veya grace period sonunda askıya almadan/ödeme bekletmeden ÖNCE kayıtlı ödeme
+  yöntemi varsa otomatik bir tahsilat denenir; başarılıysa tenant hiç kesintiye uğramadan
+  abonelik süresi otomatik uzar, başarısızsa (veya kart yoksa) **hiçbir davranış değişmeden**
+  var olan manuel dekont akışına düşer — yeni bir cron dosyası açılmadı, tek dosya genişletildi
+- [x] **"impersonation" bilinçli olarak gerçek oturum ele geçirme OLARAK KURULMADI** — bu net bir
+  güvenlik kararı: bir platform admin'in tenant'ın owner'ı gibi tam yazma yetkisi kazanması
+  büyük bir yetki genişlemesi olurdu. Bunun yerine **"Destek Görünümü"**: `admin_destek_gorunumu()`
+  RPC'si yalnızca son 10 satış/servis + son 5 müşteriyi (ad/telefon) döner, hiçbir yazma
+  yapılamaz; yalnızca `master`/`manager`/`support` rolleri erişebilir (Konsol'un önceden
+  yalnızca SAYAÇ gösterdiği `admin_tenant_detay()`'e kıyasla `support` rolüne kasıtlı ve dar
+  yeni bir görünürlük). Her erişim hem işletme sahibinin de görebileceği `tenant_events`'e
+  hem `platform_audit_logs`'a çift kayıt bırakır (Gün 23'ten beri kurulu "konsol eylemi = iki
+  kayıt" deseniyle birebir)
+- [x] **Canlı testte bulunan hata (deploy öncesi yakalandı):** `admin_destek_gorunumu()` içinde
+  ilk yazımda `audit_ekle()` çağrılıyordu — o fonksiyon `current_tenant_id()`'ye (yani
+  `auth.uid()`'nin bir `profiles` satrına eşlenmesine) dayanıyor; çağıran bir `platform_admins`
+  kaydı olduğundan (işletme kullanıcısı değil) `tenant_id` NULL dönüp `audit_logs.tenant_id
+  NOT NULL`'a çarpar ve TÜM işlemi (üstündeki `tenant_events` satırı dahil) geri alırdı —
+  Teklif modülünde (0040) daha önce yakalanan aynı hata sınıfının bir başka örneği. Düzeltme:
+  `platform_audit_logs`'a doğrudan, `admin_id`/`target_tenant_id` ile yazılıyor
+  (`audit_ekle()` kullanılmadan)
+- [x] **Eklenti self-servis switch'i kapsam dışı bırakıldı** (bkz. yukarıdaki not) — abonelik
+  faturalaması tamamlandı, addon aktivasyonuna otomatik ödeme bağlanması ayrı, küçük bir
+  takip işi olarak bırakıldı
+- [x] E2E: Showroom demo tenant'ında gerçek panelde uçtan uca doğrulandı — Ayarlar > Abonelik'te
+  "💳 Kart Ekle (Sandbox)" ile sahte bir kart eklendi, veritabanında doğru kaydedildiği
+  doğrulandı; tenant'ın denemesi geçmişe alınıp gerçek `CRON_SECRET` ile cron tetiklenince
+  otomatik tahsilatın başarılı olduğu, tenant'ın **hiç past_due'ya düşmediği**, aboneliğin
+  365 gün uzadığı ve ₺14.990'lık bir `subscription_charges` kaydının oluştuğu doğrulandı;
+  ardından sandbox'ın "0002" test kartıyla bilinçli bir başarısızlık simüle edilip aynı
+  cron'un bu kez doğru şekilde mevcut `past_due` akışına düştüğü ve başarısız denemenin
+  `tenant_events`'e yazıldığı doğrulandı; throwaway bir `support` rollü platform admin
+  hesabıyla `admin_destek_gorunumu()` RPC'sinin doğru veri döndürdüğü ve hem `tenant_events`
+  hem `platform_audit_logs`'a yazdığı, rolü `analyst`'e değiştirilince ise RPC'nin doğru
+  şekilde reddettiği doğrulandı; test verileri (throwaway platform admin + demo tenant'taki
+  test ödeme yöntemi/tahsilat kayıtları) temizlendi
 
 ## SPRINT 13+ — MASAÜSTÜ (OFFLINE) VE P2 (Hafta 13+)
 

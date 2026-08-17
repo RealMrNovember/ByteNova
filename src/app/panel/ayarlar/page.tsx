@@ -92,6 +92,11 @@ export default async function AyarlarPage() {
       .limit(10),
   ]);
 
+  const { data: odemeYontemi } = await supabase
+    .from("tenant_payment_methods")
+    .select("brand, last4, expiry_month, expiry_year")
+    .maybeSingle();
+
   const ayarYonetebilir = yetkiVar(profil?.role, "ayar_yonet");
 
   // Abonelik olay geçmişi — konsoldan yapılan uzatma/askıya alma/plan
@@ -225,6 +230,7 @@ export default async function AyarlarPage() {
           billingCycle={tenant?.billing_cycle ?? null}
           dekontlar={dekontlar ?? []}
           olaylar={abonelikOlaylari ?? []}
+          odemeYontemi={odemeYontemi}
           yukleyebilir={ayarYonetebilir}
         />
 

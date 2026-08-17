@@ -163,6 +163,14 @@ export default async function KonsolTenantDetayPage({
               Kayıt: {new Date(tenant.created_at).toLocaleString("tr-TR")}
             </p>
           </div>
+          {["master", "manager", "support"].includes(platformProfil?.role ?? "") && (
+            <Link
+              href={`/konsol/${tenant.id}/destek-gorunumu`}
+              className="shrink-0 rounded-lg border border-slate-700 px-3.5 py-1.5 text-xs font-medium text-slate-300 transition hover:border-purple-500/50 hover:text-white"
+            >
+              🔎 Destek Görünümü
+            </Link>
+          )}
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">

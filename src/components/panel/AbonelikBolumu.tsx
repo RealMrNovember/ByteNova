@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { paraFormatla } from "@/lib/doviz";
 import { tenantDurum } from "@/lib/konsol";
+import { sandboxKartEkle } from "@/lib/billing";
 
 type Plan = {
   id: string;
@@ -30,6 +31,13 @@ type Olay = {
   created_at: string;
 };
 
+type OdemeYontemi = {
+  brand: string | null;
+  last4: string | null;
+  expiry_month: number | null;
+  expiry_year: number | null;
+} | null;
+
 type Props = {
   tenantId: string;
   status: string;
@@ -39,6 +47,7 @@ type Props = {
   dekontlar: Dekont[];
   olaylar: Olay[];
   yukleyebilir: boolean;
+  odemeYontemi?: OdemeYontemi;
 };
 
 const DEKONT_DURUM: Record<string, { ad: string; sinif: string }> = {
@@ -57,6 +66,10 @@ const OLAY_IKON: Record<string, string> = {
   dekont_reddedildi: "❌",
   kapatildi: "🔒",
   deneme_bitti: "⌛",
+  odeme_yontemi_eklendi: "💳",
+  odeme_yontemi_kaldirildi: "🗑️",
+  otomatik_tahsilat_basarili: "✅",
+  otomatik_tahsilat_basarisiz: "⚠️",
 };
 
 export function AbonelikBolumu({
@@ -68,6 +81,7 @@ export function AbonelikBolumu({
   dekontlar,
   olaylar,
   yukleyebilir,
+  odemeYontemi = null,
 }: Props) {
   const router = useRouter();
   const [acik, setAcik] = useState(false);
@@ -75,6 +89,35 @@ export function AbonelikBolumu({
   const [tutar, setTutar] = useState("");
   const [yukleniyor, setYukleniyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
+  const [odemeIsleniyor, setOdemeIsleniyor] = useState(false);
+
+  async function kartEkle() {
+    setOdemeIsleniyor(true);
+    setHata(null);
+    const { token, brand, last4 } = sandboxKartEkle();
+    const supabase = createClient();
+    const { error } = await supabase.rpc("odeme_yontemi_kaydet", {
+      p_provider_token: token,
+      p_brand: brand,
+      p_last4: last4,
+      p_expiry_month: 12,
+      p_expiry_year: new Date().getFullYear() + 3,
+    });
+    setOdemeIsleniyor(false);
+    if (error) {
+      setHata("Ödeme yöntemi eklenemedi.");
+      return;
+    }
+    router.refresh();
+  }
+
+  async function kartKaldir() {
+    setOdemeIsleniyor(true);
+    const supabase = createClient();
+    await supabase.rpc("odeme_yontemi_kaldir");
+    setOdemeIsleniyor(false);
+    router.refresh();
+  }
 
   const durum = tenantDurum(status);
   const fiyat = plan ? (billingCycle === "yillik" ? plan.yearly_price : plan.monthly_price) : null;
@@ -158,6 +201,51 @@ export function AbonelikBolumu({
           Ödemeniz bekleniyor — süresinde tamamlanmazsa panel erişiminiz duracaktır.
         </p>
       )}
+
+      <div className="mt-4 rounded-lg border border-slate-800 bg-surface px-3.5 py-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-medium text-slate-300">Otomatik Ödeme</p>
+          {odemeYontemi && (
+            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
+              Aktif
+            </span>
+          )}
+        </div>
+        {odemeYontemi ? (
+          <div className="mt-2 flex items-center justify-between">
+            <p className="text-sm text-slate-200">
+              💳 {odemeYontemi.brand} •••• {odemeYontemi.last4}
+              <span className="ml-2 text-[11px] text-slate-500">
+                {odemeYontemi.expiry_month}/{odemeYontemi.expiry_year}
+              </span>
+            </p>
+            {yukleyebilir && (
+              <button
+                onClick={kartKaldir}
+                disabled={odemeIsleniyor}
+                className="text-xs text-red-400 hover:text-red-300 disabled:opacity-50"
+              >
+                Kaldır
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <p className="mt-1 text-[11px] text-slate-500">
+              Vade geldiğinde abonelik ücreti otomatik tahsil edilsin, dekont yüklemek zorunda kalmayın.
+            </p>
+            {yukleyebilir && (
+              <button
+                onClick={kartEkle}
+                disabled={odemeIsleniyor}
+                className="mt-2 rounded-lg bg-nova-500 px-3.5 py-1.5 text-xs font-semibold text-slate-950 transition hover:bg-nova-400 disabled:opacity-60"
+              >
+                {odemeIsleniyor ? "Ekleniyor…" : "💳 Kart Ekle (Sandbox)"}
+              </button>
+            )}
+          </>
+        )}
+      </div>
 
       {yukleyebilir && (status === "past_due" || status === "trial") && (
         <div className="mt-4">
