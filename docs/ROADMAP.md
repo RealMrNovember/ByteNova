@@ -283,8 +283,14 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] Kılavuzdaki "Genel Bakış" konusu gerçek davranışı anlatacak şekilde yeniden yazıldı (eski "henüz bağlanmadı" uyarısı kaldırıldı)
 - [x] E2e: gerçek kullanıcı oturumuyla uçtan uca doğrulandı — karma (nakit + açık hesap) iki satış, bir teslim edilmiş ve bir onay bekleyen servis, dövizli bir alış + sonradan değişen kur ile tüm kartlar ve akıllı özet cümleleri doğru rakamlarla (₺600 satış / ₺300 tahsilat / +₺250 kur etkisi vb.) render edildiği doğrulandı
 
-### Gün 26 — Raporlar I
-- [ ] Satış raporları (gün/ay/ürün/personel/iskonto) + servis raporları (süre, teknisyen, tekrar)
+### Gün 26 — Raporlar I ✅
+- [x] `/panel/raporlar`: Satış ve Servis sekmeli, tarih aralığı seçili (7/30/90/365 gün) rapor sayfası — `rapor_gor` yetkisi (Sahip/Yönetici/Muhasebe) ile korunuyor. Saf hesaplama mantığı `src/lib/raporlar.ts`'te (cari yaşlandırma ile aynı desen — sorgulanan satırlar üzerinde JS'te agregasyon, DB'ye yeni RPC eklenmedi)
+- [x] Satış raporları: gün/ay bazlı seri (toggle), en çok satan ürünler (top 10), personel performansı (satış adedi/tutar/iskonto oranı), toplam iskonto — hem satır hem genel iskontoyu birlikte sayıyor
+- [x] Servis raporları: ortalama süre (kabul→teslim, yalnız teslim edilmişler), teknisyen performansı, tekrar eden cihazlar (tüm zamanlar, tarih aralığından bağımsız — sık arızalanan cihazları öne çıkarır)
+- [x] Servis listesine (Gün 25'te eklenen) `durum` filtresine ek olarak dashboard/rapor kartlarının kullandığı deep-link deseni bu günde de korundu
+- [x] Menüde Raporlar "yakında" → "aktif"; kılavuza yeni "Raporlar" konusu eklendi (kalan kapsam — kârlılık/stok değeri/muhasebeci paketi — Gün 27'ye not düşüldü)
+- [x] **Canlı testte bulunan hata:** "Toplam İskonto" ve personel iskonto oranı yalnızca `sales.discount_amount` (genel iskonto) alanını sayıyordu, HizliSatis'te asıl sık kullanılan SATIR iskontosunu (`sale_items.discount_amount`) hiç hesaba katmıyordu — gerçek bir satır-iskontolu satışla test edilirken fark edildi (₺20 iskonto ₺0 gösteriyordu), `sale_items` sorgusuna `discount_amount` eklenip satış başına toplanacak şekilde düzeltildi ve doğrulandı (₺20 / %1.8 doğru çıktı)
+- [x] E2E: gerçek kullanıcı oturumuyla, karma iskonto/ödeme yöntemli 3 satış ve tekrar eden cihazlı 2 servis senaryosuyla tüm rakamlar (toplam, seri, ürün, personel, süre, teknisyen, tekrar) doğrulandı
 
 ### Gün 27 — Raporlar II
 - [ ] Kârlılık (maliyet yöntemi seçilebilir) + stok raporları

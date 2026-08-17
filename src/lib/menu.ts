@@ -126,7 +126,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "raporlar",
     ad: "Raporlar",
     ikon: "📊",
-    durum: "yakinda",
+    durum: "aktif",
     aciklama:
       "Satış, kârlılık (maliyet yöntemi seçilebilir), servis performansı, stok değeri ve tek tık muhasebeci paketi.",
   },

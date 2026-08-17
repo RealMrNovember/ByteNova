@@ -649,6 +649,51 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     ilgili: ["satis", "servisler", "ayarlar", "musteriler", "tedarikciler"],
   },
   {
+    slug: "raporlar",
+    baslik: "Raporlar",
+    ikon: "📊",
+    kategori: "modul",
+    ozet: "Satış ve servis performans raporları — gün/ay bazlı, ürün/personel/teknisyen kırılımlı.",
+    anahtarKelimeler: ["rapor", "istatistik", "performans", "en çok satan", "tekrar eden"],
+    icerik: [
+      {
+        tur: "paragraf",
+        metin:
+          "Raporlar sayfası Satış ve Servis olmak üzere iki sekmeden oluşur; üstten bir tarih aralığı (son 7/30/90 gün veya son 1 yıl) seçersiniz, tüm rapor o aralığa göre hesaplanır. Görüntüleme yetkisi Sahip, Yönetici ve Muhasebe rollerine tanımlıdır.",
+      },
+      { tur: "altbaslik", metin: "Satış Sekmesi" },
+      {
+        tur: "liste",
+        ogeler: [
+          "Özet kartlar: toplam satış tutarı, ortalama sepet, toplam iskonto (hem satır hem genel iskontoların toplamı) ve satış adedi.",
+          "Günlük/Aylık Satış Serisi — \"Gün\"/\"Ay\" düğmesiyle gruplamayı değiştirebilirsiniz.",
+          "En Çok Satan Ürünler — seçili aralıkta en yüksek ciro yapan ilk 10 ürün.",
+          "Personel Performansı — her kullanıcının satış adedi, toplam tutarı ve ortalama iskonto oranı.",
+        ],
+      },
+      { tur: "altbaslik", metin: "Servis Sekmesi" },
+      {
+        tur: "liste",
+        ogeler: [
+          "Toplam servis sayısı ve ortalama süre (kabulden teslime, yalnızca teslim edilmiş servisler üzerinden gün cinsinden hesaplanır).",
+          "Teknisyen Performansı — her teknisyenin üstlendiği servis sayısı ve ortalama tamamlama süresi.",
+          "Tekrar Eden Cihazlar — aynı cihaz birden fazla kez servise girmişse (seçtiğiniz tarih aralığından bağımsız, tüm zamanlar) burada listelenir; sık arızalanan bir cihaz veya kalıcı olarak çözülmemiş bir sorun olabileceğine işarettir.",
+        ],
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "\"Bugünkü Tahsilat\" ile \"Toplam Satış\" arasındaki mantık Genel Bakış'takiyle aynıdır: açık hesap satışlar satış tutarına girer ama kasaya para girmediği için tahsilat rakamına girmez.",
+      },
+      {
+        tur: "uyari",
+        metin:
+          "Kârlılık (maliyet yöntemi seçilebilir), stok değeri raporu ve tek tık muhasebeci paketi (Excel export) henüz yol haritasında — bu ekrana ileride eklenecek.",
+      },
+    ],
+    ilgili: ["satis", "servisler", "genel-bakis"],
+  },
+  {
     slug: "ayarlar",
     baslik: "Ayarlar",
     ikon: "⚙️",
@@ -780,7 +825,6 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
           ["📄 Teklifler", "Kurumsal müşterilere PDF teklif hazırlama, QR ile onay, kabul edilince tek tıkla satışa dönüştürme. (Eklenti)"],
           ["📋 Sözleşmeler", "Periyodik bakım sözleşmeleri, SLA takibi, otomatik ziyaret planları. (Eklenti)"],
           ["🗂️ Belgeler", "e-Fatura, e-Arşiv, gider pusulası ve servis formlarının tek arşivi. (Eklenti)"],
-          ["📊 Raporlar", "Satış, kârlılık, servis performansı, stok değeri raporları ve muhasebeci paketi."],
           ["🛒 Pazaryeri", "Trendyol, Hepsiburada, N11 stok senkronizasyonu. (Eklenti)"],
           ["🔔 Bildirimler", "WhatsApp/SMS bildirimleri ve İYS uyumlu kampanya yönetimi. (Eklenti)"],
         ],
