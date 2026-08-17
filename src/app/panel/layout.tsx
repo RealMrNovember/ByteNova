@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { efektifMenu } from "@/lib/flags";
 import { etkinKurlar, TAKIP_EDILEN_KURLAR } from "@/lib/doviz";
 import { PanelKabuk } from "@/components/panel/PanelKabuk";
+import { AbonelikBekliyorEkrani } from "@/components/panel/AbonelikBekliyorEkrani";
+import { yetkiVar } from "@/lib/yetki";
 
 export default async function PanelLayout({
   children,
@@ -21,7 +23,7 @@ export default async function PanelLayout({
 
   const { data: profil } = await supabase
     .from("profiles")
-    .select("full_name, role, tenants(*)")
+    .select("full_name, role, tenant_id, tenants(*)")
     .eq("id", user.id)
     .single();
 
@@ -36,6 +38,18 @@ export default async function PanelLayout({
   // Şirket bilgileri alınmadıysa önce kurulum
   if (tenant && tenant.onboarding_completed === false) {
     redirect("/kurulum");
+  }
+
+  // Askıya alınmış tenant: panel tamamen kilitlenir, "Aboneliğiniz
+  // beklemede" ekranı gösterilir (Bölüm 65 — veri asla silinmez, yalnız
+  // erişim durur). Sahip/yönetici burada doğrudan dekont yükleyebilir.
+  if (tenant && tenant.status === "suspended") {
+    return (
+      <AbonelikBekliyorEkrani
+        tenantId={profil?.tenant_id ?? ""}
+        yukleyebilir={yetkiVar(profil?.role, "ayar_yonet")}
+      />
+    );
   }
 
   const kalanGun =

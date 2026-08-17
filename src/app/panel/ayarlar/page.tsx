@@ -7,6 +7,7 @@ import { EklentilerListesi } from "@/components/panel/EklentilerListesi";
 import { DovizKurlari } from "@/components/panel/DovizKurlari";
 import { StokPolitikasi } from "@/components/panel/StokPolitikasi";
 import { TaksitAyari } from "@/components/panel/TaksitAyari";
+import { AbonelikBolumu } from "@/components/panel/AbonelikBolumu";
 import { yetkiVar } from "@/lib/yetki";
 import { TAKIP_EDILEN_KURLAR } from "@/lib/doviz";
 import type { EklentiAbonelikDurum, EklentiPaketi } from "@/lib/eklenti";
@@ -39,6 +40,10 @@ export default async function AyarlarPage() {
     logo_url: string | null;
     negative_stock_policy: "uyarili" | "onayli" | "yasak";
     max_installments: number;
+    status: string;
+    trial_ends_at: string | null;
+    plan_id: string | null;
+    billing_cycle: "aylik" | "yillik" | null;
   } | null;
 
   // Aynı tenant'taki kullanıcılar (RLS zaten sınırlıyor)
@@ -69,7 +74,34 @@ export default async function AyarlarPage() {
     abonelikler[a.addon_key] = a.status as EklentiAbonelikDurum;
   }
 
+  const [{ data: plan }, { data: dekontlar }] = await Promise.all([
+    tenant?.plan_id
+      ? supabase
+          .from("subscription_plans")
+          .select("id, key, name, monthly_price, yearly_price, max_users")
+          .eq("id", tenant.plan_id)
+          .single()
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("payment_receipts")
+      .select("id, amount, status, review_note, created_at")
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
+
   const ayarYonetebilir = yetkiVar(profil?.role, "ayar_yonet");
+
+  // Abonelik olay geçmişi — konsoldan yapılan uzatma/askıya alma/plan
+  // değişikliği gibi işlemler işletme sahibi/yöneticisi için de görünür
+  // olmalı (şeffaflık ilkesi, Bölüm 65); tenant_events RLS'i bunu zaten
+  // owner/manager'a açık tutuyor.
+  const { data: abonelikOlaylari } = ayarYonetebilir
+    ? await supabase
+        .from("tenant_events")
+        .select("id, event_type, description, created_at")
+        .order("created_at", { ascending: false })
+        .limit(10)
+    : { data: [] };
 
   // Döviz kurları: TCMB (global) ve dükkân override'ı ayrı ayrı gösterilir
   const [{ data: paraBirimleri }, { data: tumKurSatirlari }] = await Promise.all([
@@ -171,6 +203,18 @@ export default async function AyarlarPage() {
           tenantId={profil?.tenant_id ?? ""}
           yetkili={ayarYonetebilir}
           mevcutLimit={tenant?.max_installments ?? 12}
+        />
+
+        {/* Abonelik — plan, durum, dekont yükleme */}
+        <AbonelikBolumu
+          tenantId={profil?.tenant_id ?? ""}
+          status={tenant?.status ?? "trial"}
+          trialEndsAt={tenant?.trial_ends_at ?? null}
+          plan={plan}
+          billingCycle={tenant?.billing_cycle ?? null}
+          dekontlar={dekontlar ?? []}
+          olaylar={abonelikOlaylari ?? []}
+          yukleyebilir={ayarYonetebilir}
         />
 
         {/* Eklentiler — ücretli modül kataloğu ve tek switch */}

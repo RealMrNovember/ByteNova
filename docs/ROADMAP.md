@@ -317,39 +317,84 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] E2E: normal tenant kullanıcısı RPC'yi çağıramıyor (400 "yetkisiz") doğrulandı
 - [x] ~~MFA zorunluluğu + tam ayrı kimlik alanı + `tenant_events`~~ → Gün 28'de tamamlandı (yukarıda). Uzatma/askıya alma/plan değişikliği Gün 29'a, feature flag yönetim ekranı Gün 30'a planlı
 
-### Gün 29 — Abonelik Planları + Yönetim Konsolu v1b
-Kapsam kullanıcı talebiyle netleştirildi (17.08.2026): ByteNova'nın kendi
-abonelik planları (addon'lardan ayrı — addon'lar ek modül, bu planlar
-tenant'ın temel aboneliği) tanımlanacak ve Konsol'a, master admin'in bir
-işletmenin aboneliğine doğrudan müdahale edebileceği bir ekran eklenecek
-(bugün yalnızca "Deneme: 12g" gibi salt-okunur bir rozet var, üzerinde
-işlem yapılamıyor).
+### Gün 29 — Abonelik Planları + Yönetim Konsolu v1b ✅
+Kapsam kullanıcı talebiyle netleştirildi (17.08.2026).
 
-- [ ] **Plan kataloğu:** `subscription_plans` (örn. Başlangıç / Profesyonel /
-  Kurumsal) — her planda özellik/limit seti (kullanıcı sayısı, modül
-  erişimi vb.) + **aylık ve yıllık fiyat** (yıllık, indirimli tek kalem)
-- [ ] Tenant'a plan + faturalama döngüsü (aylık/yıllık) atanması
-  (`tenants.plan_id`, `billing_cycle`); işletme sahibi kendi planını
-  Ayarlar'da (yeni "Abonelik" bölümü) görebilir
-- [ ] Abonelik yaşam döngüsü: Trial → Aktif → Ödeme Bekliyor → Askıda +
-  trial bitince otomatik durum geçişi
-- [ ] **Konsol'dan müdahale (S63-ish, kullanıcı talebiyle öne çıkarıldı):**
-  tenant detayında master admin şunları yapabilmeli:
-  - Deneme süresini uzatma (gün ekle veya yeni bitiş tarihi seç)
-  - Plan değiştirme (yükselt/düşür) ve faturalama döngüsünü değiştirme
-  - Durumu manuel değiştirme (Aktif yap / Askıya al / Yeniden etkinleştir)
-  - Her işlem gerekçe ister, `platform_audit_logs` + tenant'ın kendi
-    `audit_logs`'una işlenir — kasa kapanışı geri almadaki şeffaflık
-    deseniyle birebir aynı (Gün 23): işletme sahibi "ByteNova destek
-    tarafından değiştirildi" kaydını her zaman görebilmeli
-- [ ] Askıdaki tenant salt-okunur deneyimi (veriye erişim var, işlem yok)
-- [ ] Manuel ödeme (havale/dekont onay) akışı — dekont yükleme + Konsol'dan
-  onaylayınca abonelik otomatik "Aktif"e döner
+- [x] **Plan kataloğu:** `subscription_plans` (`0034_abonelik_planlari.sql`) —
+  Başlangıç (₺499/ay, ₺4.990/yıl, 1 kullanıcı) / Profesyonel (₺899, ₺8.990,
+  5 kullanıcı, CRM Plus dahil) / Kurumsal (₺1.499, ₺14.990, sınırsız
+  kullanıcı, CRM Plus+WhatsApp/SMS+Kurumsal Satış dahil) — fiyatlar makul
+  varsayılan olarak belirlendi (kullanıcı onayıyla, gerekirse sonradan
+  değiştirilebilir). Yıllık fiyat ~%17 indirimli (10 aylık bedel)
+- [x] `tenants.plan_id`/`billing_cycle` — `handle_new_user()` tetikleyicisi
+  her yeni tenant'a varsayılan Başlangıç/aylık atıyor (`0035` — canlı testte
+  bulunan bir eksiklik: 0034'teki geriye dönük UPDATE yalnızca o an var olan
+  tenant'ları kapsıyordu, yeni kayıtlar plansız kalıyordu, düzeltildi).
+  Ayarlar > **Abonelik** bölümü: plan adı/fiyat/dönem, durum rozeti, deneme
+  gün sayacı
+- [x] Abonelik yaşam döngüsü: Trial → Aktif → Ödeme Bekliyor (past_due) →
+  Askıda (suspended) — `tenants.status` zaten bu değerleri destekliyordu
+  (Gün 2). `/api/cron/abonelik-kontrol` (günlük, Vercel Cron 03:00 UTC):
+  deneme bitmiş tenant'ları `past_due`'a, 7 günlük ek süreyi (grace period)
+  aşanları `suspended`'a düşürür, her geçiş `tenant_events`'e yazılır
+- [x] **Konsol'dan müdahale:** tenant detayında (rol bazlı görünür/gizli,
+  Bölüm 64'teki platform rolleri tablosuna göre):
+  - **Süreyi uzat** (master/manager) — yeni bitiş tarihi + zorunlu gerekçe;
+    `past_due`/`suspended` durumundaki bir tenant uzatılırsa otomatik
+    `trial`'a döner
+  - **Durum değiştir** (master/manager) — Askıya Al (gerekçe zorunlu) /
+    Yeniden Etkinleştir (tek tık)
+  - **Plan değiştir** (master/manager/finance) — plan + dönem (aylık/yıllık)
+    + zorunlu gerekçe
+  - Her işlem hem `platform_audit_logs`'a (ByteNova tarafı, teknik detay)
+    hem `tenant_events`'e (Gün 28'de kurulan, işletme sahibinin de
+    görebildiği sade özet) yazılıyor — kasa kapanışı geri almadaki
+    şeffaflık deseniyle birebir aynı (Gün 23). **Bilinçli tasarım kararı:**
+    roadmap'in "tenant'ın kendi `audit_logs`'una işlenir" ifadesi yerine,
+    Gün 28'de bu tam amaç için kurulan `tenant_events` kullanıldı — aynı
+    bilgiyi iki ayrı tabloya yazmak gereksiz tekrar olurdu
+- [x] **Askıdaki tenant deneyimi:** panel tamamen kilitlenir — layout'ta
+  `status==='suspended'` kontrolü, `AbonelikBekliyorEkrani` tam sayfa
+  "Aboneliğiniz Beklemede" ekranı (veri silinmez, yalnız erişim durur) +
+  gömülü dekont yükleme formu. **Bilinçli kapsam:** roadmap'teki "salt-okunur
+  mod" (veriye bakabilme, işlem yapamama) yerine tam kilit tercih edildi —
+  her CRUD/RPC'yi tek tek salt-okunur denetlemek bu adımın kapsamını çok
+  büyütürdü; tam kilit aynı iş hedefini (ödemesiz kullanım durur) çok daha
+  az riskle karşılıyor
+- [x] **Manuel ödeme (dekont) akışı:** `payment_receipts` tablosu +
+  `dekont_yukle()`/`admin_dekont_onayla()`/`admin_dekont_reddet()` RPC'leri
+  (onay/red master/finance rolüne açık). Tenant tarafı: Ayarlar > Abonelik'te
+  (deneme veya ödeme bekleyen durumda) dosya yükleme formu, `servis-belgeleri`
+  bucket'ının mevcut tenant-scoped RLS deseni yeniden kullanıldı
+  (`{tenant_id}/dekont/...`). Konsol tarafı: `/api/konsol/dekont/[id]`
+  route'u service-role ile imzalı URL üretip dekontu gösteriyor, onay/red
+  butonları + red gerekçesi alanı. Onaylanınca tenant `active`'e dönüyor
+- [x] **Canlı testte bulunan güvenlik hatası (deploy öncesi yakalandı):** ilk
+  yazımda platform admin rol kontrolleri `select role into v_rol from
+  platform_admins ...; if v_rol not in (...)` şeklindeydi — PL/pgSQL'de
+  NULL bir IF koşulunda "false" gibi davranır (hata fırlatmaz), yani
+  platform_admins'te hiç kaydı olmayan (sıradan bir tenant kullanıcısı gibi)
+  biri bu RPC'leri çağırırsa yetki kontrolü sessizce ATLANIYORDU. Tüm 5 yeni
+  RPC, `0023`'teki kanıtlanmış `if not exists (select 1 from platform_admins
+  where id = auth.uid() and role in (...))` desenine geçirilerek düzeltildi
 
 > Not: Otomatik/online tahsilat (kart ile aylık/yıllık otomatik çekim,
 > `BillingProvider` soyutlaması) bu güne dahil değil — Sprint 9-12,
 > madde 4'te ayrı bir iş olarak planlı; Gün 29 yalnızca planların
 > tanımını ve manuel/idari yönetimini kapsar.
+
+- [x] E2E: throwaway master-rol admin + throwaway destek-rol admin +
+  throwaway tenant ile gerçek tarayıcı oturumunda uçtan uca doğrulandı —
+  tenant kaydı doğru varsayılan planı aldı; gerçek RPC+storage ile dekont
+  yüklendi, konsoldan onaylandı → tenant `Aktif`'e döndü ve olay zaman
+  çizelgesine düştü; Askıya Al → tenant panelinde tam kilit ekranı doğrulandı
+  → Yeniden Etkinleştir → panel erişimi geri geldi; Süreyi Uzat ve Plan
+  Değiştir (Başlangıç→Profesyonel, yıllık) doğru işlendi; **destek rolündeki
+  admin** için uzatma/durum/plan panellerinin tamamen gizlendiği (yalnız
+  salt-okunur bilgi + dekont görüntüleme kaldığı) doğrulandı; cron endpoint'i
+  gerçek CRON_SECRET ile çağrılarak hem `trial→past_due` hem
+  `past_due→suspended` (7 günlük grace period aşımı) otomatik geçişleri ve
+  ilgili `tenant_events` kayıtları doğrulandı. Test verileri temizlendi
 
 ### Gün 30 — Sertleştirme
 - [ ] Admin davet/rol yönetimi + `platform_audit_logs` + feature flag yönetim ekranı

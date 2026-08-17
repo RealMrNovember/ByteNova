@@ -5,6 +5,7 @@ import { tenantDurum } from "@/lib/konsol";
 import { ROL_ADLARI, type Rol } from "@/lib/yetki";
 import { paraFormatla } from "@/lib/doviz";
 import { KasaKapanisiGeriAl } from "@/components/konsol/KasaKapanisiGeriAl";
+import { AbonelikYonetimi } from "@/components/konsol/AbonelikYonetimi";
 
 type Detay = {
   tenant: {
@@ -16,7 +17,20 @@ type Detay = {
     trial_ends_at: string | null;
     created_at: string;
     onboarding_completed: boolean;
+    plan_id: string | null;
+    billing_cycle: "aylik" | "yillik" | null;
   };
+  plan: { id: string; key: string; name: string; monthly_price: number; yearly_price: number } | null;
+  dekontlar: {
+    id: string;
+    storage_path: string;
+    amount: number | null;
+    note: string | null;
+    status: "bekliyor" | "onaylandi" | "reddedildi";
+    review_note: string | null;
+    created_at: string;
+    reviewed_at: string | null;
+  }[];
   kullanicilar: {
     id: string;
     full_name: string | null;
@@ -89,17 +103,32 @@ export default async function KonsolTenantDetayPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data, error }, { data: platformProfil }] = await Promise.all([
+  const [{ data, error }, { data: platformProfil }, { data: planlar }] = await Promise.all([
     supabase.rpc("admin_tenant_detay", { p_tenant_id: id }),
     user
       ? supabase.from("platform_admins").select("role").eq("id", user.id).single()
       : Promise.resolve({ data: null }),
+    supabase
+      .from("subscription_plans")
+      .select("id, key, name, monthly_price, yearly_price")
+      .eq("is_active", true)
+      .order("sort_order"),
   ]);
 
   if (error || !data || !(data as Detay).tenant) notFound();
 
-  const { tenant, kullanicilar, musteri_sayisi, cihaz_sayisi, servis_sayisi, kasa_kapanislari, eklentiler, olaylar } =
-    data as Detay;
+  const {
+    tenant,
+    plan,
+    dekontlar,
+    kullanicilar,
+    musteri_sayisi,
+    cihaz_sayisi,
+    servis_sayisi,
+    kasa_kapanislari,
+    eklentiler,
+    olaylar,
+  } = data as Detay;
   const durum = tenantDurum(tenant.status);
   const kapanisGeriAlabilir = ["master", "finance"].includes(platformProfil?.role ?? "");
 
@@ -176,6 +205,17 @@ export default async function KonsolTenantDetayPage({
           ))}
         </div>
       </div>
+
+      <AbonelikYonetimi
+        tenantId={tenant.id}
+        status={tenant.status}
+        trialEndsAt={tenant.trial_ends_at}
+        plan={plan}
+        billingCycle={tenant.billing_cycle}
+        planlar={planlar ?? []}
+        dekontlar={dekontlar}
+        platformRol={platformProfil?.role ?? ""}
+      />
 
       <div className="glass mt-4 rounded-xl p-5">
         <h2 className="text-sm font-semibold text-white">Kullanıcılar</h2>
@@ -322,10 +362,6 @@ export default async function KonsolTenantDetayPage({
         </div>
       )}
 
-      <p className="mt-4 text-center text-[11px] text-slate-600">
-        Uzatma / askıya alma / plan değişikliği işlemleri Gün 29&apos;da bu
-        ekrana eklenecek.
-      </p>
     </div>
   );
 }

@@ -724,8 +724,8 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     baslik: "Ayarlar",
     ikon: "⚙️",
     kategori: "modul",
-    ozet: "İşletme bilgileri, kullanıcı/rol yönetimi, döviz kurları, stok politikası, taksit limiti ve eklentiler.",
-    anahtarKelimeler: ["ayarlar", "eklenti", "döviz", "kur", "taksit", "işletme bilgisi"],
+    ozet: "İşletme bilgileri, kullanıcı/rol yönetimi, döviz kurları, stok politikası, taksit limiti, abonelik ve eklentiler.",
+    anahtarKelimeler: ["ayarlar", "eklenti", "döviz", "kur", "taksit", "işletme bilgisi", "abonelik", "dekont", "plan", "askıya alındı"],
     icerik: [
       { tur: "altbaslik", metin: "İşletme Bilgileri" },
       {
@@ -763,6 +763,22 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
       {
         tur: "paragraf",
         metin: "Satış ekranında kart ödemelerinde önerilecek azami taksit sayısını burada belirlersiniz.",
+      },
+      { tur: "altbaslik", metin: "Abonelik" },
+      {
+        tur: "paragraf",
+        metin:
+          "Mevcut planınızı (Başlangıç/Profesyonel/Kurumsal), faturalama döngünüzü (aylık/yıllık) ve deneme/ödeme durumunuzu buradan görürsünüz. Plan değişikliği, süre uzatma gibi işlemler ByteNova ekibi tarafından (Konsol'dan) yapılır — kendi başınıza plan yükseltemezsiniz, destek hattından talep etmeniz yeterlidir.",
+      },
+      {
+        tur: "paragraf",
+        metin:
+          "Ödemenizi banka havalesi/EFT ile yaptıysanız \"📤 Ödeme Dekontu Yükle\" ile dekontunuzu (görsel veya PDF, azami 5 MB) buradan gönderebilirsiniz; ByteNova ekibi onayladığında aboneliğiniz otomatik olarak aktif hale gelir. Onay/red durumunu ve varsa red gerekçesini yine bu ekrandan takip edersiniz.",
+      },
+      {
+        tur: "uyari",
+        metin:
+          "Ödeme süresinde tamamlanmazsa (deneme bitiminden bir süre sonra) işletme paneliniz geçici olarak durur — \"Aboneliğiniz Beklemede\" ekranı görürsünüz. Verileriniz asla silinmez; dekont onaylanır onaylanmaz erişiminiz anında geri açılır.",
       },
       { tur: "altbaslik", metin: "Eklentiler" },
       {
