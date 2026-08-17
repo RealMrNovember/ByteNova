@@ -91,9 +91,9 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "teklifler",
     ad: "Teklifler",
     ikon: "📄",
-    durum: "yakinda",
+    durum: "aktif",
     aciklama:
-      "Kurumsal müşterilere PDF teklif hazırla, QR ile onay al, kabul edilince tek tıkla satışa/iş emrine dönüştür.",
+      "Kurumsal müşterilere PDF teklif hazırla, QR ile onay al, kabul edilince tek tıkla satışa dönüştür.",
     addonKey: "kurumsal_satis",
   },
   {

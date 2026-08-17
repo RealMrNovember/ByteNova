@@ -883,6 +883,60 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     ilgili: ["finans", "satis", "stok"],
   },
   {
+    slug: "teklifler",
+    baslik: "Teklifler",
+    ikon: "📄",
+    kategori: "modul",
+    ozet: "Kurumsal müşterilere PDF teklif hazırlama, QR ile online onay, kabul edilince tek tıkla satışa dönüştürme.",
+    anahtarKelimeler: ["teklif", "kurumsal", "pdf", "qr", "onay", "fiyat teklifi"],
+    icerik: [
+      {
+        tur: "paragraf",
+        metin:
+          "Teklifler, \"Kurumsal Satış Paketi\" eklentisine bağlıdır (Ayarlar > Eklentiler'den etkinleştirilir). Kurumsal müşterilere ürün/işçilik/hizmet kalemlerinden oluşan, dövizli de olabilen fiyat teklifleri hazırlamanızı, PDF+QR ile paylaşmanızı ve kabul edilince tek tıkla gerçek bir satışa dönüştürmenizi sağlar.",
+      },
+      { tur: "altbaslik", metin: "Teklif Oluşturma" },
+      {
+        tur: "adimlar",
+        adimlar: [
+          "Teklifler > \"+ Yeni Teklif\" ile formu açın.",
+          "Müşteriyi seçin (kurumsal müşteriler için Müşteriler modülünde \"Kurumsal\" tipini kullanmanız önerilir).",
+          "Ürün arayıp ekleyin veya \"+ İşçilik/hizmet kalemi ekle\" ile serbest bir kalem (örn. kurulum, danışmanlık) girin.",
+          "Para birimini (TRY/USD/EUR/GBP), geçerlilik süresini (gün) ve varsa genel iskontoyu belirleyin.",
+          "\"Teklifi Oluştur\"a basın — otomatik bir teklif numarası üretilir (örnek: TK-2026-000123).",
+        ],
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "Dövizli bir teklif oluşturduğunuzda kur, oluşturma anındaki güncel kurla donar — teklif süresi boyunca değişmez, tıpkı dövizli alışlardaki kur mantığı gibi.",
+      },
+      { tur: "altbaslik", metin: "Gönderme, PDF ve Online Onay" },
+      {
+        tur: "paragraf",
+        metin:
+          "Teklif detayında \"📄 PDF Görüntüle\" veya \"⬇️ İndir\" ile belgeyi alır, müşterinize e-posta/WhatsApp ile iletirsiniz. \"📤 Gönderildi Olarak İşaretle\"ye bastığınızda durum \"Gönderildi\"ye geçer. PDF'in sağ üstündeki QR kodu okutan müşteri, oturum açmadan teklifi görüntüleyip \"Kabul Ediyorum\" veya \"Reddediyorum\" diyebileceği bir sayfaya yönlenir — müşteri sayfayı ilk açtığında durum otomatik \"Müşteri İnceliyor\"a geçer.",
+      },
+      {
+        tur: "paragraf",
+        metin:
+          "Müşteri kararını telefonla veya yüz yüze bildirdiyse, teklif detayındaki \"✓ Müşteri Kabul Etti\" veya \"✕ Müşteri Reddetti\" düğmeleriyle kararı siz de kaydedebilirsiniz — online onayla tamamen aynı sonucu üretir.",
+      },
+      { tur: "altbaslik", metin: "Satışa Dönüştürme" },
+      {
+        tur: "paragraf",
+        metin:
+          "Kabul edilen bir teklifte \"🧾 Satışa Dönüştür\" (Sahip/Yönetici) düğmesi belirir — basıldığında teklifteki tüm kalemlerle gerçek bir satış oluşturulur (ürün kalemleri stoktan düşer), tutar müşterinin açık hesabına borç olarak işlenir ve teklif o satışa bağlanır. Tahsilatı normal şekilde Finans veya satış detayından alırsınız.",
+      },
+      {
+        tur: "uyari",
+        metin:
+          "Bir teklif yalnızca bir kez satışa dönüştürülebilir. Geçerlilik süresi dolan teklifler otomatik \"Süresi Doldu\" durumuna geçer ve artık karara açık olmaz — yeni bir teklif oluşturmanız gerekir.",
+      },
+    ],
+    ilgili: ["satis", "musteriler", "ayarlar"],
+  },
+  {
     slug: "yakinda",
     baslik: "Yakında Gelecek Modüller",
     ikon: "🗓️",
@@ -900,7 +954,6 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         basliklar: ["Modül", "Ne İşe Yarayacak"],
         satirlar: [
           ["🖥️ PC Toplama", "Reçeteyle (BOM) parçalardan sistem toplama — parçalar stoktan düşer, toplanan PC kendi seri numarasıyla satışa hazır olur. (Eklenti)"],
-          ["📄 Teklifler", "Kurumsal müşterilere PDF teklif hazırlama, QR ile onay, kabul edilince tek tıkla satışa dönüştürme. (Eklenti)"],
           ["📋 Sözleşmeler", "Periyodik bakım sözleşmeleri, SLA takibi, otomatik ziyaret planları. (Eklenti)"],
           ["🗂️ Belgeler", "e-Fatura, e-Arşiv, gider pusulası ve servis formlarının tek arşivi. (Eklenti)"],
           ["🛒 Pazaryeri", "Trendyol, Hepsiburada, N11 stok senkronizasyonu. (Eklenti)"],

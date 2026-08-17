@@ -4,6 +4,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { ServisBelgesi } from "./ServisBelgesi";
 import { MusteriEkstresi } from "./MusteriEkstresi";
 import { TedarikciEkstresi } from "./TedarikciEkstresi";
+import { TeklifBelgesi } from "./TeklifBelgesi";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://bytenova.cicibyte.com";
 
 export async function servisPdfOlustur(
   supabase: SupabaseClient,
@@ -48,6 +51,39 @@ export async function servisPdfOlustur(
   const dosyaAdi = `${servis.service_no}-${tip === "kabul" ? "kabul-formu" : "teslim-tutanagi"}.pdf`;
 
   return { buffer, dosyaAdi, servis, tip };
+}
+
+export async function teklifPdfOlustur(supabase: SupabaseClient, teklifId: string) {
+  const { data: teklif } = await supabase
+    .from("quotes")
+    .select("*, customers(name, phone), tenants(name, phone, address)")
+    .eq("id", teklifId)
+    .maybeSingle();
+
+  if (!teklif) return null;
+
+  const { data: kalemler } = await supabase
+    .from("quote_items")
+    .select("name, quantity, unit_price, discount_amount, line_total")
+    .eq("quote_id", teklifId)
+    .order("id");
+
+  const onayUrl = `${SITE_URL}/teklif-onay/${teklif.public_token}`;
+  const qrDataUrl = await QRCode.toDataURL(onayUrl, { margin: 1, width: 200 });
+
+  const buffer = await renderToBuffer(
+    TeklifBelgesi({
+      teklif,
+      musteri: teklif.customers ?? { name: "—", phone: null },
+      isletme: teklif.tenants ?? { name: "İşletmem", phone: null, address: null },
+      kalemler: kalemler ?? [],
+      qrDataUrl,
+    })
+  );
+
+  const dosyaAdi = `${teklif.quote_no}-teklif.pdf`;
+
+  return { buffer, dosyaAdi, teklif };
 }
 
 export async function musteriEkstrePdfOlustur(supabase: SupabaseClient, musteriId: string) {

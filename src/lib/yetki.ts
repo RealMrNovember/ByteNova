@@ -38,6 +38,8 @@ const YETKILER = {
   servis_yonet: ["owner", "manager", "technician"],
   stok_yonet: ["owner", "manager", "warehouse"],
   kasa_yonet: ["owner", "manager", "cashier"],
+  teklif_yonet: ["owner", "manager", "cashier"],
+  teklif_donustur: ["owner", "manager"],
 } as const;
 
 export type Yetki = keyof typeof YETKILER;

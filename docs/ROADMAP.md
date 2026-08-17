@@ -430,7 +430,7 @@ gerçek dış kullanıcı gerektirdiği için inşa edilemez — atlandı.
 - [x] **Servis derinliği** ✅ (`0039_servis_derinligi.sql`): teslim alınmayan cihaz
   otomasyonu, ücretli teşhis, servis garantisi ilişkisi, kanban görünümü, azami süre
   sayacı — tümü tamamlandı, ayrıntılar aşağıda
-- [ ] Teklif modülü + PDF
+- [x] **Teklif modülü + PDF** ✅ (`0040_teklif_modulu.sql`) — ayrıntılar aşağıda
 - [ ] Dijital ürün (lisans key) + demo veri seti
 - [ ] Kurulum sihirbazı tam sürüm + onboarding dokümanları
 - [x] ~~2-3 gerçek bilgisayarcıyla pilot başlangıcı~~ → **kapsam dışı** (gerçek dış kullanıcı gerektirir)
@@ -470,6 +470,44 @@ gerçek dış kullanıcı gerektirdiği için inşa edilemez — atlandı.
   runtime hatasıyla çöküyordu (build zamanında yakalanmadı, yalnız tarayıcıda ortaya çıktı);
   düzeltme: ham `kullanicilar` dizisi client component'e geçirilip ad sözlüğü orada
   hesaplanacak şekilde değiştirildi
+
+### Teklif Modülü — ayrıntılar ✅
+- [x] `quotes`/`quote_items`/`quote_no_counters` (`TK-YYYY-NNNNNN` sayaç deseni,
+  `sale_no_counters`/`sonraki_satis_no()` ile birebir aynı) + `teklif_olustur()` RPC'si —
+  `satis_olustur()`'un (Gün 16) aynısı desen: ürün/işçilik/hizmet kalemleri, satır +
+  genel iskonto, dövizli teklif (kur oluşturma anında donar, `exchange_rate` sütununda
+  saklanır)
+- [x] Yaşam döngüsü: Taslak → Gönderildi → Müşteri İnceliyor → Kabul/Reddedildi/Süresi
+  Doldu — `menu.ts`'teki "teklifler" durumu `yakinda`→`aktif` (Gün 8'den beri hazır
+  bekleyen `kurumsal_satis` addon kancasına takılı, `EklentilerListesi`/`efektifMenu()`
+  hiç değişmeden aynen çalıştı)
+- [x] **PDF + QR online onay:** `TeklifBelgesi.tsx` (`@react-pdf/renderer`, Gün 10/24'teki
+  aynı görsel dil) + `teklifPdfOlustur()` + `/api/teklif/[id]/pdf`. QR kod, herkese açık
+  `/teklif-onay/[token]` sayfasına (oturumsuz, `teklif_detay_al()`/`teklif_goruntulendi()`/
+  `teklif_musteri_karari()` — token'ın kendisi yetkilendirme, RLS'i SECURITY DEFINER ile
+  bilinçli atlıyor) yönlendirir; sayfa ilk açıldığında durum otomatik "Müşteri İnceliyor"a
+  geçer, müşteri Kabul/Reddet seçebilir. Personel de aynı kararı (telefon/yüz yüze onay
+  için) panelden manuel işleyebilir
+- [x] **Satışa dönüştürme:** `teklif_satisa_donustur()` — kabul edilen teklifin
+  kalemlerini `satis_olustur()`'a (Gün 16) AÇIK HESAP ödemesiyle devrederek gerçek bir
+  satış yaratır (stok düşümü, müşteri borcu, audit dahil hiçbir mantık tekrar yazılmadı);
+  teklif o satışa bağlanır, ikinci kez dönüştürme engellenir
+- [x] **Canlı testte bulunan güvenlik/doğruluk hatası (deploy öncesi yakalandı):**
+  `teklif_musteri_karari()` içinde `audit_ekle()` çağrılıyordu — o fonksiyon
+  `current_tenant_id()`'ye (yani `auth.uid()` ile eşlenen bir `profiles` satırına) dayanır;
+  bu RPC anonim bir müşteri tarafından (hiç oturumsuz, yalnız token ile) çağrıldığında
+  `auth.uid()` null olur, `audit_logs.tenant_id` NOT NULL kısıtına takılıp TÜM işlem geri
+  alınırdı — yani müşterinin onayı sessizce başarısız olurdu. Düzeltme: `audit_logs`'a
+  teklifin kendi `tenant_id`'siyle doğrudan, `audit_ekle()` kullanmadan yazılıyor
+- [x] E2E: throwaway tenant'a `kurumsal_satis` addon'u aktif edilip uçtan uca doğrulandı —
+  ürün + işçilik kalemli iki teklif oluşturuldu; PDF gerçek `fetch` ile indirildi (`%PDF-`
+  imzası, 200 OK); ilk teklif gönderildi → **tamamen ayrı bir tarayıcı sekmesinde,
+  oturumsuz** `/teklif-onay/[token]` sayfası açıldı → görüntülemede durum otomatik
+  "Müşteri İnceliyor"a geçti (veritabanından doğrulandı) → "Kabul Ediyorum" → panelde
+  "Kabul Edildi" olarak yansıdı → "Satışa Dönüştür" → gerçek bir satış (`SN-2026-000001`)
+  oluştu, ürün stoğu 50→49 düştü, müşteri açık hesap bakiyesi ₺1.000 arttı; ikinci teklif
+  personel tarafından panelden manuel "Müşteri Reddetti" ile (gerekçe notuyla) reddedildi;
+  Teklifler liste sayfasında her iki kayıt da doğru durum/tutarla göründü
 
 ## SPRINT 9-12 — P1 MODÜLLERİ (Hafta 7-12)
 
