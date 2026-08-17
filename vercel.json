@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/demo-sifirla",
       "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/bildirim-gonder",
+      "schedule": "*/10 * * * *"
     }
   ]
 }

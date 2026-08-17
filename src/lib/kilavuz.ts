@@ -1012,6 +1012,48 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     ilgili: ["musteriler", "stok", "ayarlar"],
   },
   {
+    slug: "bildirimler",
+    baslik: "Bildirimler",
+    ikon: "🔔",
+    kategori: "modul",
+    ozet: "Servis hazır olduğunda otomatik WhatsApp/SMS, manuel bildirim gönderimi ve İYS uyumlu pazarlama onayı.",
+    anahtarKelimeler: ["bildirim", "whatsapp", "sms", "iys", "kampanya", "servis hazır"],
+    icerik: [
+      {
+        tur: "paragraf",
+        metin:
+          "Bildirimler, \"WhatsApp/SMS Paketi\" eklentisine bağlıdır (Ayarlar > Eklentiler'den etkinleştirilir). Müşterilerinize servis durumu bildirimleri ve kampanya mesajları göndermenizi, gönderim geçmişini tek ekrandan takip etmenizi sağlar.",
+      },
+      { tur: "altbaslik", metin: "Otomatik Bildirim" },
+      {
+        tur: "paragraf",
+        metin:
+          "Bir servis kaydının durumu \"Hazır\"a geçtiğinde, müşterinin telefon numarası kayıtlıysa sistem otomatik olarak bir WhatsApp bildirimi kuyruğa ekler — birkaç dakika içinde gönderilir. Herhangi bir işlem yapmanız gerekmez.",
+      },
+      { tur: "altbaslik", metin: "Manuel Bildirim Gönderme" },
+      {
+        tur: "adimlar",
+        adimlar: [
+          "Bildirimler sayfasında müşteriyi arayıp seçin.",
+          "Kanalı (WhatsApp/SMS) ve bir şablon seçin — \"Serbest Metin\" ile kendi mesajınızı yazabilirsiniz.",
+          "\"Gönder\"e basın — sandbox modunda mesaj anında \"Gönderildi\" olarak işaretlenir.",
+        ],
+      },
+      { tur: "altbaslik", metin: "İYS ve Pazarlama Onayı" },
+      {
+        tur: "paragraf",
+        metin:
+          "\"Kampanya / Duyuru\" gibi pazarlama amaçlı şablonlar, Türkiye'deki İYS (İleti Yönetim Sistemi) düzenlemesi gereği yalnızca pazarlama mesajı onayı vermiş müşterilere gönderilebilir. Servis hazır bildirimi gibi operasyonel şablonlar bu onaya tabi değildir — bu ayrım her şablonda otomatik uygulanır, siz bir şey seçmenize gerek yoktur.",
+      },
+      {
+        tur: "uyari",
+        metin:
+          "Onayı olmayan bir müşteriye kampanya mesajı göndermeyi denerseniz sistem işlemi engeller. Müşteri kartındaki \"Pazarlama mesajı onayı\" kutucuğunu yalnızca müşterinin gerçek rızası varsa işaretleyin.",
+      },
+    ],
+    ilgili: ["musteriler", "servisler", "ayarlar"],
+  },
+  {
     slug: "yakinda",
     baslik: "Yakında Gelecek Modüller",
     ikon: "🗓️",
@@ -1032,7 +1074,6 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
           ["📋 Sözleşmeler", "Periyodik bakım sözleşmeleri, SLA takibi, otomatik ziyaret planları. (Eklenti)"],
           ["🗂️ Belgeler", "e-Fatura, e-Arşiv, gider pusulası ve servis formlarının tek arşivi. (Eklenti)"],
           ["🛒 Pazaryeri", "Trendyol, Hepsiburada, N11 stok senkronizasyonu. (Eklenti)"],
-          ["🔔 Bildirimler", "WhatsApp/SMS bildirimleri ve İYS uyumlu kampanya yönetimi. (Eklenti)"],
         ],
       },
       {

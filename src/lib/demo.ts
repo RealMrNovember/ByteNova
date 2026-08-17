@@ -94,6 +94,7 @@ export async function demoTenantiSifirlaVeDoldur() {
   await admin.from("tenant_addon_subscriptions").insert([
     { tenant_id: tenantId, addon_key: "kurumsal_satis", status: "active" },
     { tenant_id: tenantId, addon_key: "crm_plus", status: "active" },
+    { tenant_id: tenantId, addon_key: "whatsapp_sms", status: "active" },
   ]);
 
   const { data: kasa } = await admin
@@ -130,10 +131,10 @@ export async function demoTenantiSifirlaVeDoldur() {
   const { data: musteriler } = await admin
     .from("customers")
     .insert([
-      { tenant_id: tenantId, type: "individual", name: "Ahmet Yılmaz", phone: "5551234567", email: "ahmet.yilmaz@example.com" },
-      { tenant_id: tenantId, type: "individual", name: "Elif Demir", phone: "5559876543", email: "elif.demir@example.com" },
-      { tenant_id: tenantId, type: "individual", name: "Mehmet Kaya", phone: "5554443322" },
-      { tenant_id: tenantId, type: "corporate", name: "Nova Ofis Mobilya A.Ş.", phone: "5556667788", email: "info@novaofis.example.com", tax_office: "Kadıköy", tax_number: "1234567890" },
+      { tenant_id: tenantId, type: "individual", name: "Ahmet Yılmaz", phone: "5551234567", email: "ahmet.yilmaz@example.com", marketing_consent: true },
+      { tenant_id: tenantId, type: "individual", name: "Elif Demir", phone: "5559876543", email: "elif.demir@example.com", marketing_consent: false },
+      { tenant_id: tenantId, type: "individual", name: "Mehmet Kaya", phone: "5554443322", marketing_consent: false },
+      { tenant_id: tenantId, type: "corporate", name: "Nova Ofis Mobilya A.Ş.", phone: "5556667788", email: "info@novaofis.example.com", tax_office: "Kadıköy", tax_number: "1234567890", marketing_consent: false },
     ])
     .select("id, name");
 

@@ -678,14 +678,51 @@ başlıyor. Pilot başlangıcı hariç (gerçek dış kullanıcı gerektirir) sp
 
 Öngörülen öncelik (pilot verisiyle güncellenir):
 
-1. **WhatsApp/SMS + İYS** — sağlayıcı soyutlaması, servis bildirimleri, onay linki
-2. **e-Belge** — entegratör soyutlaması + ilk entegratör, gider pusulası, portal modu
-3. **Çek/Senet + POS mutabakat** — portföy, vade takvimi, nakit akış uyarıları
-4. **Otomatik abonelik tahsilatı** — `BillingProvider` (iyzico/PayTR), dunning, impersonation
-   - **Eklenti self-servis switch'i** aynı işte: tenant panelinde Ayarlar → Eklentiler, otomatik ödeme + kullanım bazlı faturalama (`docs/EKLENTI_MIMARISI.md`). İlk paketler: WhatsApp/SMS ve e-Belge.
-5. **PC Toplama (BOM)** — reçete, toplama emri, demontaj
-6. **Toptancı XML** — ilk 2-3 distribütör adaptörü
-7. **Müşteri servis takip sayfası** (QR) + bakım sözleşmeleri + prim + uyumluluk matrisi + ÖKC entegrasyonu
+- [x] **WhatsApp/SMS + İYS** ✅ — sağlayıcı soyutlaması, servis bildirimleri, İYS onayı — ayrıntılar aşağıda
+- [ ] **e-Belge** — entegratör soyutlaması + ilk entegratör, gider pusulası, portal modu
+- [ ] **Çek/Senet + POS mutabakat** — portföy, vade takvimi, nakit akış uyarıları
+- [ ] **Otomatik abonelik tahsilatı** — `BillingProvider` (iyzico/PayTR), dunning, impersonation
+  - **Eklenti self-servis switch'i** aynı işte: tenant panelinde Ayarlar → Eklentiler, otomatik ödeme + kullanım bazlı faturalama (`docs/EKLENTI_MIMARISI.md`). İlk paketler: WhatsApp/SMS ve e-Belge.
+- [ ] **PC Toplama (BOM)** — reçete, toplama emri, demontaj
+- [ ] **Toptancı XML** — ilk 2-3 distribütör adaptörü
+- [ ] **Müşteri servis takip sayfası** (QR) + bakım sözleşmeleri + prim + uyumluluk matrisi + ÖKC entegrasyonu
+
+### WhatsApp/SMS + İYS — ayrıntılar ✅
+- [x] **Sağlayıcı soyutlaması** (`src/lib/bildirim.ts`): gerçek bir WhatsApp Business API/SMS ağ
+  geçidi kimlik bilgisi bu ortamda yok — `sandboxGonder()` her zaman başarılı döner ve hiçbir
+  dış API çağırmaz. Bilinçli tasarım: şema/kuyruk/tetikleyici mimarisi gerçek üretim mimarisiyle
+  birebir aynı kurulur, yalnızca gönderim adımı mock'lanır — gerçek sağlayıcıya geçiş yalnızca
+  bu tek fonksiyonu değiştirmeyi gerektirir
+- [x] **Kuyruk + işleyici mimarisi** (`0044_bildirimler_whatsapp_sms.sql`): `notification_log`
+  tablosu (`beklemede`/`gonderildi`/`basarisiz`), `/api/cron/bildirim-gonder` (her 10 dakikada,
+  `vercel.json`) kuyruktaki kayıtları işler — sandbox'ta anında başarılı, gerçek sağlayıcıda
+  webhook'la asenkron güncellenebilecek şekilde tasarlandı
+- [x] **Otomatik tetikleyici — servis hazır:** `service_orders.status` "hazir"a her geçtiğinde
+  (`servis_hazir_bildirimi_kuyrukla()` trigger'ı) — whatsapp_sms eklentisi aktifse ve müşterinin
+  telefonu kayıtlıysa — otomatik bir bildirim kuyruğa eklenir; hiçbir UI değişikliği gerekmedi
+  (kanban, servis detayı, hangi ekrandan durum değiştirilirse değiştirilsin tetiklenir)
+- [x] **Manuel gönderim + İYS onayı:** `bildirim_gonder()` RPC'si (`/panel/bildirimler`) —
+  "işlemsel" şablonlar (servis hazır, ödeme hatırlatma) her zaman gönderilebilir; "pazarlama"
+  şablonları (kampanya/duyuru) yalnız `customers.marketing_consent = true` olan müşterilere
+  gönderilebilir — İYS (İleti Yönetim Sistemi) uyumluluğu için. Kontrol hem istemci tarafında
+  (anında geri bildirim) hem RPC içinde (gerçek zorlama, `IYS_ONAY_GEREKLI` hatası) yapılıyor
+- [x] **Müşteri formuna İYS onay kutucuğu** eklendi (`marketing_consent` + `marketing_consent_updated_at`,
+  yalnız değer değiştiğinde zaman damgalanır)
+- [x] menu.ts: Bildirimler `yakinda` → `aktif` (zaten var olan `addonKey: "whatsapp_sms"` sayesinde
+  eklenti aktif değilse otomatik `kilitli` düşüyor — `efektifMenu()`'de hiçbir değişiklik gerekmedi)
+- [x] **Bilinçli kapsam dışı:** "ödeme gecikti" ve "kritik stok" tetikleyicileri (menü açıklamasında
+  geçiyordu) bu turda eklenmedi — ödeme gecikmesi için henüz bir "vade tarihi" kavramı şemada yok
+  (açık hesap satışlarında son ödeme tarihi izlenmiyor), kritik stok bildirimi ise müşteriye değil
+  işletme sahibine gidecek farklı bir alıcı modeli gerektiriyor (dashboard'daki mevcut kritik stok
+  kartıyla zaten karşılanıyor). Her ikisi de ayrı, küçük bir takip işi olarak bırakıldı
+- [x] E2E: Showroom demo tenant'ına whatsapp_sms eklentisi aktif edilip gerçek panelde test edildi —
+  pazarlama onayı olan bir müşteriye (Ahmet Yılmaz) kampanya mesajı gönderildi ve geçmişte
+  "Gönderildi" olarak göründü; onayı olmayan bir müşteride (Elif Demir) hem arayüzün uyarı
+  gösterdiği hem de RPC'nin `IYS_ONAY_GEREKLI` ile gerçekten engellediği (istemci kontrolünü
+  atlayan doğrudan bir RPC çağrısıyla) doğrulandı; bir servis kaydının durumu panelden "Hazır"a
+  çevrildiğinde otomatik bir "beklemede" bildirim kuyruğa düştüğü, gerçek `CRON_SECRET` ile
+  tetiklenen `/api/cron/bildirim-gonder`'in bunu "gönderildi"ye çevirdiği ve geçmişte doğru
+  göründüğü uçtan uca doğrulandı
 
 ## SPRINT 13+ — MASAÜSTÜ (OFFLINE) VE P2 (Hafta 13+)
 

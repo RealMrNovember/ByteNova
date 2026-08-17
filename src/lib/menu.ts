@@ -143,9 +143,9 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "bildirimler",
     ad: "Bildirimler",
     ikon: "🔔",
-    durum: "yakinda",
+    durum: "aktif",
     aciklama:
-      "Servis hazır, ödeme gecikti, kritik stok: WhatsApp/SMS bildirimleri ve İYS uyumlu kampanya yönetimi.",
+      "Servis hazır olduğunda otomatik WhatsApp/SMS, manuel bildirim gönderimi ve İYS uyumlu pazarlama onayı.",
     addonKey: "whatsapp_sms",
   },
   {

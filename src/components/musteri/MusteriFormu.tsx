@@ -15,6 +15,7 @@ type Mevcut = {
   tax_office: string | null;
   tax_number: string | null;
   notes: string | null;
+  marketing_consent: boolean;
 };
 
 type Props = {
@@ -36,6 +37,7 @@ export function MusteriFormu({ tenantId, mevcut }: Props) {
   const [vergiDairesi, setVergiDairesi] = useState(mevcut?.tax_office ?? "");
   const [vergiNo, setVergiNo] = useState(mevcut?.tax_number ?? "");
   const [not, setNot] = useState(mevcut?.notes ?? "");
+  const [pazarlamaOnayi, setPazarlamaOnayi] = useState(mevcut?.marketing_consent ?? false);
   const [hata, setHata] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
 
@@ -55,6 +57,10 @@ export function MusteriFormu({ tenantId, mevcut }: Props) {
       tax_office: vergiDairesi.trim() || null,
       tax_number: vergiNo.trim() || null,
       notes: not.trim() || null,
+      marketing_consent: pazarlamaOnayi,
+      ...(pazarlamaOnayi !== (mevcut?.marketing_consent ?? false)
+        ? { marketing_consent_updated_at: new Date().toISOString() }
+        : {}),
     };
 
     if (mevcut) {
@@ -229,6 +235,21 @@ export function MusteriFormu({ tenantId, mevcut }: Props) {
           className={`${alanSinifi} resize-none`}
         />
       </div>
+
+      <label className="flex items-start gap-2.5 rounded-lg border border-slate-700 bg-surface px-3.5 py-2.5 text-sm text-slate-300">
+        <input
+          type="checkbox"
+          checked={pazarlamaOnayi}
+          onChange={(e) => setPazarlamaOnayi(e.target.checked)}
+          className="mt-0.5 h-3.5 w-3.5 rounded border-slate-600 bg-surface text-nova-500 focus:ring-0 focus:ring-offset-0"
+        />
+        <span>
+          Pazarlama mesajı onayı (İYS) — müşteri kampanya/duyuru mesajı almayı kabul ediyor.
+          <span className="block text-xs text-slate-500">
+            Yalnızca gerçek bir rıza varsa işaretleyin; servis/sipariş bildirimleri bu onaya tabi değildir.
+          </span>
+        </span>
+      </label>
 
       {hata && (
         <div className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-3 text-xs text-red-300">
