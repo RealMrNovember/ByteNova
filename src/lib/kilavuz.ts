@@ -1153,19 +1153,54 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     baslik: "PC Toplama",
     ikon: "🖥️",
     kategori: "modul",
-    ozet: "Reçeteyle (BOM) veya serbest parça listesiyle bilgisayar toplama, test checklist'i ve demontaj.",
-    anahtarKelimeler: ["pc toplama", "bom", "reçete", "montaj", "toplama emri", "demontaj"],
+    ozet: "Kategori bazlı, sürükle-bırak destekli yapılandırıcıyla bilgisayar toplama; reçete (BOM), stoksuz plan modu, test checklist'i ve demontaj.",
+    anahtarKelimeler: ["pc toplama", "bom", "reçete", "montaj", "toplama emri", "demontaj", "yapılandırıcı", "plan", "bileşen tipi"],
     icerik: [
       {
         tur: "paragraf",
         metin:
-          "PC Toplama, \"PC Toplama Paketi\" eklentisine bağlıdır (Ayarlar > Eklentiler'den etkinleştirilir). Sık topladığınız yapılandırmaları reçete olarak kaydedebilir, ya da her seferinde müşteriye özel serbest bir parça listesiyle toplama emri açabilirsiniz.",
+          "PC Toplama, \"PC Toplama Paketi\" eklentisine bağlıdır (Ayarlar > Eklentiler'den etkinleştirilir). Sık topladığınız yapılandırmaları reçete olarak kaydedebilir, müşteriye özel serbest bir parça listesiyle toplama emri açabilir, ya da stoğunuzda henüz olmayan parçalarla bir fiyat planı hazırlayabilirsiniz.",
+      },
+      { tur: "altbaslik", metin: "Yapılandırıcı — Kategori Kategori Parça Seçimi" },
+      {
+        tur: "paragraf",
+        metin:
+          "Reçete, toplama emri (Serbest mod) ve Plan oluştururken aynı yapılandırıcıyı kullanırsınız: üstte İşlemci/Anakart/RAM/Depolama/Ekran Kartı/Güç Kaynağı/Kasa/Soğutucu/Diğer sekmeleri, altında o kategorideki ürünlerin kartları. Bir kartı sağdaki \"Yapılandırmanız\" paneline sürükleyip bırakabilir, ya da kart üzerindeki \"+ Ekle\"ye tıklayabilirsiniz. Sağ panelde parça toplamı, işçilik ve genel toplam her eklemede anında güncellenir.",
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "Bir ürünün kategori sekmelerinde görünmesi için ürün formunda \"🖥️ PC Bileşen Tipi\" alanını doldurmanız gerekir (Stok > ürün düzenle). Etiketlenmemiş ürünler yapılandırıcıda görünmez ama normal stok aramasında görünmeye devam eder.",
+      },
+      {
+        tur: "paragraf",
+        metin:
+          "Seçtiğiniz bir parçanın stoğu yoksa kartın üzerinde \"🔄 Muadil\" bağlantısı belirir — Stok Plus'ta tanımladığınız uyumlu/muadil parçalar varsa (bkz. Stok kılavuzu) buradan stoktaki alternatifi tek tıkla seçebilirsiniz.",
       },
       { tur: "altbaslik", metin: "Reçete (BOM)" },
       {
         tur: "paragraf",
         metin:
-          "PC Toplama > \"+ Reçete\" ile örneğin \"Oyun PC'si — Orta Segment\" gibi bir şablon oluşturursunuz: parça listesi (kasa, anakart, CPU, RAM, SSD, PSU, ekran kartı) ve montaj işçiliği tutarı. Yeni bir toplama emri açarken bu reçeteyi seçtiğinizde parça listesi otomatik doldurulur.",
+          "PC Toplama > \"+ Reçete\" ile örneğin \"Oyun PC'si — Orta Segment\" gibi bir şablon oluşturursunuz: yapılandırıcıyla seçtiğiniz parça listesi ve montaj işçiliği tutarı. Yeni bir toplama emri açarken bu reçeteyi seçtiğinizde parça listesi otomatik doldurulur.",
+      },
+      { tur: "altbaslik", metin: "🌐 Genel/Plan Modu — Stok Gerektirmez" },
+      {
+        tur: "paragraf",
+        metin:
+          "PC Toplama > \"🌐 + Yeni Plan\" ile stoğunuzda olmayan ürün tipleriyle de (henüz satın almadığınız bir ekran kartı modeli gibi) bir yapılandırma planlayıp tahmini fiyatla müşteriye anında teklif verebilirsiniz. Her kategoride ürün adı, marka ve tahmini fiyat girip \"Plana Ekle\" dersiniz — gerçek bir stok kartı aramanıza gerek yoktur.",
+      },
+      {
+        tur: "adimlar",
+        adimlar: [
+          "Plan detayında müşteri kararını onayladıktan sonra \"Toplama Emrine Dönüştür\" bölümünden her kalemi gerçek bir stok kartıyla eşleştirin.",
+          "Tüm kalemler eşleşince \"✓ Toplama Emrine Dönüştür\" düğmesi aktif olur — bastığınızda gerçek bir toplama emri (parça maliyetleri kendi stok kartlarınızdan) otomatik oluşturulur.",
+          "Plan durumu \"Dönüştürüldü\"ye geçer ve oluşan toplama emrine bağlantı verir; plan bir daha düzenlenemez.",
+        ],
+      },
+      {
+        tur: "uyari",
+        metin:
+          "Plandaki \"tahmini fiyat\" yalnızca müşteriye teklif amaçlıdır — gerçek toplama emrine dönüştüğünde parça maliyeti, eşleştirdiğiniz stok kartının kendi alış fiyatından hesaplanır, plan tutarından değil.",
       },
       { tur: "altbaslik", metin: "Toplama Emri Akışı" },
       {

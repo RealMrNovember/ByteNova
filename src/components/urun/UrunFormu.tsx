@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { fiyatHesapla, paraFormatla } from "@/lib/doviz";
 import { barkodGecerliMi } from "@/lib/barkod";
 import { KategoriSec } from "./KategoriSec";
+import { BILESEN_TIPLERI } from "@/lib/toplama";
 
 type Mevcut = {
   id: string;
@@ -27,6 +28,7 @@ type Mevcut = {
   warranty_months: number | null;
   is_shelf_display: boolean;
   is_digital: boolean;
+  component_type: string | null;
 };
 
 type ParaBirimi = { code: string; symbol: string };
@@ -81,6 +83,7 @@ export function UrunFormu({ tenantId, paraBirimleri, kurlar, mevcut }: Props) {
     mevcut?.is_shelf_display ?? false
   );
   const [dijitalUrun, setDijitalUrun] = useState(mevcut?.is_digital ?? false);
+  const [bilesenTipi, setBilesenTipi] = useState(mevcut?.component_type ?? "");
   const [hata, setHata] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
 
@@ -164,6 +167,7 @@ export function UrunFormu({ tenantId, paraBirimleri, kurlar, mevcut }: Props) {
       warranty_months: garantiAy ? Number(garantiAy) : null,
       is_shelf_display: rafSergileniyor,
       is_digital: dijitalUrun,
+      component_type: bilesenTipi || null,
     };
 
     if (mevcut) {
@@ -538,6 +542,28 @@ export function UrunFormu({ tenantId, paraBirimleri, kurlar, mevcut }: Props) {
         🛒 Rafta sergileniyor (mağaza/vitrin ürünü — sarf malzemesi veya iç
         kullanım parçası değil)
       </label>
+
+      <div>
+        <label className="mb-1.5 block text-xs font-medium text-slate-300">
+          🖥️ PC Bileşen Tipi (opsiyonel)
+        </label>
+        <select
+          value={bilesenTipi}
+          onChange={(e) => setBilesenTipi(e.target.value)}
+          className={alanSinifi}
+        >
+          <option value="">— Seçilmedi —</option>
+          {BILESEN_TIPLERI.map((b) => (
+            <option key={b.deger} value={b.deger}>
+              {b.ikon} {b.etiket}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1.5 text-[11px] text-slate-600">
+          Bu ürün bir PC parçasıysa (işlemci, RAM, ekran kartı vb.) tipini seçin — PC
+          Toplama'daki kategori bazlı yapılandırıcıda bu etikete göre gruplanır.
+        </p>
+      </div>
 
       {hata && (
         <div className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-3 text-xs text-red-300">

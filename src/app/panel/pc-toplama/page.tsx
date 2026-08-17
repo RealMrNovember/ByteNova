@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { paraFormatla } from "@/lib/doviz";
-import { DURUM_ETIKETLERI, DURUM_SINIFLARI, type ToplamaDurum } from "@/lib/toplama";
+import { DURUM_ETIKETLERI, DURUM_SINIFLARI, type ToplamaDurum, planDurumu } from "@/lib/toplama";
 
 export const metadata: Metadata = { title: "PC Toplama — ByteNova" };
 
@@ -14,7 +14,7 @@ export default async function PcToplamaPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/giris");
 
-  const [{ data: emirler }, { data: receteler }] = await Promise.all([
+  const [{ data: emirler }, { data: receteler }, { data: planlar }] = await Promise.all([
     supabase
       .from("assembly_orders")
       .select("id, order_no, status, parts_cost, labor_cost, created_at, customers(name)")
@@ -25,6 +25,11 @@ export default async function PcToplamaPage() {
       .select("id, name, labor_cost, assembly_recipe_items(id)")
       .eq("is_active", true)
       .order("name"),
+    supabase
+      .from("assembly_plans")
+      .select("id, plan_no, name, status, labor_cost, customers(name)")
+      .order("created_at", { ascending: false })
+      .limit(20),
   ]);
 
   return (
@@ -46,6 +51,12 @@ export default async function PcToplamaPage() {
             className="rounded-lg border border-slate-700 px-3.5 py-2 text-center text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
           >
             + Reçete
+          </Link>
+          <Link
+            href="/panel/pc-toplama/plan/yeni"
+            className="rounded-lg border border-purple-500/30 bg-purple-500/5 px-3.5 py-2 text-center text-sm font-medium text-purple-300 transition hover:bg-purple-500/10"
+          >
+            🌐 + Yeni Plan
           </Link>
           <Link
             href="/panel/pc-toplama/yeni"
@@ -71,6 +82,35 @@ export default async function PcToplamaPage() {
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {!!planlar?.length && (
+        <div className="glass mt-4 overflow-hidden rounded-xl">
+          <div className="border-b border-slate-800 px-4 py-3">
+            <h2 className="text-sm font-semibold text-white">🌐 Planlar</h2>
+          </div>
+          <div className="divide-y divide-slate-800/60">
+            {planlar.map((p) => {
+              const musteri = p.customers as unknown as { name: string } | null;
+              const durumBilgi = planDurumu(p.status);
+              return (
+                <Link
+                  key={p.id}
+                  href={`/panel/pc-toplama/plan/${p.id}`}
+                  className="flex items-center justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-slate-800/30"
+                >
+                  <div>
+                    <p className="font-mono text-sm text-slate-200">{p.plan_no}</p>
+                    <p className="text-[11px] text-slate-500">{musteri?.name ?? p.name}</p>
+                  </div>
+                  <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${durumBilgi.sinif}`}>
+                    {durumBilgi.etiket}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}

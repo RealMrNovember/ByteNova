@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { MusteriSec } from "@/components/cihaz/MusteriSec";
-import { UrunEkleSatiri, type SecilenKalem } from "./UrunEkleSatiri";
+import { PcYapilandirici, type YapilandiricaKalemi } from "./PcYapilandirici";
 
 type Musteri = { id: string; name: string; phone: string | null };
 type Recete = { id: string; name: string; labor_cost: number };
@@ -17,14 +17,10 @@ export function ToplamaEmriFormu({ tenantId, receteler }: { tenantId: string; re
   const [mod, setMod] = useState<"recete" | "serbest">(receteler.length > 0 ? "recete" : "serbest");
   const [receteId, setReceteId] = useState(receteler[0]?.id ?? "");
   const [musteri, setMusteri] = useState<Musteri | null>(null);
-  const [kalemler, setKalemler] = useState<SecilenKalem[]>([]);
+  const [kalemler, setKalemler] = useState<YapilandiricaKalemi[]>([]);
   const [notlar, setNotlar] = useState("");
   const [hata, setHata] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
-
-  function kalemEkle(kalem: SecilenKalem) {
-    setKalemler((k) => [...k, kalem]);
-  }
 
   async function olustur() {
     if (mod === "recete" && !receteId) {
@@ -92,25 +88,7 @@ export function ToplamaEmriFormu({ tenantId, receteler }: { tenantId: string; re
       ) : (
         <div>
           <label className="mb-1.5 block text-xs font-medium text-slate-300">Parçalar</label>
-          <UrunEkleSatiri onEkle={kalemEkle} />
-          {kalemler.length > 0 && (
-            <div className="mt-3 divide-y divide-slate-800/60 rounded-lg border border-slate-800">
-              {kalemler.map((k, i) => (
-                <div key={i} className="flex items-center justify-between px-3.5 py-2.5">
-                  <span className="text-sm text-slate-200">
-                    {k.productName} <span className="text-slate-500">× {k.quantity}</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setKalemler((ks) => ks.filter((_, idx) => idx !== i))}
-                    className="text-xs text-red-400 hover:text-red-300"
-                  >
-                    Sil
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          <PcYapilandirici mod="stok" kalemler={kalemler} onKalemlerDegisti={setKalemler} />
         </div>
       )}
 

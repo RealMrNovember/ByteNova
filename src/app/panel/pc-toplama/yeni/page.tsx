@@ -21,7 +21,7 @@ export default async function YeniToplamaEmriPage() {
     .order("name");
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-5xl">
       <h1 className="text-xl font-bold text-white">Yeni Toplama Emri</h1>
       <p className="mt-0.5 text-sm text-slate-400">
         Bir reçete seçin veya müşteriye özel serbest bir parça listesi oluşturun.
