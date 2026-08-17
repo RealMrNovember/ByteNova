@@ -1059,6 +1059,49 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     ilgili: ["musteriler", "stok", "ayarlar"],
   },
   {
+    slug: "pc-toplama",
+    baslik: "PC Toplama",
+    ikon: "🖥️",
+    kategori: "modul",
+    ozet: "Reçeteyle (BOM) veya serbest parça listesiyle bilgisayar toplama, test checklist'i ve demontaj.",
+    anahtarKelimeler: ["pc toplama", "bom", "reçete", "montaj", "toplama emri", "demontaj"],
+    icerik: [
+      {
+        tur: "paragraf",
+        metin:
+          "PC Toplama, \"PC Toplama Paketi\" eklentisine bağlıdır (Ayarlar > Eklentiler'den etkinleştirilir). Sık topladığınız yapılandırmaları reçete olarak kaydedebilir, ya da her seferinde müşteriye özel serbest bir parça listesiyle toplama emri açabilirsiniz.",
+      },
+      { tur: "altbaslik", metin: "Reçete (BOM)" },
+      {
+        tur: "paragraf",
+        metin:
+          "PC Toplama > \"+ Reçete\" ile örneğin \"Oyun PC'si — Orta Segment\" gibi bir şablon oluşturursunuz: parça listesi (kasa, anakart, CPU, RAM, SSD, PSU, ekran kartı) ve montaj işçiliği tutarı. Yeni bir toplama emri açarken bu reçeteyi seçtiğinizde parça listesi otomatik doldurulur.",
+      },
+      { tur: "altbaslik", metin: "Toplama Emri Akışı" },
+      {
+        tur: "adimlar",
+        adimlar: [
+          "\"+ Yeni Toplama Emri\" ile bir reçete seçin veya serbest parça listesi oluşturun, isterseniz bir müşteriyle ilişkilendirin.",
+          "\"Parçalar Rezerve\" olarak işaretlediğinizde tüm parçalar stoktan düşer.",
+          "\"Montajda\" ve \"Test Ediliyor\" aşamalarında POST testi, stres testi ve sıcaklık kontrolü checklist'ini işaretleyin.",
+          "\"Toplamayı Tamamla\" ile yeni ürüne bir ad ve satış fiyatı verin — sistem parça maliyetleri + işçilikten toplam maliyeti hesaplayıp seri numaralı, satışa hazır yeni bir stok kaydı oluşturur.",
+        ],
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "Herhangi bir aşamada \"İptal Et\" ile emri iptal ederseniz o ana kadar rezerve edilmiş tüm parçalar otomatik olarak stoğa geri döner.",
+      },
+      { tur: "altbaslik", metin: "Demontaj" },
+      {
+        tur: "paragraf",
+        metin:
+          "PC Toplama > \"🔩 Demontaj\" iki senaryoyu kapsar: satılmadan kalan bir toplama PC'yi parçalarına ayırıp stoğa geri almak, veya hurdaya ayrılan/teslim alınmayan bir cihazdan sağlam parça hasat edip \"ikinci el parça\" olarak stoğa eklemek. Her iki durumda da hareket stok geçmişinde audit'li olarak görünür.",
+      },
+    ],
+    ilgili: ["stok", "satis", "ayarlar"],
+  },
+  {
     slug: "belgeler",
     baslik: "Belgeler",
     ikon: "🗂️",
@@ -1143,7 +1186,6 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         tur: "tablo",
         basliklar: ["Modül", "Ne İşe Yarayacak"],
         satirlar: [
-          ["🖥️ PC Toplama", "Reçeteyle (BOM) parçalardan sistem toplama — parçalar stoktan düşer, toplanan PC kendi seri numarasıyla satışa hazır olur. (Eklenti)"],
           ["📋 Sözleşmeler", "Periyodik bakım sözleşmeleri, SLA takibi, otomatik ziyaret planları. (Eklenti)"],
           ["🛒 Pazaryeri", "Trendyol, Hepsiburada, N11 stok senkronizasyonu. (Eklenti)"],
         ],

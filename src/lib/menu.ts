@@ -50,7 +50,7 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "pc-toplama",
     ad: "PC Toplama",
     ikon: "🖥️",
-    durum: "yakinda",
+    durum: "aktif",
     aciklama:
       "Reçeteyle (BOM) parçalardan sistem topla: parçalar stoktan düşer, toplama PC kendi seri numarasıyla satışa hazır olur.",
     addonKey: "pc_toplama",

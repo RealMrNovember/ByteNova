@@ -6,6 +6,9 @@ export const HAREKET_TIPLERI: Record<string, { etiket: string; ikon: string }> =
   adjustment: { etiket: "Manuel Düzeltme", ikon: "✏️" },
   count: { etiket: "Sayım", ikon: "📋" },
   initial: { etiket: "Açılış Stoğu", ikon: "✨" },
+  assembly: { etiket: "PC Toplama", ikon: "🖥️" },
+  assembly_iptal: { etiket: "Toplama İptali", ikon: "↩️" },
+  disassembly: { etiket: "Demontaj", ikon: "🔩" },
 };
 
 export function hareketEtiket(tip: string): string {

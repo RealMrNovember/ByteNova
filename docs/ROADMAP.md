@@ -683,7 +683,7 @@ başlıyor. Pilot başlangıcı hariç (gerçek dış kullanıcı gerektirir) sp
 - [x] **Çek/Senet + POS mutabakat** ✅ — portföy, vade takvimi, nakit akış uyarıları — ayrıntılar aşağıda
 - [x] **Otomatik abonelik tahsilatı** ✅ — `BillingProvider` (iyzico/PayTR sandbox), dunning, destek görünümü — ayrıntılar aşağıda
   - **Eklenti self-servis switch'i** (otomatik ödemenin addon aktivasyonuna bağlanması) bu turda **kapsam dışı bırakıldı** — mevcut "Etkinleştir" anahtarı zaten çalışıyor (ücretsiz/anında aktivasyon) ve buna dokunmak geniş, gözden geçirme riski yüksek bir davranış değişikliği olurdu; abonelik faturalaması (asıl, net biçimde tarif edilmiş kısım) tamamlandı.
-- [ ] **PC Toplama (BOM)** — reçete, toplama emri, demontaj
+- [x] **PC Toplama (BOM)** ✅ — reçete, toplama emri, demontaj — ayrıntılar aşağıda
 - [ ] **Toptancı XML** — ilk 2-3 distribütör adaptörü
 - [ ] **Müşteri servis takip sayfası** (QR) + bakım sözleşmeleri + prim + uyumluluk matrisi + ÖKC entegrasyonu
 
@@ -852,6 +852,52 @@ başlıyor. Pilot başlangıcı hariç (gerçek dış kullanıcı gerektirir) sp
   hem `platform_audit_logs`'a yazdığı, rolü `analyst`'e değiştirilince ise RPC'nin doğru
   şekilde reddettiği doğrulandı; test verileri (throwaway platform admin + demo tenant'taki
   test ödeme yöntemi/tahsilat kayıtları) temizlendi
+
+### PC Toplama (BOM) — ayrıntılar ✅
+- [x] **Şema** (`0048_pc_toplama.sql`): `assembly_recipes`/`assembly_recipe_items` (yeniden
+  kullanılabilir parça listesi + işçilik), `assembly_orders`/`assembly_order_items` (reçeteden
+  ya da serbest/müşteriye özel), `assembly_order_no_counters` + `sonraki_toplama_no()` (yıllık
+  sıfırlanan `PC-YYYY-NNNNNN` biçimi — mevcut satış/servis fiş no sayaçlarıyla aynı desen),
+  `disassembly_orders`/`disassembly_order_items`. `stock_movements.movement_type` CHECK'i
+  `assembly`/`assembly_iptal`/`disassembly` ile genişletildi
+- [x] **RPC'ler:** `recete_olustur()`; `toplama_emri_olustur()` (reçeteden veya serbest, alış
+  fiyatlarını satış anındaki TRY kuruyla dondurur — `satis_olustur()`'daki desenin aynısı);
+  `toplama_durum_ilerlet()` (taslak→parça_rezerve'de `stok_hareketi_ekle()` ile gerçek stok
+  rezervasyonu, iptalde aynı miktarın `assembly_iptal` hareketiyle geri iadesi);
+  `toplama_tamamla()` (yeni bir `products` satırı oluşturur — seri numaralı,
+  `purchase_price = parça maliyeti + işçilik` — ve `assembly_orders.product_id`'yi bağlar);
+  `demontaj_yap()` (tamamlanmış bir toplama emrini TERSİNE çevirir — parçalar stoğa döner,
+  toplanan ürün `is_active=false` yapılır — ya da hurda/cihazdan serbest parça hasadını
+  doğrudan stoğa işler)
+- [x] **Bilinçli kapsam kararı:** `toplama_tamamla()` otomatik bir `devices` kaydı OLUŞTURMAZ —
+  toplama PC bir stok kalemi olarak satışa hazırdır; cihaz bazlı garanti/servis geçmişi takibi
+  yalnızca gerçekten satıldığında (satış anında müşteriye bağlı bir cihaz kaydı açılırsa)
+  anlamlıdır, üretim anında değil
+- [x] **UI:** `/panel/pc-toplama` (reçete + emir listesi), `receteler/yeni` (reçete kurucu,
+  `UrunEkleSatiri` ortak bileşeni), `yeni` (Reçeteden/Serbest mod seçimi + opsiyonel müşteri
+  bağlama), `[id]` (durum ilerletme, checklist, tamamlama formu), `demontaj` (Satılmamış Toplama
+  PC/Hurda-Cihaz mod seçimi)
+- [x] **Canlı testte bulunan hata (deploy öncesi yakalandı):** `assembly_orders` ve kardeş
+  tablolarında yalnızca SELECT RLS politikası vardı — tüm yazmalar zaten SECURITY DEFINER
+  RPC'ler üzerinden yapılıyordu, TEK istisna test checklist'iydi: bileşen doğrudan
+  `.from("assembly_orders").update(...)` çağırıyordu. RLS bunu sessizce engelledi (0 satır
+  etkilendi, hata dönmedi — sonuç: checklist kutucukları tıklanıyor ama hiçbir şey kaydolmuyordu).
+  Düzeltme: `0049_pc_toplama_checklist_rpc.sql` ile `toplama_checklist_guncelle()` RPC'si
+  eklendi (aynı yetki kontrolü ve kapalı-emir koruması), bileşen buna geçirildi — artık bu
+  modülün TÜM yazma işlemleri, istisnasız, RPC üzerinden yapılıyor
+- [x] E2E: Showroom demo tenant'ında gerçek panelde uçtan uca doğrulandı — "Ofis PC - Standart"
+  reçetesi (2× Kingston 16GB RAM + ₺500 işçilik) oluşturuldu; reçeteden bir toplama emri
+  (PC-2026-000001) açılıp parça rezervasyonunda RAM stoğunun 23'ten 21'e düştüğü doğrulandı;
+  checklist kutucukları işaretlenip veritabanında kalıcı olduğu (RPC düzeltmesinden sonra)
+  doğrulandı; Montajda→Test Ediliyor geçişleri yapılıp tamamlama formuyla ("Ofis PC'si #001",
+  ₺3.500 satış) yeni bir `products` satırının `purchase_price=2.700`, `requires_serial=true`
+  ile doğru oluştuğu ve `/panel/stok/[id]`'ye yönlendirildiği doğrulandı; ikinci bir emir
+  (PC-2026-000002) açılıp parça rezervasyonundan sonra iptal edilip RAM stoğunun tam 21'den
+  23'e (2 adet) `assembly_iptal` hareketiyle geri döndüğü doğrulandı; son olarak tamamlanan
+  PC-2026-000001 demonte edilip RAM'in `disassembly` hareketiyle stoğa (23) geri döndüğü ve
+  "Ofis PC'si #001" ürününün `stock_quantity=0`/`is_active=false` olarak pasife alındığı
+  doğrulandı; tüm test verileri (iki toplama emri, demontaj kaydı, test reçetesi, test ürünü,
+  ilgili stock_movements satırları) temizlendi
 
 ## SPRINT 13+ — MASAÜSTÜ (OFFLINE) VE P2 (Hafta 13+)
 
