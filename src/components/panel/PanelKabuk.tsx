@@ -16,6 +16,7 @@ type Props = {
   kalanGun: number | null;
   kurlar: { kod: string; kur: number | null }[];
   platformAdminMi?: boolean;
+  demoMi?: boolean;
   children: React.ReactNode;
 };
 
@@ -50,6 +51,7 @@ export function PanelKabuk({
   kalanGun,
   kurlar,
   platformAdminMi = false,
+  demoMi = false,
   children,
 }: Props) {
   const pathname = usePathname();
@@ -289,6 +291,19 @@ export function PanelKabuk({
             </div>
           </div>
         </header>
+
+        {/* Demo modu şeridi */}
+        {demoMi && (
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-amber-500/15 px-4 py-2 text-center text-xs font-medium text-amber-200">
+            <span>
+              🧪 Bu bir canlı demo hesabıdır — girdiğiniz veriler her gece
+              sıfırlanır.
+            </span>
+            <Link href="/kayit" className="underline underline-offset-2 hover:text-amber-100">
+              Kendi işletmeniz için ücretsiz deneyin →
+            </Link>
+          </div>
+        )}
 
         {/* İçerik */}
         <main className="flex-1 px-4 pb-24 pt-6 sm:px-6 md:pb-8">

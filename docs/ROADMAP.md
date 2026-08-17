@@ -425,7 +425,7 @@ Sıra pilot geri bildirimiyle revize edilir. **Kapsam notu (17.08.2026):** masa�
 uygulaması ve AI asistan kullanıcı talebiyle kapsam dışı bırakıldı; pilot başlangıcı
 gerçek dış kullanıcı gerektirdiği için inşa edilemez — atlandı.
 
-- [ ] Showroom tam sürüm (modül turu, fiyatlandırma, SSS, canlı demo, SEO)
+- [x] **Showroom tam sürüm** ✅ (modül turu, fiyatlandırma, SSS, canlı demo, SEO) — ayrıntılar aşağıda
 - [x] **Excel import sihirbazı** ✅ (müşteri/ürün/stok/cihaz/açık servis) — ayrıntılar aşağıda
 - [x] **Servis derinliği** ✅ (`0039_servis_derinligi.sql`): teslim alınmayan cihaz
   otomasyonu, ücretli teşhis, servis garantisi ilişkisi, kanban görünümü, azami süre
@@ -508,6 +508,55 @@ gerçek dış kullanıcı gerektirdiği için inşa edilemez — atlandı.
   oluştu, ürün stoğu 50→49 düştü, müşteri açık hesap bakiyesi ₺1.000 arttı; ikinci teklif
   personel tarafından panelden manuel "Müşteri Reddetti" ile (gerekçe notuyla) reddedildi;
   Teklifler liste sayfasında her iki kayıt da doğru durum/tutarla göründü
+
+### Showroom Tam Sürüm — ayrıntılar ✅
+- [x] **Ortak header/footer** (`ShowroomHeader.tsx`/`ShowroomFooter.tsx`) — ana sayfa dahil tüm
+  Showroom sayfalarında tekrar kullanılıyor, oturum durumuna göre Giriş/Kayıt ↔ "Panele Git"
+- [x] **Modül turu** (`/moduller`): `menu.ts`'teki `PANEL_MENU` tek kaynağından beslenir (yeni
+  bir kopya veri yazılmadı) — 12 aktif modül + 5 yol haritası modülü, eklenti rozetleriyle
+- [x] **Fiyatlandırma** (`/fiyatlandirma`): `subscription_plans`/`addon_packages`'tan **canlı**
+  çekiliyor (statik kopya değil) — Konsol'dan bir fiyat değişse Showroom'a da otomatik yansır.
+  Bunun için `0041_showroom_anonim_fiyatlandirma.sql` ile bu iki tabloya yalnızca
+  aktif/satıştaki satırları gösteren `anon` rolüne özel SELECT politikası eklendi (tablolarda
+  hassas veri yok — yalnız ad/fiyat/özellik)
+- [x] **SSS** (`/sss`): panel içi kılavuzdaki "sss" konusundan farklı, satış öncesi sorulara
+  odaklı ayrı bir soru seti (deneme, veri aktarımı, güvenlik, iptal); `FAQPage` JSON-LD
+  şeması eklendi (SEO — arama sonucunda katlanır soru/cevap görünümü)
+- [x] **Canlı demo** (`/demo`): kayıt olmadan, gerçek verilerle doldurulmuş paylaşımlı bir
+  demo hesabına giriş. **Bilinçli tasarım kararı:** demo tenant salt-okunur değil, tamamen
+  yazılabilir bırakıldı — ziyaretçi panelde gerçekten işlem yapabilsin diye. Kötüye kullanım
+  riski `tenant_id` RLS izolasyonu sayesinde yalnızca bu tek (sahte) tenant'ın kendi verisiyle
+  sınırlı kalır, başka hiçbir gerçek işletmeyi etkilemez; `/api/cron/demo-sifirla` (her gece
+  05:00 UTC, `vercel.json`) demo tenant'ını tamamen silip (`tenants` üzerindeki tüm FK'lar
+  `ON DELETE CASCADE`) baştan örnek veriyle dolduruyor. Panelde `PanelKabuk`'a eklenen
+  turuncu şerit ("verileriniz her gece sıfırlanır") ziyaretçiyi bilgilendiriyor
+  (`tenants.is_demo`, `0042_demo_tenant.sql`)
+- [x] **Demo veri seti** (`src/lib/demo.ts`, `demoTenantiSifirlaVeDoldur()`): 8 ürün, 4 müşteri
+  (1 kurumsal), 3 cihaz, kanban'ın 3 farklı sütununa düşecek 3 servis kaydı, gerçek
+  `satis_olustur()`/`teklif_olustur()` RPC'leriyle oluşturulmuş 1 satış + 1 teklif. **Canlı
+  testte bulunan hata:** bu RPC'ler `auth.uid()` üzerinden yetki/tenant çözdüğü için
+  service-role istemciyle çağrıldıklarında sessizce "yetkiniz yok" hatası veriyordu —
+  düzeltme: demo kullanıcısıyla gerçek bir oturum açılıp RPC'ler o oturumun access token'ıyla
+  çağrılıyor. **İkinci hata (E2E'de bulundu):** `supabase.auth.admin.createUser()` çağrısı
+  `handle_new_user()` tetikleyicisini fırlatıp kendi (boş, `is_demo=false`) tenant/profile
+  ikilisini otomatik yaratıyor; script bunun üstüne ikinci bir profil satırı eklemeye
+  çalışınca birincil anahtar çakışmasıyla sessizce başarısız oluyor, demo kullanıcısı asıl
+  doldurulan (ama profile hiç bağlı olmayan) tenant'tan kopuk kalıyordu. Düzeltme: her
+  sıfırlamada önce kullanıcının **o an profildeki** `tenant_id`'si siliniyor (tetikleyicinin
+  mi yoksa önceki sıfırlamanın mı yarattığı fark etmeksizin), ayrıca `is_demo=true` işaretli
+  başıboş bir tenant kalmaması için ek bir güvenlik silmesi de ekli
+- [x] **SEO:** `sitemap.ts`/`robots.ts` eklendi; ana sayfaya ve yeni sayfaların hepsine
+  `export const metadata` (başlık/açıklama) eklendi; ana sayfadaki eski "İnşa halinde" rozeti
+  ürün artık canlı olduğu için "Şimdi canlıda" olarak güncellendi, ana sayfadan
+  Modüller/Fiyatlandırma/Demo'ya yönlendiren üç kart eklendi
+- [x] E2E: `/api/cron/demo-sifirla` gerçek `CRON_SECRET` ile üç kez art arda tetiklenerek
+  idempotent olduğu doğrulandı (her seferinde tam olarak tek bir `is_demo=true` tenant kalıyor,
+  veri sayıları sabit: 8 ürün/4 müşteri/3 cihaz/3 servis/1 satış/1 teklif); tarayıcıda gerçek
+  "Demoyu Başlat" akışı denendi — girişten sonra panelde turuncu demo şeridi, Genel Bakış'ta
+  doğru rakamlar (₺4.100 satış, 3 açık servis, 1 kritik stok), kanban'da üç kartın doğru
+  sütunlarda, Teklifler listesinde ₺28.500 tutarlı teklifin doğru göründüğü doğrulandı;
+  `/fiyatlandirma` sayfasının canlı DB'den doğru üç planı ve dokuz eklentiyi anonim
+  (oturumsuz) tarayıcı bağlamında çektiği doğrulandı
 
 ### Excel Import Sihirbazı — ayrıntılar ✅
 - [x] **4 adımlı sihirbaz** (`ImportSihirbazi.tsx`, `/panel/import?tur=...`): 1) tür seçimi +

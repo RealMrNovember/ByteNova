@@ -33,6 +33,7 @@ export default async function PanelLayout({
     trial_ends_at: string;
     logo_url: string | null;
     onboarding_completed: boolean;
+    is_demo: boolean;
   } | null;
 
   // Şirket bilgileri alınmadıysa önce kurulum
@@ -84,6 +85,7 @@ export default async function PanelLayout({
       kalanGun={kalanGun}
       kurlar={kurListesi}
       platformAdminMi={!!platformAdminMi}
+      demoMi={!!tenant?.is_demo}
     >
       {children}
     </PanelKabuk>

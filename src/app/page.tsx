@@ -1,5 +1,14 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
+import ShowroomHeader from "@/components/showroom/ShowroomHeader";
+import ShowroomFooter from "@/components/showroom/ShowroomFooter";
+
+export const metadata: Metadata = {
+  title: "ByteNova — Teknik Servis ve Bilgisayarcı Yazılımı",
+  description:
+    "Servisten satışa, kurdan kasaya: teknik servis ve bilgisayarcı işletmeleri için Türkiye'nin gerçeklerine göre yazılmış tek platform. Ücretsiz deneyin.",
+};
 
 const moduller = [
   {
@@ -57,42 +66,7 @@ export default async function Home() {
 
   return (
     <main className="flex-1">
-      {/* Üst bar */}
-      <header className="sticky top-0 z-20 border-b border-slate-800/60 bg-surface/80 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">⚡</span>
-            <span className="text-lg font-semibold tracking-tight text-white">
-              Byte<span className="text-nova-400">Nova</span>
-            </span>
-          </div>
-          <nav className="flex items-center gap-2 sm:gap-3">
-            {user ? (
-              <Link
-                href="/panel"
-                className="rounded-lg bg-nova-500 px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-nova-400"
-              >
-                Panele Git →
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/giris"
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:text-white"
-                >
-                  Giriş Yap
-                </Link>
-                <Link
-                  href="/kayit"
-                  className="rounded-lg bg-nova-500 px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-nova-400"
-                >
-                  Ücretsiz Dene
-                </Link>
-              </>
-            )}
-          </nav>
-        </div>
-      </header>
+      <ShowroomHeader oturumluMu={!!user} />
 
       {/* Hero */}
       <section className="relative overflow-hidden">
@@ -104,7 +78,7 @@ export default async function Home() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-nova-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-nova-400" />
             </span>
-            İnşa halinde — çok yakında sizinle
+            Şimdi canlıda — ücretsiz deneyin
           </span>
           <h1 className="mx-auto max-w-3xl text-balance text-4xl font-bold tracking-tight text-white sm:text-6xl">
             Teknik servisin ve bilgisayarcının{" "}
@@ -125,10 +99,10 @@ export default async function Home() {
               Ücretsiz Denemeye Başla
             </Link>
             <Link
-              href="/panel"
+              href="/demo"
               className="w-full rounded-xl border border-slate-700 px-8 py-3.5 text-sm font-semibold text-slate-200 transition hover:border-nova-500/50 hover:text-white sm:w-auto"
             >
-              Paneli Keşfet
+              Canlı Demoyu İncele
             </Link>
           </div>
         </div>
@@ -184,19 +158,59 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-10 text-center text-xs text-slate-500 sm:flex-row sm:justify-between sm:px-6 sm:text-left">
-        <span>
-          © {new Date().getFullYear()} CiciByte Teknoloji —{" "}
-          <a
-            href="https://cicibyte.com"
-            className="text-slate-400 transition-colors hover:text-nova-300"
+      {/* Devam etmek isteyenler için */}
+      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Link
+            href="/moduller"
+            className="glass group rounded-2xl p-6 transition hover:border-nova-500/40"
           >
-            cicibyte.com
-          </a>
-        </span>
-        <span>ByteNova • Sürüm 0.1 — her gün yeni bir özellikle büyüyor</span>
-      </footer>
+            <div className="text-2xl">🧭</div>
+            <h3 className="mt-4 font-semibold text-white">
+              Tüm modülleri gezin
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              15 modülün tamamını ve yakında geleceklerini tek sayfada
+              inceleyin.
+            </p>
+            <span className="mt-4 inline-block text-sm font-medium text-nova-300 transition group-hover:translate-x-0.5">
+              Modülleri incele →
+            </span>
+          </Link>
+          <Link
+            href="/fiyatlandirma"
+            className="glass group rounded-2xl p-6 transition hover:border-nova-500/40"
+          >
+            <div className="text-2xl">💳</div>
+            <h3 className="mt-4 font-semibold text-white">
+              Fiyatlandırmayı görün
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              Şeffaf aylık/yıllık planlar ve ihtiyaca göre eklenti paketleri.
+            </p>
+            <span className="mt-4 inline-block text-sm font-medium text-nova-300 transition group-hover:translate-x-0.5">
+              Planları karşılaştır →
+            </span>
+          </Link>
+          <Link
+            href="/demo"
+            className="glass group rounded-2xl p-6 transition hover:border-nova-500/40"
+          >
+            <div className="text-2xl">▶️</div>
+            <h3 className="mt-4 font-semibold text-white">
+              Canlı demoyu deneyin
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              Kayıt olmadan, gerçek verilerle doldurulmuş bir panelde gezinin.
+            </p>
+            <span className="mt-4 inline-block text-sm font-medium text-nova-300 transition group-hover:translate-x-0.5">
+              Demoya git →
+            </span>
+          </Link>
+        </div>
+      </section>
+
+      <ShowroomFooter />
     </main>
   );
 }
