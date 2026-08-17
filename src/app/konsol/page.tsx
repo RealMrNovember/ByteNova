@@ -94,6 +94,9 @@ export default async function KonsolPage({
                 <th className="hidden px-4 py-3 font-medium lg:table-cell">
                   Kayıt
                 </th>
+                <th className="hidden px-4 py-3 text-right font-medium sm:table-cell">
+                  Eklenti
+                </th>
                 <th className="px-4 py-3 text-right font-medium">Durum</th>
               </tr>
             </thead>
@@ -136,6 +139,9 @@ export default async function KonsolPage({
                     </td>
                     <td className="hidden px-4 py-2.5 text-xs text-slate-500 lg:table-cell">
                       {new Date(t.created_at).toLocaleDateString("tr-TR")}
+                    </td>
+                    <td className="hidden px-4 py-2.5 text-right text-slate-400 sm:table-cell">
+                      {t.aktif_eklenti_sayisi > 0 ? `🧩 ${t.aktif_eklenti_sayisi}` : "—"}
                     </td>
                     <td className="px-4 py-2.5 text-right">
                       <span

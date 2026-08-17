@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { fiyatHesapla, paraFormatla } from "@/lib/doviz";
+import { barkodGecerliMi } from "@/lib/barkod";
 import { KategoriSec } from "./KategoriSec";
 
 type Mevcut = {
@@ -80,6 +81,47 @@ export function UrunFormu({ tenantId, paraBirimleri, kurlar, mevcut }: Props) {
   );
   const [hata, setHata] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
+
+  // Yeni ürün için barkod-önce akışı: barkod okutulup sorgulanmadan tam
+  // form gösterilmez — ürün bilgileri bulunursa otomatik doldurulur.
+  // Düzenleme modunda bu adım atlanır, doğrudan tam form açılır.
+  const [asama, setAsama] = useState<"barkod" | "form">(mevcut ? "form" : "barkod");
+  const [barkodSorgulaniyor, setBarkodSorgulaniyor] = useState(false);
+  const [barkodDurumu, setBarkodDurumu] = useState<"bulundu" | "bulunamadi" | null>(null);
+  const [barkodKaynak, setBarkodKaynak] = useState<string | null>(null);
+
+  async function barkodIleDevamEt(e?: React.FormEvent) {
+    e?.preventDefault();
+    const temiz = barkod.trim();
+    if (!temiz) {
+      setAsama("form");
+      return;
+    }
+    if (!barkodGecerliMi(temiz)) {
+      // Standart bir EAN/UPC formatı değil (örn. iç barkod) — veritabanı
+      // sorgusu anlamsız, doğrudan elle girişe geçilir.
+      setAsama("form");
+      return;
+    }
+    setBarkodSorgulaniyor(true);
+    setBarkodDurumu(null);
+    try {
+      const yanit = await fetch(`/api/barkod/${encodeURIComponent(temiz)}`);
+      const sonuc = await yanit.json();
+      if (sonuc.bulundu) {
+        if (!ad.trim() && sonuc.ad) setAd(sonuc.ad);
+        if (!marka.trim() && sonuc.marka) setMarka(sonuc.marka);
+        setBarkodDurumu("bulundu");
+        setBarkodKaynak(sonuc.kaynak ?? null);
+      } else {
+        setBarkodDurumu("bulunamadi");
+      }
+    } catch {
+      setBarkodDurumu("bulunamadi");
+    }
+    setBarkodSorgulaniyor(false);
+    setAsama("form");
+  }
 
   const guncelKur = alisParaBirimi === "TRY" ? 1 : (kurlar[alisParaBirimi] ?? null);
   const tlKarsiligi = useMemo(() => {
@@ -171,8 +213,63 @@ export function UrunFormu({ tenantId, paraBirimleri, kurlar, mevcut }: Props) {
     }
   }
 
+  if (asama === "barkod") {
+    return (
+      <div className="py-6 text-center">
+        <span className="text-3xl">🔍</span>
+        <h2 className="mt-3 text-base font-semibold text-white">
+          Önce barkodu okutun
+        </h2>
+        <p className="mx-auto mt-1.5 max-w-sm text-sm text-slate-400">
+          Barkod okuyucuyla okutun ya da elle yazıp Enter&apos;a basın —
+          ürün bilgilerini bulabilirsek adı ve markasını otomatik doldururuz.
+        </p>
+
+        <form onSubmit={barkodIleDevamEt} className="mx-auto mt-5 max-w-xs">
+          <input
+            type="text"
+            autoFocus
+            value={barkod}
+            onChange={(e) => setBarkod(e.target.value)}
+            placeholder="Barkod numarası…"
+            className={`${alanSinifi} text-center font-mono text-base`}
+          />
+          <button
+            type="submit"
+            disabled={barkodSorgulaniyor}
+            className="mt-3 w-full rounded-lg bg-nova-500 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-nova-400 disabled:cursor-wait disabled:opacity-60"
+          >
+            {barkodSorgulaniyor ? "Aranıyor…" : "Devam Et"}
+          </button>
+        </form>
+
+        <button
+          type="button"
+          onClick={() => setAsama("form")}
+          className="mt-4 text-xs text-slate-500 hover:text-nova-300"
+        >
+          Barkodu yok / elle gireceğim →
+        </button>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={kaydet} className="space-y-4">
+      {!mevcut && barkodDurumu && (
+        <div
+          className={`rounded-lg border px-3.5 py-2.5 text-xs ${
+            barkodDurumu === "bulundu"
+              ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"
+              : "border-slate-700 bg-surface text-slate-400"
+          }`}
+        >
+          {barkodDurumu === "bulundu"
+            ? `✓ Ürün bilgileri barkod veritabanından dolduruldu (kaynak: ${barkodKaynak ?? "—"}) — kontrol edip gerekirse düzeltin.`
+            : "Bu barkod veritabanında bulunamadı — bilgileri elle girin."}
+        </div>
+      )}
+
       <div>
         <label className="mb-1.5 block text-xs font-medium text-slate-300">
           Ürün adı *

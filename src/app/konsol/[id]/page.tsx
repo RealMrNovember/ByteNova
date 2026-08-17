@@ -40,6 +40,22 @@ type Detay = {
     reversed_at: string | null;
     reversal_reason: string | null;
   }[];
+  eklentiler: {
+    key: string;
+    name: string;
+    icon: string;
+    status: string;
+    activated_at: string;
+    trial_ends_at: string | null;
+    cancelled_at: string | null;
+  }[];
+};
+
+const EKLENTI_DURUM_ETIKET: Record<string, { ad: string; sinif: string }> = {
+  trial: { ad: "Deneme", sinif: "bg-amber-500/15 text-amber-300" },
+  active: { ad: "Aktif", sinif: "bg-emerald-500/15 text-emerald-300" },
+  past_due: { ad: "Ödeme Bekliyor", sinif: "bg-red-500/15 text-red-300" },
+  cancelled: { ad: "İptal", sinif: "bg-slate-500/15 text-slate-400" },
 };
 
 export default async function KonsolTenantDetayPage({
@@ -63,7 +79,7 @@ export default async function KonsolTenantDetayPage({
 
   if (error || !data || !(data as Detay).tenant) notFound();
 
-  const { tenant, kullanicilar, musteri_sayisi, cihaz_sayisi, servis_sayisi, kasa_kapanislari } =
+  const { tenant, kullanicilar, musteri_sayisi, cihaz_sayisi, servis_sayisi, kasa_kapanislari, eklentiler } =
     data as Detay;
   const durum = tenantDurum(tenant.status);
   const kapanisGeriAlabilir = ["master", "finance"].includes(platformProfil?.role ?? "");
@@ -162,6 +178,39 @@ export default async function KonsolTenantDetayPage({
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="glass mt-4 rounded-xl p-5">
+        <h2 className="text-sm font-semibold text-white">Eklentiler</h2>
+        {eklentiler.length === 0 ? (
+          <p className="mt-2 text-xs text-slate-500">
+            Bu işletme henüz herhangi bir eklenti paketi kullanmıyor.
+          </p>
+        ) : (
+          <div className="mt-3 divide-y divide-slate-800/60">
+            {eklentiler.map((e) => {
+              const durum = EKLENTI_DURUM_ETIKET[e.status] ?? EKLENTI_DURUM_ETIKET.active;
+              return (
+                <div key={e.key} className="flex items-center gap-3 py-2.5">
+                  <span className="text-lg">{e.icon}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm text-slate-200">{e.name}</p>
+                    <p className="text-[11px] text-slate-500">
+                      Etkinleştirme: {new Date(e.activated_at).toLocaleDateString("tr-TR")}
+                      {e.status === "trial" && e.trial_ends_at &&
+                        ` · Deneme bitişi: ${new Date(e.trial_ends_at).toLocaleDateString("tr-TR")}`}
+                      {e.status === "cancelled" && e.cancelled_at &&
+                        ` · İptal: ${new Date(e.cancelled_at).toLocaleDateString("tr-TR")}`}
+                    </p>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${durum.sinif}`}>
+                    {durum.ad}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {kasa_kapanislari.length > 0 && (

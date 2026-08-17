@@ -15,6 +15,7 @@ type Props = {
   email: string;
   kalanGun: number | null;
   kurlar: { kod: string; kur: number | null }[];
+  platformAdminMi?: boolean;
   children: React.ReactNode;
 };
 
@@ -48,6 +49,7 @@ export function PanelKabuk({
   email,
   kalanGun,
   kurlar,
+  platformAdminMi = false,
   children,
 }: Props) {
   const pathname = usePathname();
@@ -265,6 +267,15 @@ export function PanelKabuk({
                   >
                     🏪 İşletme bilgileri
                   </Link>
+                  {platformAdminMi && (
+                    <Link
+                      href="/konsol"
+                      onClick={() => setProfilAcik(false)}
+                      className="block rounded-lg px-3 py-2 text-[13px] text-purple-300 transition-colors hover:bg-purple-500/10"
+                    >
+                      🛡️ ByteNova Konsol
+                    </Link>
+                  )}
                   <form action={cikisYap}>
                     <button
                       type="submit"

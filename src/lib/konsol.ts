@@ -22,4 +22,5 @@ export type TenantSatiri = {
   owner_email: string | null;
   owner_name: string | null;
   kullanici_sayisi: number;
+  aktif_eklenti_sayisi: number;
 };

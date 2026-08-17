@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cikisYap } from "@/app/panel/actions";
+import { KonsolSekmeler } from "@/components/konsol/KonsolSekmeler";
 
 export default async function KonsolLayout({
   children,
@@ -48,6 +49,7 @@ export default async function KonsolLayout({
             </form>
           </div>
         </div>
+        <KonsolSekmeler />
       </header>
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</main>
     </div>

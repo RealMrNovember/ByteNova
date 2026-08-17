@@ -56,6 +56,10 @@ export default async function PanelLayout({
     kur: kurlar.get(kod)?.rate_to_try ?? null,
   }));
 
+  // Platform admin ise profil menüsünde Konsol'a giden bir bağlantı
+  // gösterilecek — aksi halde /konsol URL'i bilinmeden erişilemez.
+  const { data: platformAdminMi } = await supabase.rpc("is_platform_admin");
+
   return (
     <PanelKabuk
       menuOgeleri={menu}
@@ -65,6 +69,7 @@ export default async function PanelLayout({
       email={user.email ?? ""}
       kalanGun={kalanGun}
       kurlar={kurListesi}
+      platformAdminMi={!!platformAdminMi}
     >
       {children}
     </PanelKabuk>

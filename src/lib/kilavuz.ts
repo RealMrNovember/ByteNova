@@ -350,11 +350,22 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
       "stok", "ürün", "sayım", "kritik stok", "fiyat güncelle", "raf", "mağaza", "barkod",
     ],
     icerik: [
-      { tur: "altbaslik", metin: "Ürün Ekleme" },
+      { tur: "altbaslik", metin: "Ürün Ekleme — Barkod Okutarak" },
       {
         tur: "paragraf",
         metin:
-          "\"+ Yeni Ürün\" ile ad, SKU, barkod, marka, kategori bilgilerini ve alış fiyatını (TL veya döviz cinsinden) girersiniz; döviz seçtiğinizde güncel kurla TL karşılığı canlı önizlenir ve isterseniz \"satış fiyatını otomatik hesapla\" ile kâr marjına göre satış fiyatı önerisi alabilirsiniz.",
+          "\"+ Yeni Ürün\"e tıkladığınızda karşınıza önce yalnızca bir barkod kutusu çıkar. Barkod okuyucuyla okutun ya da elle yazıp Enter'a basın: sistem barkodu bir ürün veritabanında arar, bulursa ürün adını ve markasını otomatik doldurur. Barkodu olmayan bir ürün ekliyorsanız \"Barkodu yok / elle gireceğim\" bağlantısıyla bu adımı atlayabilirsiniz.",
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "Otomatik doldurma yalnızca isim/marka gibi genel bilgiler içindir — fiyat, kategori, kritik stok gibi işletmenize özel alanları her zaman siz girersiniz. Barkod veritabanında bulunamayan ürünler (çoğu yerel/özel parça) için form doğrudan boş açılır, elle doldurmanız yeterlidir.",
+      },
+      { tur: "altbaslik", metin: "Kalan Bilgiler" },
+      {
+        tur: "paragraf",
+        metin:
+          "Barkod adımından sonra açılan tam formda SKU, kategori ve alış fiyatını (TL veya döviz cinsinden) girersiniz; döviz seçtiğinizde güncel kurla TL karşılığı canlı önizlenir ve isterseniz \"satış fiyatını otomatik hesapla\" ile kâr marjına göre satış fiyatı önerisi alabilirsiniz.",
       },
       { tur: "altbaslik", metin: "Stok Hareketleri ve Kritik Stok" },
       {
