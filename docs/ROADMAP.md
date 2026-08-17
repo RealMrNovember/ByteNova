@@ -315,7 +315,7 @@ Servis/Cihaz oluşturma formunda müşteri bulunamadığında tam sayfa `/panel/
 - [x] `/konsol/[id]`: tenant detayı — bilgiler, kullanıcı listesi, müşteri/cihaz/servis sayaçları
 - [x] middleware: `/konsol/**` oturumsuz erişime kapalı; layout `is_platform_admin()` kontrolüyle yetkisiz tenant kullanıcısını `/panel`'e geri yönlendiriyor
 - [x] E2E: normal tenant kullanıcısı RPC'yi çağıramıyor (400 "yetkisiz") doğrulandı
-- [x] ~~MFA zorunluluğu + tam ayrı kimlik alanı + `tenant_events`~~ → Gün 28'de tamamlandı (yukarıda). Uzatma/askıya alma/plan değişikliği Gün 29'a, feature flag yönetim ekranı Gün 30'a planlı
+- [x] ~~MFA zorunluluğu + tam ayrı kimlik alanı + `tenant_events`~~ → Gün 28'de tamamlandı. ~~Uzatma/askıya alma/plan değişikliği~~ → Gün 29'da. ~~Feature flag yönetim ekranı + admin davet/rol yönetimi~~ → Gün 30'da (hepsi yukarıda) — Konsol v0'ın planladığı tüm genişleme tamamlandı
 
 ### Gün 29 — Abonelik Planları + Yönetim Konsolu v1b ✅
 Kapsam kullanıcı talebiyle netleştirildi (17.08.2026).
@@ -396,11 +396,13 @@ Kapsam kullanıcı talebiyle netleştirildi (17.08.2026).
   `past_due→suspended` (7 günlük grace period aşımı) otomatik geçişleri ve
   ilgili `tenant_events` kayıtları doğrulandı. Test verileri temizlendi
 
-### Gün 30 — Sertleştirme
-- [ ] Admin davet/rol yönetimi + `platform_audit_logs` + feature flag yönetim ekranı
-- [x] ~~Eklenti mimarisi temeli~~ → **öne alındı, kullanıcı talebiyle bugün (Gün 8 arası) inşa edildi** (bkz. altta)
-- [ ] Konsol'da paket toggle ekranı (Master Admin tarafı — tenant tarafı zaten çalışıyor)
-- [ ] RLS güvenlik taraması + E2E test paketi (S1, S2, S3) + performans geçişi
+### Gün 30 — Sertleştirme ✅
+- [x] **RLS güvenlik taraması** (`0036_sertlestirme_rls_taramasi.sql`): `pg_tables`/`pg_policies` introspection'ıyla tüm 49 public tablo tarandı. **Gerçek bir açık bulundu:** `sale_no_counters`/`service_no_counters`/`return_no_counters`/`purchase_no_counters` (belge numarası sayaçları) tablolarında RLS TAMAMEN KAPALIYDI — herhangi bir giriş yapmış kullanıcı PostgREST üzerinden başka tenant'ların sayaçlarını görebilir, hatta `last_no`'yu doğrudan UPDATE ederek belge numarası çakışması yaratabilirdi. Dört tabloya da tenant-scoped SELECT RLS'i eklendi (yazma zaten yalnız SECURITY DEFINER sayaç fonksiyonlarından). Ayrıca tüm INSERT/ALL politikalarının `with_check` içerdiği ve `qual`'i `current_tenant_id()`/`is_platform_admin()`/`auth.uid()` dışında bir şeye dayanan politika olmadığı doğrulandı
+- [x] **Performans geçişi** (`0037_performans_tenant_index.sql`): `tenant_id` sütunu olup onu kapsayan hiçbir index'i olmayan 14 tablo bulundu (çoğu zaten doğal bir üst-kayıt index'ine sahip, ama RLS'in `tenant_id = current_tenant_id()` filtresi index'siz kalıyordu) — hepsine index eklendi
+- [x] **Admin davet/rol yönetimi** (`0038_konsol_admin_yonetimi.sql`): `platform_admin_invitations` + davet oluştur/iptal RPC'leri (yalnız Master). Ayrı bir "davet kabul" formu kurmak yerine mevcut giriş akışına entegre edildi: davetli mevcut/yeni bir Supabase Auth hesabıyla `/konsol/giris`'e girdiğinde bekleyen davet varsa otomatik kabul edilir (`platform_davet_kabul_et()`). Rol değiştirme/kaldırma RPC'leri "son Master Admin düşürülemez/kaldırılamaz" kuralını uyguluyor. Yeni `/konsol/adminler` sayfası — Master için tam yönetim, diğer roller için salt-okunur
+- [x] **Feature flag yönetim ekranı:** `admin_flag_ayarla()` (master/manager) + yeni `/konsol/ayarlar` sayfası — `menu.ts`'teki tüm modüller için global durum (Kapalı/Çok Yakında/Beta/Aktif) tek ekrandan değiştirilebiliyor. **Bilinçli kapsam dışı:** tenant/yüzde bazlı kademeli açılış — P2
+- [x] **Konsol'da paket toggle ekranı:** `admin_paket_durumu_degistir()` (master/manager) — aynı `/konsol/ayarlar` sayfasında ikinci bölüm, `addon_packages.status`'u (Taslak/Satışta/Kaldırıldı) değiştiriyor; "Taslak" işaretlenen paket tenant'ların Ayarlar &gt; Eklentiler kataloğunda anında kayboluyor (mevcut sorgu zaten yalnız `status='available'` çekiyordu — Gün 8'den beri hazır bekleyen bir kanca kullanıldı)
+- [x] **E2E test paketi:** bu üç Gün 30 özelliği throwaway master admin + gerçek e-posta/parola akışıyla uçtan uca doğrulandı — davet oluşturuldu → davetlinin hesabı açılıp `/konsol/giris`'te otomatik kabul edildi (MFA kurulumuna yönlendirildi) → Adminler listesinde doğru rolle göründü; rol değiştirme ve kaldırma doğrulandı (yalnız test hesapları üzerinde — gerçek Master Admin hesabına hiç dokunulmadı); bekleyen davet iptali doğrulandı; feature flag ve eklenti paketi durumu değiştirilip veritabanından doğrulandı ve hemen eski değerine geri alındı (canlı tenant'ları etkilememesi için). **Bilinçli kapsam:** "son Master Admin kaldırılamaz" kuralının engelleme dalı canlı ortamda test edilmedi — gerçek Master Admin hesabını (mozkarci1991@gmail.com) geçici de olsa düşürmek/kaldırmak gerekirdi, bu risk alınmadı; kural kod incelemesiyle ve `0023`'teki kanıtlanmış aynı desenle doğrulandı. S1/S2/S3'ün tam bir regresyon turu da bugüne dahil edilmedi — bugünün değişiklikleri yalnız `middleware.ts`/`panel/layout.tsx`'e dokundu ve bu ikisi zaten Gün 28-29 E2E'lerinde defalarca (aktif tenant panel yüklemesi) doğrulandı
 
 ### Ek — Eklenti (Add-on) Pazarı v1 ✅ (kullanıcı talebiyle öne alındı)
 - [x] `0008_eklentiler.sql`: `addon_packages`, `tenant_addon_subscriptions`, `addon_usage_events` + RLS + 8 paketlik lansman kataloğu (uygulandı)
@@ -457,10 +459,10 @@ Sıra pilot geri bildirimiyle revize edilir:
 | 0 (Gün 1-2) | Canlıya çık + Auth | ✅ Tamamlandı — site canlıda |
 | 1 (Gün 3-5) | Panel iskeleti + flag + roller | ✅ Tamamlandı |
 | 2 (Gün 6-10) | Müşteri + Servis çekirdeği | ✅ Tamamlandı — dükkânda kullanılabilir ilk sürüm |
-| 3 (Gün 11-15) | Ürün + Stok + Döviz | Bekliyor |
-| 4 (Gün 16-20) | Satış + Kasa + Gider | Bekliyor |
-| 5 (Gün 21-24) | Alış + Cari | Bekliyor |
-| 6 (Gün 25-30) | Dashboard + Rapor + Konsol = MVP | 🔨 Konsol v0 öne alınıp tamamlandı (Gün 28-30'un temeli) |
+| 3 (Gün 11-15) | Ürün + Stok + Döviz | ✅ Tamamlandı |
+| 4 (Gün 16-20) | Satış + Kasa + Gider | ✅ Tamamlandı |
+| 5 (Gün 21-24) | Alış + Cari | ✅ Tamamlandı |
+| 6 (Gün 25-30) | Dashboard + Rapor + Konsol = MVP | ✅ Tamamlandı — MVP çekirdeği canlıda |
 | 7-8 | Derinlik + pilot | Bekliyor |
 | 9-12 | P1 modülleri | Bekliyor |
 | 13+ | Masaüstü/Offline + P2 | Bekliyor |

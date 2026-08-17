@@ -41,6 +41,10 @@ function KonsolGirisFormu() {
       return;
     }
 
+    // Bekleyen bir admin daveti varsa, giriş anında otomatik kabul edilir
+    // — ayrı bir "davet kabul" formu/sayfası gerekmez.
+    await supabase.rpc("platform_davet_kabul_et");
+
     const { data: yetkiliMi } = await supabase.rpc("is_platform_admin");
     if (!yetkiliMi) {
       await supabase.auth.signOut();

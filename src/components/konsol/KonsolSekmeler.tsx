@@ -7,6 +7,8 @@ const SEKMELER = [
   { href: "/konsol", ad: "Tenant Listesi", ikon: "🏢" },
   { href: "/konsol/kullanicilar", ad: "Kullanıcılar", ikon: "👥" },
   { href: "/konsol/loglar", ad: "Sistem Logları", ikon: "📜" },
+  { href: "/konsol/adminler", ad: "Adminler", ikon: "🛡️" },
+  { href: "/konsol/ayarlar", ad: "Platform Ayarları", ikon: "🎛️" },
 ];
 
 export function KonsolSekmeler() {
