@@ -63,6 +63,12 @@ export default async function StokPage({
             💱 Kur Güncellemesi
           </Link>
           <Link
+            href="/panel/import?tur=urun"
+            className="rounded-lg border border-slate-700 px-3.5 py-2 text-center text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+          >
+            📥 İçe Aktar
+          </Link>
+          <Link
             href="/panel/stok/yeni"
             className="rounded-lg bg-nova-500 px-4 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-nova-400"
           >

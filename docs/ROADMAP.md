@@ -426,7 +426,7 @@ uygulaması ve AI asistan kullanıcı talebiyle kapsam dışı bırakıldı; pil
 gerçek dış kullanıcı gerektirdiği için inşa edilemez — atlandı.
 
 - [ ] Showroom tam sürüm (modül turu, fiyatlandırma, SSS, canlı demo, SEO)
-- [ ] Excel import sihirbazı tam set (müşteri/ürün/stok/cihaz/açık servis)
+- [x] **Excel import sihirbazı** ✅ (müşteri/ürün/stok/cihaz/açık servis) — ayrıntılar aşağıda
 - [x] **Servis derinliği** ✅ (`0039_servis_derinligi.sql`): teslim alınmayan cihaz
   otomasyonu, ücretli teşhis, servis garantisi ilişkisi, kanban görünümü, azami süre
   sayacı — tümü tamamlandı, ayrıntılar aşağıda
@@ -508,6 +508,32 @@ gerçek dış kullanıcı gerektirdiği için inşa edilemez — atlandı.
   oluştu, ürün stoğu 50→49 düştü, müşteri açık hesap bakiyesi ₺1.000 arttı; ikinci teklif
   personel tarafından panelden manuel "Müşteri Reddetti" ile (gerekçe notuyla) reddedildi;
   Teklifler liste sayfasında her iki kayıt da doğru durum/tutarla göründü
+
+### Excel Import Sihirbazı — ayrıntılar ✅
+- [x] **4 adımlı sihirbaz** (`ImportSihirbazi.tsx`, `/panel/import?tur=...`): 1) tür seçimi +
+  dosya yükleme, 2) sütun eşleme (isim benzerliğine göre otomatik ön-eşleme, elle
+  düzeltilebilir), 3) ilk 5 satır önizleme, 4) sonuç — satır bazlı başarı/hata listesi.
+  Müşteriler ve Stok sayfalarına "📥 İçe Aktar" kısayolu eklendi (tür önceden seçili gelir),
+  Ayarlar'a genel giriş kartı eklendi (yalnız `ayar_yonet` yetkisi olanlara)
+- [x] **Sunucu tarafı ayrıştırma:** `/api/import/parse` — `exceljs` ile `.xlsx` okunur (proje
+  zaten Gün 27'den beri bu paketi kullanıyor), ilk satır başlık kabul edilir, en fazla 5 MB /
+  2000 satır sınırı. `/api/import/calistir` — türe göre (müşteri/ürün/cihaz/servis) satır satır
+  doğrulayıp `tenant_id` ile ekler, her satır için ayrı ok/hata sonucu döner (tek satırın
+  hatası diğerlerini engellemez)
+- [x] **İlişkisel eşleme:** cihaz ve açık-servis türleri müşteriyi telefon numarasıyla arar
+  (`Telefon ile eşleşen müşteri bulunamadı` hatası), cihaz türü `GECERLI_CIHAZ_TURLERI`
+  listesine karşı doğrulanır (`Geçersiz cihaz türü` hatası); açık servis türü ayrıca seri
+  numarasıyla isteğe bağlı cihaz eşlemesi yapar
+- [x] E2E: throwaway tenant ile — 3 satırlık müşteri dosyası (2 geçerli + 1 kasıtlı boş-ad
+  satırı) `/api/import/parse`den doğru `columns`/`rows` ile döndü, `/api/import/calistir`
+  ile 2 başarılı + 1 "Ad zorunlu" hatası doğru raporlandı, veritabanında tam 2 müşteri
+  satırı doğrulandı; ardından 4 satırlık cihaz dosyası (2 geçerli, 1 eşleşmeyen telefon,
+  1 geçersiz cihaz türü) aynı şekilde doğru sonuçlandı ve iki cihaz doğru müşterilere
+  bağlı olarak veritabanında doğrulandı. `<input type=file>` tarayıcı otomasyonuyla
+  sürülemediği için gerçek `.xlsx` dosyaları Node/`exceljs` ile üretilip `public/` altına
+  geçici olarak konup tarayıcı içinden `fetch()`+`FormData` ile yüklendi, test sonunda
+  dosyalar ve throwaway tenant/kullanıcı silindi. "urun" ve "servis" türleri aynı kod
+  desenini birebir izlediği için yalnız kod incelemesiyle doğrulandı (tam E2E yapılmadı)
 
 ## SPRINT 9-12 — P1 MODÜLLERİ (Hafta 7-12)
 

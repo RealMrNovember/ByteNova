@@ -47,12 +47,20 @@ export default async function MusterilerPage({
               : "Müşteri kartları ve iletişim geçmişi"}
           </p>
         </div>
-        <Link
-          href="/panel/musteriler/yeni"
-          className="rounded-lg bg-nova-500 px-4 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-nova-400"
-        >
-          + Yeni Müşteri
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/panel/import?tur=musteri"
+            className="rounded-lg border border-slate-700 px-4 py-2 text-center text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+          >
+            📥 İçe Aktar
+          </Link>
+          <Link
+            href="/panel/musteriler/yeni"
+            className="rounded-lg bg-nova-500 px-4 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-nova-400"
+          >
+            + Yeni Müşteri
+          </Link>
+        </div>
       </div>
 
       {/* Arama */}

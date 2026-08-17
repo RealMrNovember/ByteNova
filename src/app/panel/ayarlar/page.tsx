@@ -235,6 +235,22 @@ export default async function AyarlarPage() {
           abonelikler={abonelikler}
         />
 
+        {/* Veri içe aktarma */}
+        {ayarYonetebilir && (
+          <div className="glass rounded-xl p-5">
+            <h2 className="text-sm font-semibold text-white">Veri İçe Aktarma</h2>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Eski sisteminizden Excel (.xlsx) dosyasıyla müşteri, ürün, cihaz veya açık servis kayıtlarını toplu aktarın.
+            </p>
+            <Link
+              href="/panel/import"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-nova-500/50 hover:text-white"
+            >
+              📥 İçe Aktarma Sihirbazı
+            </Link>
+          </div>
+        )}
+
         {/* Gelecek ayar blokları */}
         <div className="glass rounded-xl p-5 opacity-60">
           <h2 className="text-sm font-semibold text-slate-300">

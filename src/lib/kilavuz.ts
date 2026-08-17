@@ -937,6 +937,43 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     ilgili: ["satis", "musteriler", "ayarlar"],
   },
   {
+    slug: "veri-ice-aktarma",
+    baslik: "Veri İçe Aktarma (Excel)",
+    ikon: "📥",
+    kategori: "modul",
+    ozet: "Müşteri, ürün, cihaz veya açık servis kayıtlarınızı bir .xlsx dosyasından toplu olarak aktarın.",
+    anahtarKelimeler: ["excel", "içe aktar", "import", "toplu yükleme", "xlsx", "eski sistem", "veri aktarımı"],
+    icerik: [
+      {
+        tur: "paragraf",
+        metin:
+          "Eski bir programdan veya Excel tablosundan geçiş yapıyorsanız, kayıtlarınızı tek tek elle girmek yerine bir .xlsx dosyasıyla toplu aktarabilirsiniz. Ayarlar > \"Veri İçe Aktarma\" ile veya Müşteriler/Stok sayfalarındaki \"📥 İçe Aktar\" kısayoluyla sihirbaza ulaşırsınız.",
+      },
+      { tur: "altbaslik", metin: "Sihirbaz Nasıl Çalışır" },
+      {
+        tur: "adimlar",
+        adimlar: [
+          "Aktaracağınız veri türünü seçin: Müşteri, Ürün, Cihaz veya Açık Servis (geçmiş sistemden aktarım).",
+          "İlk satırında sütun başlıkları olan bir .xlsx dosyası yükleyin (en fazla 5 MB, 2000 satır).",
+          "Sistemin otomatik önerdiği sütun eşlemesini kontrol edin, gerekirse elle düzeltin (örn. \"Müşteri Adı\" sütununu \"Ad Soyad\" alanına eşleyin).",
+          "İlk birkaç satırın önizlemesini kontrol edip \"İçe Aktar\"a basın.",
+          "Sonuç ekranında her satırın başarılı mı yoksa hangi hatayla reddedildiği ayrı ayrı listelenir — bir satırdaki hata diğerlerini etkilemez.",
+        ],
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "Cihaz ve Açık Servis türleri, ilgili müşteriyi telefon numarasından bulur — önce müşterileri, sonra cihazları/servisleri aktarmanız önerilir. Açık Servis türünde cihaz seri numarası da verirseniz cihazla otomatik eşleştirilir.",
+      },
+      {
+        tur: "uyari",
+        metin:
+          "İçe aktarma yalnızca yeni kayıt ekler, mevcut kayıtları güncellemez veya birleştirmez — aynı müşteriyi iki kez aktarırsanız iki ayrı kayıt oluşur. Büyük bir aktarım öncesi küçük bir örnek dosyayla deneme yapmanız önerilir.",
+      },
+    ],
+    ilgili: ["musteriler", "stok", "ayarlar"],
+  },
+  {
     slug: "yakinda",
     baslik: "Yakında Gelecek Modüller",
     ikon: "🗓️",
