@@ -4,15 +4,17 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cihazIkon } from "@/lib/cihaz";
 import { durumEtiket, durumSinifi, ONCELIKLER, oncelikBul } from "@/lib/servis";
+import { ServisKanban } from "@/components/servis/ServisKanban";
 
 export const metadata: Metadata = { title: "Servisler — ByteNova" };
 
 export default async function ServislerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; oncelik?: string; atanan?: string; durum?: string }>;
+  searchParams: Promise<{ q?: string; oncelik?: string; atanan?: string; durum?: string; gorunum?: string }>;
 }) {
-  const { q, oncelik, atanan, durum } = await searchParams;
+  const { q, oncelik, atanan, durum, gorunum } = await searchParams;
+  const kanbanGorunumu = gorunum === "kanban";
   const supabase = await createClient();
 
   const {
@@ -26,7 +28,7 @@ export default async function ServislerPage({
       "id, service_no, status, priority, technician_id, created_at, customers(name), devices(device_type, brand, model)"
     )
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(kanbanGorunumu ? 150 : 50);
 
   if (q?.trim()) sorgu = sorgu.ilike("service_no", `%${q.trim()}%`);
   if (oncelik) sorgu = sorgu.eq("priority", oncelik);
@@ -54,12 +56,28 @@ export default async function ServislerPage({
             Kabulden teslime tüm servis kayıtları
           </p>
         </div>
-        <Link
-          href="/panel/servisler/yeni"
-          className="rounded-lg bg-nova-500 px-4 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-nova-400"
-        >
-          + Yeni Servis
-        </Link>
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-lg border border-slate-700 p-0.5 text-xs">
+            <Link
+              href={`/panel/servisler?${new URLSearchParams({ ...(atanan ? { atanan } : {}) }).toString()}`}
+              className={`rounded-md px-2.5 py-1 font-medium ${!kanbanGorunumu ? "bg-nova-500/15 text-nova-300" : "text-slate-500"}`}
+            >
+              📋 Liste
+            </Link>
+            <Link
+              href={`/panel/servisler?${new URLSearchParams({ ...(atanan ? { atanan } : {}), gorunum: "kanban" }).toString()}`}
+              className={`rounded-md px-2.5 py-1 font-medium ${kanbanGorunumu ? "bg-nova-500/15 text-nova-300" : "text-slate-500"}`}
+            >
+              🗂️ Kanban
+            </Link>
+          </div>
+          <Link
+            href="/panel/servisler/yeni"
+            className="rounded-lg bg-nova-500 px-4 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-nova-400"
+          >
+            + Yeni Servis
+          </Link>
+        </div>
       </div>
 
       {/* Filtreler */}
@@ -130,6 +148,15 @@ export default async function ServislerPage({
             + İlk servisi oluştur
           </Link>
         </div>
+      ) : kanbanGorunumu ? (
+        <ServisKanban
+          servisler={servisler.map((s) => ({
+            ...s,
+            customers: s.customers as unknown as { name: string } | null,
+            devices: s.devices as unknown as { device_type: string; brand: string | null; model: string | null } | null,
+          }))}
+          kullanicilar={kullanicilar ?? []}
+        />
       ) : (
         <div className="glass mt-6 overflow-hidden rounded-xl">
           <table className="w-full text-sm">

@@ -18,6 +18,7 @@ type Props = {
   mevcutFinalTutar: number | null;
   avansAlinan: number;
   kasaHesaplari: KasaHesabi[];
+  varsayilanGarantiGun: number;
 };
 
 export function TeslimPaneli({
@@ -30,12 +31,14 @@ export function TeslimPaneli({
   mevcutFinalTutar,
   avansAlinan,
   kasaHesaplari,
+  varsayilanGarantiGun,
 }: Props) {
   const router = useRouter();
   const [aksesuarlar, setAksesuarlar] = useState(ilk);
   const [teslimNotu, setTeslimNotu] = useState("");
   const [finalTutar, setFinalTutar] = useState(mevcutFinalTutar?.toString() ?? "");
   const [hesapId, setHesapId] = useState(kasaHesaplari[0]?.id ?? "");
+  const [garantiGun, setGarantiGun] = useState(varsayilanGarantiGun.toString());
   const [yukleniyor, setYukleniyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
 
@@ -61,7 +64,8 @@ export function TeslimPaneli({
       teslimNotu,
       finalTutar ? finalSayi : null,
       kalanTahsilat > 0 ? kalanTahsilat : null,
-      kalanTahsilat > 0 ? hesapId : null
+      kalanTahsilat > 0 ? hesapId : null,
+      Number(garantiGun) || 0
     );
     setYukleniyor(false);
     if (!sonuc.ok) {
@@ -140,6 +144,19 @@ export function TeslimPaneli({
             value={teslimNotu}
             onChange={(e) => setTeslimNotu(e.target.value)}
             placeholder="Örn: Müşteriye test videosu gösterildi."
+            className="w-full rounded-lg border border-slate-700 bg-surface px-3.5 py-2 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-nova-500"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-slate-300">
+            Garanti süresi (gün, opsiyonel)
+          </label>
+          <input
+            type="number"
+            min="0"
+            value={garantiGun}
+            onChange={(e) => setGarantiGun(e.target.value)}
+            placeholder="0"
             className="w-full rounded-lg border border-slate-700 bg-surface px-3.5 py-2 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-nova-500"
           />
         </div>

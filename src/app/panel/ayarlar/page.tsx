@@ -7,6 +7,7 @@ import { EklentilerListesi } from "@/components/panel/EklentilerListesi";
 import { DovizKurlari } from "@/components/panel/DovizKurlari";
 import { StokPolitikasi } from "@/components/panel/StokPolitikasi";
 import { TaksitAyari } from "@/components/panel/TaksitAyari";
+import { ServisAyarlari } from "@/components/panel/ServisAyarlari";
 import { AbonelikBolumu } from "@/components/panel/AbonelikBolumu";
 import { yetkiVar } from "@/lib/yetki";
 import { TAKIP_EDILEN_KURLAR } from "@/lib/doviz";
@@ -44,6 +45,8 @@ export default async function AyarlarPage() {
     trial_ends_at: string | null;
     plan_id: string | null;
     billing_cycle: "aylik" | "yillik" | null;
+    default_warranty_days: number;
+    hazir_bekleme_gun: number;
   } | null;
 
   // Aynı tenant'taki kullanıcılar (RLS zaten sınırlıyor)
@@ -203,6 +206,14 @@ export default async function AyarlarPage() {
           tenantId={profil?.tenant_id ?? ""}
           yetkili={ayarYonetebilir}
           mevcutLimit={tenant?.max_installments ?? 12}
+        />
+
+        {/* Servis ayarları — garanti süresi + teslim bekleme */}
+        <ServisAyarlari
+          tenantId={profil?.tenant_id ?? ""}
+          yetkili={ayarYonetebilir}
+          mevcutGarantiGun={tenant?.default_warranty_days ?? 90}
+          mevcutBeklemeGun={tenant?.hazir_bekleme_gun ?? 15}
         />
 
         {/* Abonelik — plan, durum, dekont yükleme */}

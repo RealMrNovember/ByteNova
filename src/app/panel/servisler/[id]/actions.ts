@@ -10,7 +10,8 @@ export async function teslimiTamamla(
   teslimNotu: string,
   finalTutar: number | null,
   kalanTahsilat: number | null,
-  kasaHesapId: string | null
+  kasaHesapId: string | null,
+  garantiGun: number = 0
 ) {
   const supabase = await createClient();
   const {
@@ -36,6 +37,7 @@ export async function teslimiTamamla(
       accessories: aksesuarlar,
       delivery_note: teslimNotu.trim() || null,
       final_cost: finalTutar,
+      warranty_days: garantiGun > 0 ? garantiGun : null,
     })
     .eq("id", servisId);
 

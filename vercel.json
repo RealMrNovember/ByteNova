@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/abonelik-kontrol",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/servis-teslim-kontrolu",
+      "schedule": "0 4 * * *"
     }
   ]
 }

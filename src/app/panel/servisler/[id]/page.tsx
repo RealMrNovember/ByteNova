@@ -11,6 +11,9 @@ import { BelgeIslemleri } from "@/components/servis/BelgeIslemleri";
 import { ServisParcalari } from "@/components/servis/ServisParcalari";
 import { ServisParcaTalebi } from "@/components/servis/ServisParcaTalebi";
 import { ServisTahsilat } from "@/components/servis/ServisTahsilat";
+import { TeshisUcreti } from "@/components/servis/TeshisUcreti";
+import { KAPANMIS_DURUMLAR, isGunuSayisi, AZAMI_TAMIR_SURESI_IS_GUNU } from "@/lib/servis";
+import { paraFormatla } from "@/lib/doviz";
 
 type Aksesuar = { name: string; delivered: boolean };
 
@@ -105,6 +108,14 @@ export default async function ServisDetayPage({
     .eq("service_order_id", id)
     .order("requested_at", { ascending: false });
 
+  const [{ data: kaynakServis }, { data: tekrarServisler }, { data: tenantAyar }] = await Promise.all([
+    s.source_service_id
+      ? supabase.from("service_orders").select("id, service_no").eq("id", s.source_service_id).single()
+      : Promise.resolve({ data: null }),
+    supabase.from("service_orders").select("id, service_no, status, created_at").eq("source_service_id", id),
+    supabase.from("tenants").select("default_warranty_days").eq("id", s.tenant_id).single(),
+  ]);
+
   const adSozlugu = new Map(
     (kullanicilar ?? []).map((k) => [k.id, k.full_name ?? "İsimsiz"])
   );
@@ -178,11 +189,58 @@ export default async function ServisDetayPage({
                   🔧 {teknisyenAdi}
                 </span>
               )}
+              {s.warranty_claim && !KAPANMIS_DURUMLAR.includes(s.status) && (
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                    isGunuSayisi(s.created_at) >= AZAMI_TAMIR_SURESI_IS_GUNU
+                      ? "bg-red-500/15 text-red-300"
+                      : isGunuSayisi(s.created_at) >= AZAMI_TAMIR_SURESI_IS_GUNU - 5
+                        ? "bg-amber-500/15 text-amber-300"
+                        : "bg-nova-500/15 text-nova-300"
+                  }`}
+                >
+                  🛡️ Garanti — {isGunuSayisi(s.created_at)}/{AZAMI_TAMIR_SURESI_IS_GUNU} iş günü
+                </span>
+              )}
+              {s.diagnosis_fee_charged && (
+                <span className="rounded-full bg-amber-500/15 px-2.5 py-1 text-[10px] font-semibold text-amber-300">
+                  💰 Teşhis: {paraFormatla(s.diagnosis_fee ?? 0)}
+                </span>
+              )}
             </div>
             <p className="mt-1 text-xs text-slate-500">
               Kabul: {new Date(s.created_at).toLocaleString("tr-TR")}
+              {kaynakServis && (
+                <>
+                  {" · "}Kaynak servis:{" "}
+                  <Link href={`/panel/servisler/${kaynakServis.id}`} className="font-mono text-nova-300 hover:underline">
+                    {kaynakServis.service_no}
+                  </Link>
+                </>
+              )}
             </p>
+            {(tekrarServisler ?? []).length > 0 && (
+              <p className="mt-1 text-xs text-slate-500">
+                Bu cihaz için sonraki (garanti) servisler:{" "}
+                {(tekrarServisler ?? []).map((t, i) => (
+                  <span key={t.id}>
+                    {i > 0 && ", "}
+                    <Link href={`/panel/servisler/${t.id}`} className="font-mono text-nova-300 hover:underline">
+                      {t.service_no}
+                    </Link>
+                  </span>
+                ))}
+              </p>
+            )}
           </div>
+          {KAPANMIS_DURUMLAR.includes(s.status) && !s.warranty_claim && cihaz && (
+            <Link
+              href={`/panel/servisler/yeni?kaynak=${s.id}`}
+              className="shrink-0 rounded-lg border border-nova-500/40 px-3.5 py-1.5 text-xs font-medium text-nova-300 transition hover:bg-nova-500/10"
+            >
+              🛡️ Garanti Kapsamında Tekrar Servis Aç
+            </Link>
+          )}
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -316,6 +374,18 @@ export default async function ServisDetayPage({
         <ServisParcaTalebi servisId={s.id} yetkili={yetkili} talepler={parcaTalepleri} />
       </div>
 
+      {/* Ücretli teşhis */}
+      {["fiyatlandirma_bekliyor", "onay_bekliyor"].includes(s.status) && (
+        <div className="mt-4">
+          <TeshisUcreti
+            servisId={s.id}
+            yetkili={yetkili}
+            mevcutUcret={s.diagnosis_fee}
+            ucretTahsilEdildi={s.diagnosis_fee_charged}
+          />
+        </div>
+      )}
+
       {/* Kapora / avans */}
       <div className="mt-4">
         <ServisTahsilat
@@ -338,6 +408,7 @@ export default async function ServisDetayPage({
           mevcutFinalTutar={s.final_cost}
           avansAlinan={s.advance_paid ?? 0}
           kasaHesaplari={kasaHesaplari ?? []}
+          varsayilanGarantiGun={tenantAyar?.default_warranty_days ?? 90}
         />
       </div>
 

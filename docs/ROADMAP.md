@@ -421,15 +421,55 @@ Kapsam kullanıcı talebiyle netleştirildi (17.08.2026).
 
 ## SPRINT 7-8 — DERİNLİK VE CİLA (Hafta 5-6)
 
-Sıra pilot geri bildirimiyle revize edilir:
+Sıra pilot geri bildirimiyle revize edilir. **Kapsam notu (17.08.2026):** masaüstü/Tauri
+uygulaması ve AI asistan kullanıcı talebiyle kapsam dışı bırakıldı; pilot başlangıcı
+gerçek dış kullanıcı gerektirdiği için inşa edilemez — atlandı.
 
 - [ ] Showroom tam sürüm (modül turu, fiyatlandırma, SSS, canlı demo, SEO)
 - [ ] Excel import sihirbazı tam set (müşteri/ürün/stok/cihaz/açık servis)
-- [ ] Servis derinliği: teslim alınmayan cihaz otomasyonu, ücretli teşhis, servis garantisi ilişkisi, kanban görünümü, azami süre sayacı
+- [x] **Servis derinliği** ✅ (`0039_servis_derinligi.sql`): teslim alınmayan cihaz
+  otomasyonu, ücretli teşhis, servis garantisi ilişkisi, kanban görünümü, azami süre
+  sayacı — tümü tamamlandı, ayrıntılar aşağıda
 - [ ] Teklif modülü + PDF
 - [ ] Dijital ürün (lisans key) + demo veri seti
 - [ ] Kurulum sihirbazı tam sürüm + onboarding dokümanları
-- [ ] 2-3 gerçek bilgisayarcıyla **pilot başlangıcı**
+- [x] ~~2-3 gerçek bilgisayarcıyla pilot başlangıcı~~ → **kapsam dışı** (gerçek dış kullanıcı gerektirir)
+
+### Servis Derinliği — ayrıntılar ✅
+- [x] **Kanban görünümü:** `/panel/servisler?gorunum=kanban` — 18 ham durumu 6 okunabilir
+  sütuna gruplar (Kabul/İnceleme, Fiyat/Onay Bekliyor, Onarımda, Test/Hazır, Teslim
+  Alınmadı, Kapandı); karttan tek tıkla durum değişimi (`ServisKanban.tsx`)
+- [x] **Ücretli teşhis** (Bölüm 12.10): `servis_teshis_ucreti_uygula()` RPC — müşteri
+  teklifi reddederse ücret kaydedilir, cihaz "Hazır" durumuna geçer, sistem notu düşer;
+  tahsilat mevcut `servis_tahsilat_al()` akışıyla (Gün 18) yapılır, yeni ödeme mekanizması
+  gerekmedi
+- [x] **Servis garantisi ve tekrar servis** (Bölüm 12.9): Gün 7'den beri var olup hiç
+  kullanılmayan `source_service_id` sütunu artık gerçek bir akışa bağlandı — kapanmış bir
+  servisten "🛡️ Garanti Kapsamında Tekrar Servis Aç" ile yeni kayıt açılır (müşteri/cihaz
+  otomatik dolar), iki kayıt karşılıklı bağlantı gösterir. **Azami tamir süresi (20 iş
+  günü)** sayacı istemci tarafında hesaplanır (`isGunuSayisi()` — hafta sonu hariç), 15
+  günde turuncu, 20 günde kırmızı rozet
+- [x] **Teslim alınmayan cihaz otomasyonu** (Bölüm 12.7): `/api/cron/servis-teslim-kontrolu`
+  (günlük) — "Hazır" durumunda tenant başına ayarlanabilir süre (varsayılan 15 gün, Ayarlar
+  > Servis Ayarları) geçen cihazları otomatik "Teslim Alınmadı"ya düşürür + sistem notu;
+  Genel Bakış'a "Teslim Alınmayanlar" kartı eklendi. **Bilinçli kapsam dışı:** gerçek
+  SMS/arama/ihtar kademeli hatırlatma zinciri (gün 15/30/60) bir mesajlaşma sağlayıcısı
+  gerektirir — Sprint 9-12'deki WhatsApp/SMS eklentisine planlı; bugün yalnız durum geçişi
+  ve panel içi görünürlük otomatik
+- [x] E2E: throwaway tenant + müşteri + cihazla uçtan uca doğrulandı — servis oluşturuldu,
+  kanban görünümünde kart doğru sütuna düştü ve durum değişimi anında yansıdı; ücretli
+  teşhis uygulandı (₺300 rozet + durum "Hazır"a geçti); teslimde 90 günlük varsayılan
+  garanti süresi doğru kaydedildi; kapanmış servisten garanti kapsamında tekrar servis
+  açıldı, her iki kayıtta da karşılıklı bağlantı ve "0/20 iş günü" sayaç rozeti doğru
+  göründü; cron endpoint'i gerçek CRON_SECRET ile tetiklenerek "Hazır" durumundaki bir
+  servisin (geçmişe atılmış durum kaydıyla simüle edilen 20 gün sonra) otomatik "Teslim
+  Alınmadı"ya düştüğü ve Genel Bakış'taki sayaca yansıdığı doğrulandı; Ayarlar > Servis
+  Ayarları kaydı doğrulandı. **Canlı testte bulunan hata:** Kanban bileşenine bir server
+  component'ten doğrudan fonksiyon (`teknisyenAdi` closure'ı) prop olarak geçiriliyordu —
+  Next.js Server/Client Component sınırında fonksiyonlar serileştirilemediği için sayfa
+  runtime hatasıyla çöküyordu (build zamanında yakalanmadı, yalnız tarayıcıda ortaya çıktı);
+  düzeltme: ham `kullanicilar` dizisi client component'e geçirilip ad sözlüğü orada
+  hesaplanacak şekilde değiştirildi
 
 ## SPRINT 9-12 — P1 MODÜLLERİ (Hafta 7-12)
 

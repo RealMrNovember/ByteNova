@@ -54,6 +54,7 @@ export default async function GenelBakisPage() {
     { count: acikServisSayisi },
     { count: teslimSayisi },
     { count: onayBekleyenSayisi },
+    { count: teslimAlinmayanSayisi },
     { data: tedarikciler },
     kurlar,
   ] = await Promise.all([
@@ -72,6 +73,10 @@ export default async function GenelBakisPage() {
       .from("service_orders")
       .select("id", { count: "exact", head: true })
       .eq("status", "onay_bekliyor"),
+    supabase
+      .from("service_orders")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "teslim_alinmadi"),
     supabase.from("suppliers").select("balance, currency, avg_exchange_rate").neq("balance", 0),
     etkinKurlar(supabase),
   ]);
@@ -177,6 +182,14 @@ export default async function GenelBakisPage() {
       ikon: "⏳",
       href: "/panel/servisler?durum=onay_bekliyor",
       vurgu: (onayBekleyenSayisi ?? 0) > 0,
+    });
+    kartlar.push({
+      baslik: "Teslim Alınmayanlar",
+      deger: String(teslimAlinmayanSayisi ?? 0),
+      alt: "Hazır ama alınmayan cihaz",
+      ikon: "📮",
+      href: "/panel/servisler?durum=teslim_alinmadi",
+      vurgu: (teslimAlinmayanSayisi ?? 0) > 0,
     });
   }
   if (kurEtkisiGosterilsin) {

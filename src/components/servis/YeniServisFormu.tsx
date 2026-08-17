@@ -23,10 +23,17 @@ type Cihaz = {
 const alanSinifi =
   "w-full rounded-lg border border-slate-700 bg-surface px-3.5 py-2.5 text-sm text-slate-200 outline-none transition-colors placeholder:text-slate-600 focus:border-nova-500";
 
-export function YeniServisFormu({ tenantId }: { tenantId: string }) {
+type Props = {
+  tenantId: string;
+  kaynakServisId?: string | null;
+  ilkMusteri?: Musteri | null;
+  ilkCihaz?: Cihaz | null;
+};
+
+export function YeniServisFormu({ tenantId, kaynakServisId = null, ilkMusteri = null, ilkCihaz = null }: Props) {
   const router = useRouter();
-  const [musteri, setMusteri] = useState<Musteri | null>(null);
-  const [cihaz, setCihaz] = useState<Cihaz | null>(null);
+  const [musteri, setMusteri] = useState<Musteri | null>(ilkMusteri);
+  const [cihaz, setCihaz] = useState<Cihaz | null>(ilkCihaz);
   const [beyan, setBeyan] = useState("");
   const [checklist, setChecklist] = useState<Record<string, boolean>>({});
   const [aksesuarGirisi, setAksesuarGirisi] = useState("");
@@ -86,6 +93,8 @@ export function YeniServisFormu({ tenantId }: { tenantId: string }) {
         consent_accepted: true,
         consent_accepted_at: new Date().toISOString(),
         created_by: user?.id,
+        source_service_id: kaynakServisId,
+        warranty_claim: !!kaynakServisId,
       })
       .select("id, service_no")
       .single();

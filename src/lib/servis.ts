@@ -24,6 +24,26 @@ export const DURUMLAR = [
 
 export type ServisDurum = (typeof DURUMLAR)[number]["deger"];
 
+// Kanban görünümü için 18 durumu okunabilir kolonlara gruplar.
+export const KANBAN_KOLONLARI = [
+  { baslik: "Kabul / İnceleme", durumlar: ["kabul_edildi", "incelemede"] },
+  { baslik: "Fiyat / Onay Bekliyor", durumlar: ["fiyatlandirma_bekliyor", "onay_bekliyor"] },
+  {
+    baslik: "Onarımda",
+    durumlar: ["onaylandi", "onariliyor", "parca_bekleniyor", "dis_serviste", "kargoda", "garanti_kapsaminda"],
+  },
+  { baslik: "Test / Hazır", durumlar: ["test_ediliyor", "hazir"] },
+  { baslik: "Teslim Alınmadı", durumlar: ["teslim_alinmadi"] },
+  {
+    baslik: "Kapandı",
+    durumlar: ["teslim_edildi", "iptal", "onarilamadi", "musteri_vazgecti", "hurda"],
+  },
+] as const;
+
+export function kanbanKolonuBul(durum: string) {
+  return KANBAN_KOLONLARI.find((k) => (k.durumlar as readonly string[]).includes(durum))?.baslik ?? "Diğer";
+}
+
 const RENK_SINIFLARI: Record<string, string> = {
   slate: "bg-slate-500/15 text-slate-300",
   sky: "bg-sky-500/15 text-sky-300",
@@ -41,6 +61,34 @@ export function durumSinifi(deger: string): string {
   const renk = DURUMLAR.find((d) => d.deger === deger)?.renk ?? "slate";
   return RENK_SINIFLARI[renk];
 }
+
+// Kapanmış (artık aktif işlem beklemeyen) durumlar — garanti sayacı ve
+// "teslim alınmayanlar" gibi hesaplamalar bu kümenin dışındaki servisleri
+// izler.
+export const KAPANMIS_DURUMLAR: readonly string[] = [
+  "teslim_edildi",
+  "iptal",
+  "onarilamadi",
+  "musteri_vazgecti",
+  "hurda",
+];
+
+/** İki tarih arasındaki iş günü (hafta içi) sayısı — Bölüm 38'deki azami tamir süresi (20 iş günü) için. */
+export function isGunuSayisi(baslangic: string, bitis: Date = new Date()): number {
+  let sayac = 0;
+  const gun = new Date(baslangic);
+  gun.setHours(0, 0, 0, 0);
+  const son = new Date(bitis);
+  son.setHours(0, 0, 0, 0);
+  while (gun < son) {
+    gun.setDate(gun.getDate() + 1);
+    const haftaGunu = gun.getDay();
+    if (haftaGunu !== 0 && haftaGunu !== 6) sayac += 1;
+  }
+  return sayac;
+}
+
+export const AZAMI_TAMIR_SURESI_IS_GUNU = 20;
 
 export const ONCELIKLER = [
   { deger: "dusuk", etiket: "Düşük", sinif: "bg-slate-500/15 text-slate-400" },

@@ -224,9 +224,10 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     ikon: "🔧",
     kategori: "modul",
     ozet:
-      "Servis kabulünden teslime: kabul formu, durum takibi, parça kullanımı, kapora, teslim ve belgeler.",
+      "Servis kabulünden teslime: kabul formu, durum takibi, parça kullanımı, kapora, teslim ve belgeler; kanban görünümü, ücretli teşhis, garanti ve teslim alınmayan cihaz takibi.",
     anahtarKelimeler: [
       "servis", "kabul", "teslim", "kapora", "avans", "parça", "teknisyen", "durum",
+      "kanban", "garanti", "teşhis", "teslim alınmayan",
     ],
     icerik: [
       { tur: "altbaslik", metin: "Yeni Servis Kabul Etme" },
@@ -305,8 +306,37 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         metin:
           "\"Belgeler\" kartından Kabul Formu'nu (ve teslimden sonra Teslim Tutanağı'nı) PDF olarak indirebilirsiniz — her ikisinde de doğrulama için QR kod bulunur. WhatsApp/SMS eklentiniz aktifse aynı belgeleri doğrudan müşterinin WhatsApp'ına gönderen yeşil butonlar da burada belirir; eklenti aktif değilse bu alanda Ayarlar > Eklentiler'e giden bir bağlantı görürsünüz.",
       },
+      { tur: "altbaslik", metin: "Kanban Görünümü" },
+      {
+        tur: "paragraf",
+        metin:
+          "Servisler listesinin üstündeki \"📋 Liste / 🗂️ Kanban\" düğmesiyle görünüm değiştirirsiniz. Kanban'da servisler altı sütuna gruplanır (Kabul/İnceleme, Fiyat/Onay Bekliyor, Onarımda, Test/Hazır, Teslim Alınmadı, Kapandı); bir kartın altındaki \"Durum değiştir\"e basıp yeni durumu seçmek, detay sayfasına girmeden hızlı güncelleme yapmanızı sağlar.",
+      },
+      { tur: "altbaslik", metin: "Ücretli Teşhis" },
+      {
+        tur: "paragraf",
+        metin:
+          "Müşteri onarım teklifini reddederse (\"bu ücrete yaptırmayacağım, geri alacağım\") servis detayındaki \"💰 Müşteri Teklifi Reddetti — Ücretli Teşhis Uygula\" butonuna basıp kabul formunda beyan edilen teşhis ücretini girersiniz. Cihaz otomatik \"Hazır\" (teslim bekliyor) durumuna geçer, ücret kartta rozet olarak görünür ve Kapora/Avans bölümünden tahsil edilebilir.",
+      },
+      { tur: "altbaslik", metin: "Garanti ve Tekrar Servis" },
+      {
+        tur: "paragraf",
+        metin:
+          "Teslim edilmiş bir cihaz kısa süre sonra aynı arızayla geri gelirse, o servisin detay sayfasındaki \"🛡️ Garanti Kapsamında Tekrar Servis Aç\" düğmesiyle yeni bir servis açarsınız — müşteri ve cihaz otomatik doldurulur, iki kayıt birbirine bağlanır (her ikisinde de karşılıklı bağlantı görünür). Garanti kapsamındaki servislerde \"20 iş günü\" azami tamir süresi sayacı rozet olarak gösterilir; süre yaklaştıkça/aşıldıkça renk turuncuya ve kırmızıya döner. Teslim işleminde girilen \"Garanti süresi (gün)\" değeri Ayarlar'daki varsayılanla otomatik doldurulur, isterseniz değiştirebilirsiniz.",
+      },
+      { tur: "altbaslik", metin: "Teslim Alınmayan Cihazlar" },
+      {
+        tur: "paragraf",
+        metin:
+          "Bir cihaz \"Hazır\" durumunda Ayarlar'da belirlediğiniz süre (varsayılan 15 gün) boyunca teslim alınmazsa sistem otomatik olarak \"Teslim Alınmadı (Bekliyor)\" durumuna geçirir ve servise bir sistem notu düşer. Genel Bakış'taki \"Teslim Alınmayanlar\" kartı bu cihazların güncel sayısını gösterir — karta tıklayarak doğrudan filtrelenmiş listeye gidersiniz.",
+      },
+      {
+        tur: "uyari",
+        metin:
+          "Gerçek SMS/arama hatırlatma zincirleri (gün 15 SMS, gün 30 arama, gün 60 ihtar) için bir mesajlaşma sağlayıcısı entegrasyonu gerekir — bugün yalnızca durum geçişi ve panel içi görünürlük otomatik; hatırlatmaları şimdilik WhatsApp/telefon ile siz yapmalısınız.",
+      },
     ],
-    ilgili: ["stok", "musteriler", "finans"],
+    ilgili: ["stok", "musteriler", "finans", "ayarlar"],
   },
   {
     slug: "satis",
@@ -763,6 +793,12 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
       {
         tur: "paragraf",
         metin: "Satış ekranında kart ödemelerinde önerilecek azami taksit sayısını burada belirlersiniz.",
+      },
+      { tur: "altbaslik", metin: "Servis Ayarları" },
+      {
+        tur: "paragraf",
+        metin:
+          "Teslimde önerilecek varsayılan garanti süresini (gün) ve \"Hazır\" durumundaki bir cihazın kaç gün beklenirse otomatik \"Teslim Alınmadı\" işaretleneceğini burada belirlersiniz.",
       },
       { tur: "altbaslik", metin: "Abonelik" },
       {
