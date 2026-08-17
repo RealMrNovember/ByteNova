@@ -12,6 +12,7 @@ type Mevcut = {
   phone: string | null;
   address: string | null;
   notes: string | null;
+  is_taxpayer: boolean;
 };
 
 type Props = {
@@ -30,6 +31,7 @@ export function TedarikciFormu({ tenantId, mevcut }: Props) {
   const [telefon, setTelefon] = useState(mevcut?.phone ?? "");
   const [adres, setAdres] = useState(mevcut?.address ?? "");
   const [notlar, setNotlar] = useState(mevcut?.notes ?? "");
+  const [mukellef, setMukellef] = useState(mevcut?.is_taxpayer ?? true);
   const [hata, setHata] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
 
@@ -50,6 +52,7 @@ export function TedarikciFormu({ tenantId, mevcut }: Props) {
       phone: telefon.trim() || null,
       address: adres.trim() || null,
       notes: notlar.trim() || null,
+      is_taxpayer: mukellef,
     };
 
     if (mevcut) {
@@ -158,6 +161,22 @@ export function TedarikciFormu({ tenantId, mevcut }: Props) {
           className={alanSinifi}
         />
       </div>
+
+      <label className="flex items-start gap-2.5 rounded-lg border border-slate-700 bg-surface px-3.5 py-2.5 text-sm text-slate-300">
+        <input
+          type="checkbox"
+          checked={mukellef}
+          onChange={(e) => setMukellef(e.target.checked)}
+          className="mt-0.5 h-3.5 w-3.5 rounded border-slate-600 bg-surface text-nova-500 focus:ring-0 focus:ring-offset-0"
+        />
+        <span>
+          Vergi mükellefi (işletme)
+          <span className="block text-xs text-slate-500">
+            İşaretsiz bırakırsanız bu tedarikçi vergi mükellefi olmayan bir şahıs sayılır —
+            alımlarında fatura yerine gider pusulası düzenlenebilir.
+          </span>
+        </span>
+      </label>
 
       <div>
         <label className="mb-1.5 block text-xs font-medium text-slate-300">Notlar</label>

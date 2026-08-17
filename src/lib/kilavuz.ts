@@ -393,6 +393,11 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         metin:
           "Her satışta \"🕐 Sonra Kesilecek\" veya \"🧾 ÖKC Fişi Kesildi\" seçeneklerinden birini işaretlersiniz. ÖKC fişi kesildiyse fiş numarasını girmeniz zorunludur. \"Sonra Kesilecek\" işaretlenen satışlar Satış > Belgeler kuyruğunda birikir; fiş kesildiğinde oradan fiş numarasını girip belgeyi kapatırsınız.",
       },
+      {
+        tur: "ipucu",
+        metin:
+          "Müşteri kurumsalsa ve kartında VKN kayıtlıysa, \"Sonra Kesilecek\" satışın detayında fiş numarası kutusunun altında \"🧾 e-Fatura Kes\" ve \"🧾 e-Arşiv Fatura Kes\" düğmeleri de belirir. Bu, e-Belge Paketi eklentisiyle gelir — kesilen belgeler Belgeler sayfasında arşivlenir. (Sandbox: gerçek bir GİB entegrasyonu değildir, belge numarası simüle edilir.)",
+      },
       { tur: "altbaslik", metin: "Satış Sonrası — Detay, Belge Kuyruğu, İadeler" },
       {
         tur: "liste",
@@ -511,7 +516,7 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     ikon: "🤝",
     kategori: "modul",
     ozet: "Tedarikçi kartları, dövizli cari bakiye ve ödeme takibi.",
-    anahtarKelimeler: ["tedarikçi", "cari", "iban", "ödeme", "borç"],
+    anahtarKelimeler: ["tedarikçi", "cari", "iban", "ödeme", "borç", "gider pusulası", "stopaj", "vergi mükellefi"],
     icerik: [
       {
         tur: "paragraf",
@@ -523,6 +528,17 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         tur: "paragraf",
         metin:
           "\"+ Yeni Tedarikçi\" ile ad ve para birimini girersiniz (bu tedarikçiyle hangi para biriminde çalıştığınız — genelde tüm alışlarınız bu para biriminde olur). IBAN, telefon, adres ve notları kart oluştuktan sonra da ekleyebilirsiniz.",
+      },
+      { tur: "altbaslik", metin: "Vergi Mükellefi Olmayan Tedarikçiler — Gider Pusulası" },
+      {
+        tur: "paragraf",
+        metin:
+          "İkinci el eşya/cihaz gibi vergi mükellefi olmayan bir şahıstan alım yapıyorsanız, o tedarikçiyi oluştururken/düzenlerken \"Vergi mükellefi (işletme)\" kutucuğunu kaldırın. Bu tedarikçinin detay sayfasında beliren \"🧾 Gider Pusulası Oluştur\" ile açıklama, tutar ve isteğe bağlı bir stopaj oranı girip imzalanabilir bir PDF belge üretirsiniz — bu, e-Belge Paketi eklentisiyle gelir.",
+      },
+      {
+        tur: "uyari",
+        metin:
+          "Stopaj oranı sistemde sabit değildir, siz girersiniz — gerçek oran ürün grubuna ve güncel mevzuata göre değişir. Emin değilseniz mali müşavirinize danışın.",
       },
       { tur: "altbaslik", metin: "Cari Bakiye ve Ödeme" },
       {
@@ -1012,6 +1028,32 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
     ilgili: ["musteriler", "stok", "ayarlar"],
   },
   {
+    slug: "belgeler",
+    baslik: "Belgeler",
+    ikon: "🗂️",
+    kategori: "modul",
+    ozet: "e-Fatura, e-Arşiv ve gider pusulası arşivi.",
+    anahtarKelimeler: ["belgeler", "e-fatura", "e-arşiv", "gider pusulası", "arşiv"],
+    icerik: [
+      {
+        tur: "paragraf",
+        metin:
+          "Belgeler, \"e-Belge Paketi\" eklentisine bağlıdır (Ayarlar > Eklentiler'den etkinleştirilir). Kesilen tüm e-Fatura/e-Arşiv faturaları (Satış detayından) ve gider pusulaları (Tedarikçi detayından) burada tek arşivde listelenir — belgeler burada oluşturulmaz, yalnızca görüntülenir/indirilir.",
+      },
+      {
+        tur: "ipucu",
+        metin:
+          "e-Fatura/e-Arşiv kesmek için Satış > ilgili satışın detayına gidip \"Sonra Kesilecek\" durumundaki bir satışta beliren e-Belge düğmelerini kullanın (kurumsal müşteri + VKN gerekir). Gider pusulası için Tedarikçiler > vergi mükellefi olmayan bir tedarikçinin detayına gidin.",
+      },
+      {
+        tur: "uyari",
+        metin:
+          "Bu modüldeki e-Fatura/e-Arşiv kesimi gerçek bir GİB entegratör bağlantısı değildir (sandbox) — üretimde gerçek kullanım öncesi bir entegratörle (ve mali müşavirinizle) doğrulama yapılmalıdır. Küçük işletmeler için \"entegratörsüz mod\" (fişi/faturayı GİB portalinden elle kesip Satış detayından \"ÖKC Fişi\" olarak numarasını bağlama) her zaman kullanılabilir.",
+      },
+    ],
+    ilgili: ["satis", "tedarikciler", "ayarlar"],
+  },
+  {
     slug: "bildirimler",
     baslik: "Bildirimler",
     ikon: "🔔",
@@ -1072,7 +1114,6 @@ export const KILAVUZ_KONULARI: KilavuzKonu[] = [
         satirlar: [
           ["🖥️ PC Toplama", "Reçeteyle (BOM) parçalardan sistem toplama — parçalar stoktan düşer, toplanan PC kendi seri numarasıyla satışa hazır olur. (Eklenti)"],
           ["📋 Sözleşmeler", "Periyodik bakım sözleşmeleri, SLA takibi, otomatik ziyaret planları. (Eklenti)"],
-          ["🗂️ Belgeler", "e-Fatura, e-Arşiv, gider pusulası ve servis formlarının tek arşivi. (Eklenti)"],
           ["🛒 Pazaryeri", "Trendyol, Hepsiburada, N11 stok senkronizasyonu. (Eklenti)"],
         ],
       },

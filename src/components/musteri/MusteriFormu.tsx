@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { vknGecerliMi } from "@/lib/e-belge";
 
 type Mevcut = {
   id: string;
@@ -44,6 +45,12 @@ export function MusteriFormu({ tenantId, mevcut }: Props) {
   async function kaydet(e: React.FormEvent) {
     e.preventDefault();
     setHata(null);
+
+    if (vergiNo.trim() && !vknGecerliMi(vergiNo)) {
+      setHata("Vergi no / TCKN 10 (VKN) veya 11 (TCKN) haneli sayısal olmalı.");
+      return;
+    }
+
     setYukleniyor(true);
 
     const supabase = createClient();

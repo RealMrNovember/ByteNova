@@ -679,7 +679,7 @@ başlıyor. Pilot başlangıcı hariç (gerçek dış kullanıcı gerektirir) sp
 Öngörülen öncelik (pilot verisiyle güncellenir):
 
 - [x] **WhatsApp/SMS + İYS** ✅ — sağlayıcı soyutlaması, servis bildirimleri, İYS onayı — ayrıntılar aşağıda
-- [ ] **e-Belge** — entegratör soyutlaması + ilk entegratör, gider pusulası, portal modu
+- [x] **e-Belge** ✅ — entegratör soyutlaması, gider pusulası, portal modu — ayrıntılar aşağıda
 - [ ] **Çek/Senet + POS mutabakat** — portföy, vade takvimi, nakit akış uyarıları
 - [ ] **Otomatik abonelik tahsilatı** — `BillingProvider` (iyzico/PayTR), dunning, impersonation
   - **Eklenti self-servis switch'i** aynı işte: tenant panelinde Ayarlar → Eklentiler, otomatik ödeme + kullanım bazlı faturalama (`docs/EKLENTI_MIMARISI.md`). İlk paketler: WhatsApp/SMS ve e-Belge.
@@ -723,6 +723,45 @@ başlıyor. Pilot başlangıcı hariç (gerçek dış kullanıcı gerektirir) sp
   çevrildiğinde otomatik bir "beklemede" bildirim kuyruğa düştüğü, gerçek `CRON_SECRET` ile
   tetiklenen `/api/cron/bildirim-gonder`'in bunu "gönderildi"ye çevirdiği ve geçmişte doğru
   göründüğü uçtan uca doğrulandı
+
+### e-Belge — ayrıntılar ✅
+- [x] **Şema** (`0045_e_belge.sql`): `suppliers.is_taxpayer` (mükellef/şahıs ayrımı),
+  `e_document_records` (tüm e-Fatura/e-Arşiv/gider pusulası kayıtlarının tek arşivi — satış
+  veya alış kaynaklı olabilir), `sales.document_type` `e_fatura`/`e_arsiv_fatura` ile
+  genişletildi (mevcut `okc_fisi`/`sonra_kesilecek` değişmedi)
+- [x] **Kurumsal satışa e-Belge kesme:** `satis_e_belge_kes()` RPC'si — mevcut
+  `satis_belgesini_kes()` (yalnız ÖKC fişi) ile aynı aile, ayrı bir sibling RPC olarak
+  eklendi (var olan davranış hiç değişmedi). Yalnız VKN'si kayıtlı kurumsal müşterilerde
+  Satış detayının "Belge sonra kesilecek" panelinde beliren "🧾 e-Fatura Kes"/"🧾 e-Arşiv
+  Fatura Kes" düğmeleriyle tetiklenir
+- [x] **Gider pusulası:** `gider_pusulasi_olustur()` RPC'si + `GiderPusulasiBelgesi.tsx` PDF
+  şablonu (imza alanlı) — yalnız `is_taxpayer=false` işaretli tedarikçilerde Tedarikçi
+  detayında beliren "🧾 Gider Pusulası Oluştur" formuyla düzenlenir; stopaj oranı **sabit
+  kodlanmadı**, kullanıcı girer, PDF'de brüt/stopaj/net şeffafça gösterilir
+- [x] **"Belgeler" arşiv sayfası** (`/panel/belgeler`, menu.ts `yakinda`→`aktif`): hem satış
+  kaynaklı e-Fatura/e-Arşiv hem alış kaynaklı gider pusulası kayıtlarını tek listede gösterir
+- [x] **VKN/TCKN biçim doğrulaması** (`src/lib/e-belge.ts` → `vknGecerliMi()`) müşteri
+  formuna eklendi — projede daha önce hiç yoktu (10 haneli VKN veya 11 haneli TCKN)
+- [x] **Bilinçli kapsam dışı (önemli):** proje dosyasının (Bölüm 35-37) tarif ettiği
+  tam kural motoru — KDV tevkifatı, özel matrah, tarih-versiyonlu vergi kuralları,
+  e-Arşiv zorunluluk eşikleri — bu turda KURULMADI. Proje dosyasının kendisi bu konuların
+  "üretime alınmadan önce güncel mevzuat ve uzman/mali müşavir doğrulamasından geçirilmesi"
+  gerektiğini açıkça belirtiyor; sahte vergi hesaplama kuralları icat etmek mesajlaşma gibi
+  zararsız bir sandbox'tan farklı olarak gerçek muhasebe hatasına yol açabilir. Bunun yerine
+  yalnızca **belge kaydı/arşivi mimarisi** kuruldu — stopaj oranı gibi tek değişken elle
+  girilir ve şeffafça gösterilir, sistem "doğru" bir oran dayatmaz. Mükellef sorgulama
+  (`mukellefSorgula()`) de gerçek bir GİB API çağrısı değil, salt biçimsel bir sandbox
+  sezgiseldir — kodda böyle belirtildi
+- [x] E2E: Showroom demo tenant'ında gerçek panelde uçtan uca doğrulandı — vergi mükellefi
+  olmayan yeni bir tedarikçi ("Ayşe Yıldız") oluşturuldu, detayında beliren gider pusulası
+  formuyla ₺9.000 tutar + %10 stopaj girildi, canlı önizlemenin ₺900 stopaj/₺8.100 net
+  hesapladığı doğrulandı, oluşturulan belgenin PDF uç noktasının geçerli bir dosya döndürdüğü
+  (tarayıcının indirme diyaloğu tetiklemesiyle) doğrulandı; kurumsal müşteri (VKN'li "Nova
+  Ofis Mobilya A.Ş.") için yeni bir satış oluşturulup Belge Kuyruğu'nda yalnız bu satış için
+  (VKN'siz "Ahmet Yılmaz"ın satışında DEĞİL) e-Fatura/e-Arşiv düğmelerinin belirdiği
+  doğrulandı; "e-Fatura Kes" tıklanınca satışın durumunun "e-Fatura — EFT-2026-XXXXXX" olarak
+  güncellendiği hem satış detayında hem Belgeler arşiv sayfasında (gider pusulasıyla yan yana)
+  doğru göründüğü doğrulandı
 
 ## SPRINT 13+ — MASAÜSTÜ (OFFLINE) VE P2 (Hafta 13+)
 

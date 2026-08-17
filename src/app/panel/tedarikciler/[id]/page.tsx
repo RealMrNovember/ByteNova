@@ -5,6 +5,7 @@ import { yetkiVar } from "@/lib/yetki";
 import { odemeDurumEtiket, odemeDurumSinifi } from "@/lib/alis";
 import { paraFormatla, etkinKurlar } from "@/lib/doviz";
 import { TedarikciOdeme } from "@/components/alis/TedarikciOdeme";
+import { GiderPusulasiOlustur } from "@/components/alis/GiderPusulasiOlustur";
 
 export default async function TedarikciDetayPage({
   params,
@@ -53,6 +54,15 @@ export default async function TedarikciDetayPage({
     .eq("is_active", true)
     .order("created_at");
 
+  const { data: giderPusulalari } = tedarikci.is_taxpayer
+    ? { data: null }
+    : await supabase
+        .from("e_document_records")
+        .select("id, document_no, description, amount, net_amount, created_at")
+        .eq("supplier_id", id)
+        .eq("document_type", "gider_pusulasi")
+        .order("created_at", { ascending: false });
+
   const yetkili = yetkiVar(profil?.role, "stok_yonet");
   const kasaYetkili = yetkiVar(profil?.role, "kasa_yonet");
   const toplamAlis = (alislar ?? []).length;
@@ -83,7 +93,14 @@ export default async function TedarikciDetayPage({
       <div className="glass mt-3 rounded-xl p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-lg font-bold text-white">🤝 {tedarikci.name}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-lg font-bold text-white">🤝 {tedarikci.name}</h1>
+              {!tedarikci.is_taxpayer && (
+                <span className="rounded-full bg-slate-500/15 px-2.5 py-1 text-[10px] font-medium text-slate-300">
+                  Vergi mükellefi değil
+                </span>
+              )}
+            </div>
             <p className="mt-1 text-xs text-slate-500">
               {tedarikci.phone || "Telefon eklenmedi"} · {tedarikci.currency}
             </p>
@@ -118,6 +135,39 @@ export default async function TedarikciDetayPage({
           </div>
         )}
       </div>
+
+      {!tedarikci.is_taxpayer && yetkili && (
+        <div className="mt-4">
+          <GiderPusulasiOlustur supplierId={tedarikci.id} />
+        </div>
+      )}
+
+      {!!giderPusulalari?.length && (
+        <div className="glass mt-4 overflow-hidden rounded-xl">
+          <div className="border-b border-slate-800 px-4 py-3">
+            <h2 className="text-sm font-semibold text-white">Gider Pusulaları</h2>
+          </div>
+          <div className="divide-y divide-slate-800/60">
+            {giderPusulalari.map((g) => (
+              <a
+                key={g.id}
+                href={`/api/gider-pusulasi/${g.id}/pdf`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-slate-800/30"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm text-slate-200">{g.description ?? g.document_no}</p>
+                  <p className="font-mono text-[11px] text-slate-500">{g.document_no}</p>
+                </div>
+                <span className="shrink-0 text-sm font-semibold text-slate-200">
+                  {paraFormatla(g.net_amount ?? g.amount)}
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-4">
         <TedarikciOdeme

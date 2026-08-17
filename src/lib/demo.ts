@@ -95,6 +95,7 @@ export async function demoTenantiSifirlaVeDoldur() {
     { tenant_id: tenantId, addon_key: "kurumsal_satis", status: "active" },
     { tenant_id: tenantId, addon_key: "crm_plus", status: "active" },
     { tenant_id: tenantId, addon_key: "whatsapp_sms", status: "active" },
+    { tenant_id: tenantId, addon_key: "e_belge", status: "active" },
   ]);
 
   const { data: kasa } = await admin

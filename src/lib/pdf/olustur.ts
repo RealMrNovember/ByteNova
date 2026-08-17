@@ -5,6 +5,7 @@ import { ServisBelgesi } from "./ServisBelgesi";
 import { MusteriEkstresi } from "./MusteriEkstresi";
 import { TedarikciEkstresi } from "./TedarikciEkstresi";
 import { TeklifBelgesi } from "./TeklifBelgesi";
+import { GiderPusulasiBelgesi } from "./GiderPusulasiBelgesi";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://bytenova.cicibyte.com";
 
@@ -84,6 +85,29 @@ export async function teklifPdfOlustur(supabase: SupabaseClient, teklifId: strin
   const dosyaAdi = `${teklif.quote_no}-teklif.pdf`;
 
   return { buffer, dosyaAdi, teklif };
+}
+
+export async function giderPusulasiPdfOlustur(supabase: SupabaseClient, belgeId: string) {
+  const { data: belge } = await supabase
+    .from("e_document_records")
+    .select("*, suppliers(name, phone, address), tenants(name, phone, address)")
+    .eq("id", belgeId)
+    .eq("document_type", "gider_pusulasi")
+    .maybeSingle();
+
+  if (!belge) return null;
+
+  const buffer = await renderToBuffer(
+    GiderPusulasiBelgesi({
+      belge,
+      tedarikci: belge.suppliers ?? { name: "—", phone: null, address: null },
+      isletme: belge.tenants ?? { name: "İşletmem", phone: null, address: null },
+    })
+  );
+
+  const dosyaAdi = `${belge.document_no}-gider-pusulasi.pdf`;
+
+  return { buffer, dosyaAdi, belge };
 }
 
 export async function musteriEkstrePdfOlustur(supabase: SupabaseClient, musteriId: string) {

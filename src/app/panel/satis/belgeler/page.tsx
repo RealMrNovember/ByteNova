@@ -30,7 +30,7 @@ export default async function BelgeKuyruguPage() {
 
   const { data: bekleyenler } = await supabase
     .from("sales")
-    .select("id, sale_no, total_amount, created_at, customers(name)")
+    .select("id, sale_no, total_amount, created_at, customers(name, type, tax_number)")
     .eq("document_type", "sonra_kesilecek")
     .is("document_issued_at", null)
     .order("created_at", { ascending: true });
@@ -51,7 +51,11 @@ export default async function BelgeKuyruguPage() {
       ) : (
         <div className="mt-5 space-y-3">
           {bekleyenler.map((s) => {
-            const musteri = s.customers as unknown as { name: string } | null;
+            const musteri = s.customers as unknown as {
+              name: string;
+              type: string;
+              tax_number: string | null;
+            } | null;
             return (
               <div key={s.id}>
                 <div className="mb-1.5 flex items-center justify-between text-[11px] text-slate-600">
@@ -63,7 +67,12 @@ export default async function BelgeKuyruguPage() {
                     {new Date(s.created_at).toLocaleString("tr-TR")}
                   </span>
                 </div>
-                <SatisBelgesi saleId={s.id} yetkili={yetkili} />
+                <SatisBelgesi
+                  saleId={s.id}
+                  yetkili={yetkili}
+                  musteriTipi={musteri?.type ?? null}
+                  musteriVkn={musteri?.tax_number ?? null}
+                />
               </div>
             );
           })}

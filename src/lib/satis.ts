@@ -26,6 +26,8 @@ export function kalemIkon(tip: string): string {
 export const BELGE_TIPLERI: Record<string, string> = {
   okc_fisi: "ÖKC Fişi",
   sonra_kesilecek: "Sonra Kesilecek",
+  e_fatura: "e-Fatura",
+  e_arsiv_fatura: "e-Arşiv Fatura",
 };
 
 export const IADE_SONUCLARI: Record<string, { etiket: string; ikon: string }> = {

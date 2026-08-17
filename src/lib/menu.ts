@@ -117,9 +117,9 @@ export const PANEL_MENU: MenuOgesi[] = [
     slug: "belgeler",
     ad: "Belgeler",
     ikon: "🗂️",
-    durum: "yakinda",
+    durum: "aktif",
     aciklama:
-      "e-Fatura, e-Arşiv, gider pusulası ve servis formları: tüm resmi ve operasyonel belgeler arşivde.",
+      "e-Fatura, e-Arşiv ve gider pusulası arşivi — Satış ve Tedarikçi ekranlarından kesilen tüm e-belgeler burada listelenir.",
     addonKey: "e_belge",
   },
   {

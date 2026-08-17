@@ -29,7 +29,7 @@ export default async function SatisDetayPage({
   const { data: satis } = await supabase
     .from("sales")
     .select(
-      "id, sale_no, subtotal, discount_amount, rounding_amount, total_amount, payment_method, document_type, receipt_no, document_issued_at, created_at, customers(id, name, phone)"
+      "id, sale_no, subtotal, discount_amount, rounding_amount, total_amount, payment_method, document_type, receipt_no, document_issued_at, created_at, customers(id, name, phone, type, tax_number)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -61,7 +61,13 @@ export default async function SatisDetayPage({
     iadelerByKalem.set(iade.sale_item_id, mevcut);
   }
 
-  const musteri = satis.customers as unknown as { id: string; name: string; phone: string | null } | null;
+  const musteri = satis.customers as unknown as {
+    id: string;
+    name: string;
+    phone: string | null;
+    type: string;
+    tax_number: string | null;
+  } | null;
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -79,7 +85,7 @@ export default async function SatisDetayPage({
           </div>
           <span
             className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-              satis.document_type === "okc_fisi"
+              satis.document_type !== "sonra_kesilecek"
                 ? "bg-emerald-500/15 text-emerald-300"
                 : "bg-amber-500/15 text-amber-300"
             }`}
@@ -155,7 +161,12 @@ export default async function SatisDetayPage({
 
       {satis.document_type === "sonra_kesilecek" && (
         <div className="mt-4">
-          <SatisBelgesi saleId={satis.id} yetkili={yetkili} />
+          <SatisBelgesi
+            saleId={satis.id}
+            yetkili={yetkili}
+            musteriTipi={musteri?.type ?? null}
+            musteriVkn={musteri?.tax_number ?? null}
+          />
         </div>
       )}
 
